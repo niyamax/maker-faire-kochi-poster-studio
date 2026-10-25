@@ -46,7 +46,7 @@ export function mountImageEditor({getMedia,getInfo,onChange,prepareAssets,announ
     if(busy)return;busy=true;sync();$('image-status').textContent='Preparing image…';
     try{
       const name=button.dataset.imageSample,response=await fetch(`assets/samples/${name}.png`);if(!response.ok)throw Error('The sample image could not load.');
-      const blob=await response.blob();busy=false;await load(new File([blob],`${name}-sample.png`,{type:'image/png'}),name==='robot'?'cutout':'window');
+      const blob=await response.blob();busy=false;await load(new File([blob],`${name}-sample.png`,{type:'image/png'}),button.dataset.imageSampleLayout||'window');
     }catch(error){$('image-status').textContent=error.message;announce(error.message);}
     finally{busy=false;sync();}
   });
