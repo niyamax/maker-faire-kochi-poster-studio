@@ -1,0 +1,64 @@
+{
+  "format": "sampled normalized font outlines",
+  "license": "SIL Open Font License 1.1",
+  "shaping": "Independent Latin display glyphs rendered as uppercase. No connected-script shaping.",
+  "fonts": [
+    {
+      "id": "dela",
+      "filename": "DelaGothicOne-Regular.ttf",
+      "sha256": "4ff87a0965f1b0505e5a2c58424bc6ad3cff27e56a82f21c2fc9d6b0e3857ee2",
+      "axes": {},
+      "license": "DelaGothicOne-OFL.txt",
+      "source": "https://github.com/google/fonts/tree/main/ofl/delagothicone"
+    },
+    {
+      "id": "anton",
+      "filename": "Anton-Regular.ttf",
+      "sha256": "a4ba3a92350ebb031da0cb47630ac49eb265082ca1bc0450442f4a83ab947cab",
+      "axes": {},
+      "license": "Anton-OFL.txt",
+      "source": "https://github.com/google/fonts/tree/main/ofl/anton"
+    },
+    {
+      "id": "bricolage",
+      "filename": "BricolageGrotesque-variable.ttf",
+      "sha256": "413e7357809ddd12fd80a96a8a396de0e401638d4acd3cb3e37532f0472ac682",
+      "axes": {
+        "opsz": 96,
+        "wght": 800,
+        "wdth": 100
+      },
+      "license": "BricolageGrotesque-OFL.txt",
+      "source": "https://github.com/google/fonts/tree/main/ofl/bricolagegrotesque"
+    },
+    {
+      "id": "bowlby",
+      "filename": "BowlbyOne-Regular.ttf",
+      "sha256": "c46a806d7b51fd4987e5f0be449fe40a944cb407e43290ce1cdeed029a8cdc1d",
+      "axes": {},
+      "license": "BowlbyOne-OFL.txt",
+      "source": "https://github.com/google/fonts/tree/main/ofl/bowlbyone"
+    },
+    {
+      "id": "geist",
+      "filename": "Geist-variable.woff2",
+      "sha256": "19f9c92546aa300c312235e3125af1b81394d8db9a4bc4a425cd5b641d2d54e1",
+      "axes": {
+        "wght": 900
+      },
+      "license": "Geist-OFL.txt",
+      "source": "https://github.com/vercel/geist-font"
+    },
+    {
+      "id": "inter",
+      "filename": "Inter.ttf",
+      "sha256": "746431e950fd28d29b0189d708d4a5852a8458edb3184387eadcee9e5e34676c",
+      "axes": {
+        "opsz": 32,
+        "wght": 900
+      },
+      "license": "Inter-OFL.txt",
+      "source": "https://github.com/rsms/inter"
+    }
+  ]
+}

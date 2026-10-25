@@ -1,0 +1,46 @@
+/* Editor colours, typography and spacing. */
+@font-face{font-family:Geist;src:url('../../assets/fonts/geist-ui.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+:root{
+  --studio-font-sans:Geist,Inter,Arial,sans-serif;
+  --studio-bg-canvas:#FCFCF9;
+  --studio-bg-surface:#FFFFFF;
+  --studio-bg-subtle:#EFEFE4;
+  --studio-text-primary:#181818;
+  --studio-text-secondary:#666666;
+  --studio-text-tertiary:#5B5B5B;
+  --studio-text-disabled:#A8A8A8;
+  --studio-text-inverse:#EFEFE4;
+  --studio-border-subtle:#EAEAEA;
+  --studio-border-default:#D7D7D7;
+  --studio-border-control:#909090;
+  --studio-border-strong:#666666;
+  --studio-focus:#2D6FCD;
+  --studio-action-primary:#181818;
+  --studio-action-primary-hover:#424242;
+  --studio-action-primary-pressed:#000000;
+  --studio-action-secondary:#EFEFE4;
+  --studio-action-ghost-hover:#EAEAEA;
+  --studio-selection-bg:#EFF5FF;
+  --studio-selection-fg:#225DAC;
+  --studio-radius-sm:4px;
+  --studio-radius-md:8px;
+  --studio-radius-lg:12px;
+  --studio-border-width:1px;
+  --studio-focus-width:2px;
+  --studio-control-height:32px;
+  --studio-control-padding:12px;
+  --studio-control-gap:6px;
+  --studio-row-height:40px;
+  --studio-space-4:4px;
+  --studio-space-8:8px;
+  --studio-space-12:12px;
+  --studio-space-16:16px;
+  --studio-space-24:24px;
+  --studio-label-size:12px;
+  --studio-label-leading:16px;
+  --studio-label-weight:500;
+  --studio-body-size:14px;
+  --studio-body-leading:20px;
+  --studio-caption-size:12px;
+  --studio-caption-leading:18px;
+}

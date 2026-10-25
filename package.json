@@ -1,0 +1,17 @@
+{
+  "name": "maker-faire-kochi-poster-studio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED",
+  "description": "A local poster and motion typography editor for Maker Faire Kochi.",
+  "engines": {"node": ">=22"},
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/dev.mjs --preview",
+    "test": "node --test tests/*.test.mjs",
+    "check": "npm test && npm run build"
+  },
+  "devDependencies": {"esbuild": "0.28.2"}
+}

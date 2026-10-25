@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Poster Studio — Maker Faire Kochi</title>
+  <meta name="description" content="Create Maker Faire Kochi posters with expressive type, a shared colour system and direct canvas editing.">
+  <link rel="stylesheet" href="studio.css">
+  <script defer src="studio.js"></script>
+</head>
+<body data-inspector="content">
+  <header class="app-header">
+    <div class="app-identity"><img class="app-logo" src="assets/MF_Kochi_Logo_long.png" alt="Maker Faire Kochi"><span class="app-divider" aria-hidden="true"></span><div class="project-control"><h1><button id="project-menu-toggle" class="project-button" aria-haspopup="menu" aria-expanded="false" aria-controls="project-menu">Poster Studio<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button></h1><div id="project-menu" class="project-menu" role="menu" hidden><button id="save-project" role="menuitem">Save project</button><button id="open-project" role="menuitem">Open project…</button></div></div></div>
+    <div class="document-actions">
+      <output id="save-state" class="save-state" aria-live="polite"></output>
+      <div class="history-actions" aria-label="Edit history"><button id="undo-pose" class="icon-button" title="Undo · Cmd/Ctrl Z" aria-label="Undo" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5 3 9l4 4M3.5 9h7a5 5 0 0 1 5 5v1"/></svg></button><button id="redo-pose" class="icon-button" title="Redo · Cmd/Ctrl Shift Z" aria-label="Redo" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m13 5 4 4-4 4M16.5 9h-7a5 5 0 0 0-5 5v1"/></svg></button></div>
+      <div class="export-control"><button id="export-menu-toggle" class="primary-button" aria-haspopup="menu" aria-expanded="false" aria-controls="export-menu">Export <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button><div id="export-menu" class="export-menu" role="menu" hidden><button id="export-video" role="menuitem"><span id="export-video-label">Video</span><span class="menu-note">8-second loop</span></button><button id="export-png" role="menuitem"><span>PNG image</span><span class="menu-note">For sharing</span></button><button id="export-svg" role="menuitem"><span>SVG artwork</span><span class="menu-note">For print &amp; editing</span></button></div></div>
+    </div>
+  </header>
+  <main class="studio" aria-label="Maker Faire poster editor">
+    <div class="inspector-shell">
+      <nav class="panel-tabs" aria-label="Editor panels"><button data-workspace-tab="content" aria-pressed="true">Content</button><button data-workspace-tab="properties" aria-pressed="false">Properties</button></nav>
+      <aside class="content-panel editor-panel" aria-label="Poster content">
+        <div class="panel-heading"><h2>Content</h2></div>
+        <section class="panel-section content-fields"><label class="field-label" for="headline">Headline</label><textarea id="headline" rows="3" spellcheck="false" maxlength="52" aria-describedby="headline-hint"></textarea><p id="headline-hint" class="field-hint">Use line breaks to shape the composition.</p><label class="field-label" for="detail">Supporting text</label><textarea id="detail" class="small-copy" rows="3" maxlength="160"></textarea></section>
+        <section class="panel-section layer-section"><div class="section-heading"><h3>Layers</h3></div><div class="layer-list" aria-label="Poster layers"><button data-editor-layer="letters" aria-pressed="true"><span class="layer-symbol" aria-hidden="true">Aa</span><span>Headline</span><span class="layer-type">Type</span></button><button data-editor-layer="text" aria-pressed="false"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 4h12M3 8h12M3 12h8"/></svg><span>Supporting text</span></button><button data-editor-layer="logo" aria-pressed="false"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="5" width="13" height="8" rx=".5"/><path d="M5 8h3v2H5M10 8h3v2h-3"/></svg><span>Maker Faire logo</span><svg class="layer-lock" viewBox="0 0 18 18" aria-label="Original artwork"><path d="M6 8V6a3 3 0 0 1 6 0v2M5 8h8v7H5z"/></svg></button><button data-editor-layer="poster" aria-pressed="false"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="4" y="2.5" width="10" height="13" rx=".5"/></svg><span>Poster</span></button></div></section>
+      </aside>
+      <aside class="properties-panel editor-panel" aria-label="Selection properties">
+        <div class="panel-heading"><h2 id="selection-title">Headline</h2><span class="panel-caption">Properties</span></div>
+        <section id="lettering-controls" class="panel-section lettering-controls" data-properties-for="letters" aria-label="Lettering controls">
+          <label class="select-field" for="type-font">Font<select id="type-font"></select></label>
+          <div class="type-select-pair"><label class="select-field" for="type-style">Style<select id="type-style"><option value="original">Original</option><option value="jostle">Jostle</option><option value="switch">Switch</option><option value="double">Double line</option></select></label><label class="select-field" for="type-render">Drawing<select id="type-render"><option value="solid">Solid</option><option value="line">Line</option></select></label></div>
+          <label class="select-field" for="type-layout">Layout<select id="type-layout"></select></label>
+          <div class="type-range"><label for="type-contrast">Contrast</label><output id="contrast-value" for="type-contrast">62</output><input id="type-contrast" type="range" min="0" max="100" step="1" value="62"></div>
+          <div class="type-range"><label for="type-pressure" id="type-pressure-label">Inflation</label><output id="pressure-value" for="type-pressure">84</output><input id="type-pressure" type="range" min="0" max="100" step="1" value="84"></div>
+          <div class="type-range"><label for="type-variation">Character</label><output id="variation-value" for="type-variation">82</output><input id="type-variation" type="range" min="0" max="100" step="1" value="82"></div>
+          <div class="section-actions"><button id="reset-type" class="text-button">Reset type</button><button id="reset-pose" class="text-button" disabled>Reset pose</button></div>
+        </section>
+        <section class="panel-section motion-properties" data-properties-for="letters"><div class="section-heading"><h3>Motion</h3></div><label class="select-field" for="motion-curve">Curve<select id="motion-curve"></select></label><div class="type-range"><label for="energy">Energy</label><output id="energy-value" for="energy">100</output><input id="energy" type="range" min="35" max="150" value="100"></div></section>
+        <section class="panel-section colour-properties" data-properties-for="poster" hidden><div class="section-heading"><h3>Colour</h3></div><label class="select-field" for="palette">Palette<select id="palette"></select></label><div id="palette-swatches" class="swatches" aria-label="Selected palette colours"></div><div class="section-actions footer-alignment-action"><button id="align-footer" class="text-button">Align footer</button></div><details class="custom-colors"><summary>Custom colours<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m5 6 3 3 3-3"/></svg></summary><div class="color-inputs"><label>Field<input type="color" id="custom-bg"></label><label>Type<input type="color" id="custom-fg"></label><label>Accent<input type="color" id="custom-accent"></label></div><button id="reset-colors" class="text-button">Restore palette</button></details></section>
+        <div id="footer-controls" class="footer-controls">
+          <section class="panel-section" data-properties-for="text" hidden><fieldset data-footer-part="text"><legend>Supporting text</legend><div class="footer-fields"></div><p class="field-hint">Drag on the poster. Corner handles resize.</p><button type="button" class="text-button" data-reset-footer="text">Reset text</button></fieldset></section>
+          <section class="panel-section" data-properties-for="logo" hidden><fieldset data-footer-part="logo"><legend>Maker Faire logo</legend><div class="footer-fields"></div><p class="field-hint">Proportions stay locked as you resize.</p><button type="button" class="text-button" data-reset-footer="logo">Reset logo</button></fieldset></section>
+        </div>
+        <div class="properties-footer"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2M4.5 7h7v6h-7z"/></svg><span>Shared margins keep the set cohesive.</span></div>
+      </aside>
+    </div>
+    <section class="preview-column" aria-label="Poster workspace">
+      <div class="workspace-toolbar"><div class="treatment-control"><span class="treatment-label" aria-hidden="true">Treatment</span><div class="directions" role="group" aria-label="Lettering treatment"></div></div><div class="view-controls"><select id="format" aria-label="Poster format"></select><button id="focus" class="icon-button" title="Focus canvas" aria-label="Focus canvas" aria-expanded="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3H3v4M13 3h4v4M17 13v4h-4M7 17H3v-4"/></svg></button></div></div>
+      <div class="artwork-stage"><canvas id="artwork" tabindex="0" aria-label="Editable poster. Drag letters, supporting text or the logo. Select a letter to reveal reshape handles. Corner handles resize text and logo proportionally. Pink guides show shared edges, centres and margins. Hold Alt to bypass snapping. Arrow keys nudge the selection. Escape cancels a drag or clears selection. Space plays or pauses motion."></canvas><p id="loading">Preparing your poster…</p><button id="close-focus">Exit focus <kbd>Esc</kbd></button></div>
+      <div class="canvas-status"><label class="snap-toggle" title="Snap to poster margins and other items. Hold Alt for free placement."><input id="snapping" type="checkbox" checked><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3v5a4 4 0 0 0 8 0V3M4 6h2M10 6h2"/></svg>Snap</label><span id="drag-note">Drag to move · handles to reshape</span><span class="canvas-view">Fit</span></div>
+      <div class="transport"><button id="play" class="icon-button" aria-label="Play motion"><span id="play-symbol">▶</span></button><input id="timeline" type="range" min="0" max="1000" value="0" aria-label="Motion timeline"><span id="time">0.0 / 8s</span><label class="loop-label"><input type="checkbox" id="loop">Loop</label></div>
+    </section>
+  </main>
+  <div id="status" role="status" aria-live="polite"></div>
+  <dialog id="video-dialog" aria-labelledby="video-title"><div class="video-dialog-heading"><h2 id="video-title">Exporting loop</h2></div><div id="video-progress-wrap"><p id="video-progress-label">Preparing video…</p><progress id="video-progress" max="1" value="0"></progress><p class="field-hint">Keep this tab visible while the video is recorded.</p></div><video id="video-preview" controls autoplay muted loop playsinline hidden></video><p id="video-details" class="field-hint"></p><div class="video-dialog-actions"><button id="cancel-video" class="text-button">Cancel</button><button id="download-video" class="primary-button" hidden>Download video</button></div></dialog>
+  <input id="project-file" type="file" accept="application/json,.json" hidden>
+</body>
+</html>

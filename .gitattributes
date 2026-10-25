@@ -1,0 +1,3 @@
+licenses/* -text -whitespace
+assets/fonts/* -text
+src/data/* linguist-generated=true
