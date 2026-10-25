@@ -1,0 +1,29 @@
+name: Bug report
+description: Report something that does not work as expected.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the result and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the relevant treatment, font, format and editing action.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and operating system
+      placeholder: Browser version, operating system, desktop or mobile
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Screenshot or minimal example
+      description: A screenshot or recording helps with visual issues. Do not attach a private project file.

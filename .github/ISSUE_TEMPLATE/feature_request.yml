@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest an improvement to the poster editor.
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What would this help you make or do?
+      description: Describe the goal and the limitation you encounter today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Suggested behaviour
+      description: Explain how you would expect it to work. Sketches or examples are welcome.
+    validations:
+      required: true

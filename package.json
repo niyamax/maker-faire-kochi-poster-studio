@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "license": "UNLICENSED",
-  "description": "A local poster and motion typography editor for Maker Faire Kochi.",
-  "engines": {"node": ">=22"},
+  "license": "MIT",
+  "description": "A browser-based poster and motion typography editor for Maker Faire Kochi.",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
@@ -13,5 +15,22 @@
     "test": "node --test tests/*.test.mjs",
     "check": "npm test && npm run build"
   },
-  "devDependencies": {"esbuild": "0.28.2"}
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/niyamax/maker-faire-kochi-poster-studio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/niyamax/maker-faire-kochi-poster-studio/issues"
+  },
+  "homepage": "https://github.com/niyamax/maker-faire-kochi-poster-studio#readme",
+  "keywords": [
+    "typography",
+    "poster-design",
+    "creative-coding",
+    "maker-faire",
+    "canvas"
+  ]
 }
