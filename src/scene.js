@@ -5,6 +5,7 @@ import {displaceLetters} from './letter-drag.js';
 import {normalizeFooter,placeFooterItem} from './footer-layout.js';
 import {HEADLINE_MAX_LENGTH} from './content-limits.js';
 import {normalizePosterImage,posterImageLayout} from './poster-image.js';
+import {reactTypeToCutout,silhouetteFromPixels} from './cutout-response.js';
 
 export const PALETTES=Object.freeze([
   {id:'maker',name:'Maker Faire',bg:'#FFFFFF',fg:'#ED1C24',accent:'#00AEEF',ink:'#172C35'},
@@ -78,7 +79,8 @@ export function createPosterScene({direction='air',palette='maker',format='poste
   const footerOps=scene.ops;scene.ops=[];
   scene.regions={type:fullType,details:{x:placedCopy.x,y:placedCopy.y,w:placedCopy.w,h:placedCopy.h},logo};
 
-  const image=normalizePosterImage(media),photo=posterImageLayout(image,width,height,fullType,scene.regions),typeRect=photo?.typeRect||fullType;
+  const image=normalizePosterImage(media),photo=posterImageLayout(image,width,height,fullType,scene.regions);
+  const typeRect=photo&&image.layout==='cutout'?{...photo.typeRect,h:height*.62}:photo?.typeRect||fullType;
   const letters=layoutTreatment(lines.join('\n'),typeRect,spec.id,phase,energy,lettering,motionCurve);
   const anchors=photo?layoutTreatment(lines.join('\n'),fullType,spec.id,phase,energy,lettering,motionCurve):letters;
   scene.baseCells=(anchors.unrefinedCells||anchors.cells).map(cell=>({...cell}));
@@ -87,6 +89,10 @@ export function createPosterScene({direction='air',palette='maker',format='poste
     return pinned?{...scene.baseCells[cell.index],response:cell.response,craft:cell.craft}:cell;
   });
   letters.cells=displaceLetters(placed,offsets,fullType);
+  if(photo&&image.layout==='cutout'){
+    scene.unreactedCells=letters.cells.map(cell=>({...cell}));
+    letters.cells=reactTypeToCutout(letters.cells,photo.frame,image.asset.silhouette||silhouettes.get(image.asset.src),typeRect);
+  }
   for(const row of letters.rows)row.cells=letters.cells.filter(cell=>cell.row===row.index);
   if(photo&&image.layout==='window')scene.ops.push(photo.op);
   appendTreatmentArtwork(scene,letters,colors,fullType);
@@ -101,18 +107,21 @@ export function createPosterScene({direction='air',palette='maker',format='poste
 
 const imageCache=new Map(),canvasPaths=new Map();
 function canvasPath(d){let geometry=canvasPaths.get(d);if(!geometry){geometry=new Path2D(d);if(canvasPaths.size>700)canvasPaths.clear();canvasPaths.set(d,geometry);}return geometry;}
-const pendingImages=new Map(),alphaMasks=new Map();
+const pendingImages=new Map(),alphaMasks=new Map(),silhouettes=new Map();
 async function loadPosterImage(src,alpha=false){
   if(imageCache.has(src))return;
   if(pendingImages.has(src))return pendingImages.get(src);
   const promise=(async()=>{
     const image=new Image();image.src=src;await image.decode();imageCache.set(src,image);
-    if(alpha){const mask=document.createElement('canvas');mask.width=64;mask.height=64;const context=mask.getContext('2d',{willReadFrequently:true});context.drawImage(image,0,0,64,64);alphaMasks.set(src,context.getImageData(0,0,64,64).data);}
-    while(imageCache.size>8){const oldest=[...imageCache.keys()].find(key=>key!==LOGO_DATA);imageCache.delete(oldest);alphaMasks.delete(oldest);}
+    if(alpha){const mask=document.createElement('canvas');mask.width=64;mask.height=64;const context=mask.getContext('2d',{willReadFrequently:true});context.drawImage(image,0,0,64,64);const pixels=context.getImageData(0,0,64,64).data;alphaMasks.set(src,pixels);silhouettes.set(src,silhouetteFromPixels(pixels,64,64));}
+    while(imageCache.size>8){const oldest=[...imageCache.keys()].find(key=>key!==LOGO_DATA);imageCache.delete(oldest);alphaMasks.delete(oldest);silhouettes.delete(oldest);}
   })();pendingImages.set(src,promise);
   try{await promise;}finally{pendingImages.delete(src);}
 }
-export async function preparePosterAssets(asset=null){await Promise.all([loadPosterImage(LOGO_DATA),...(asset?[loadPosterImage(asset.src,asset.hasAlpha)]:[])]);}
+export async function preparePosterAssets(asset=null){
+  await Promise.all([loadPosterImage(LOGO_DATA),...(asset?[loadPosterImage(asset.src,asset.hasAlpha)]:[])]);
+  if(asset&&!asset.silhouette&&silhouettes.has(asset.src))asset.silhouette=silhouettes.get(asset.src);
+}
 export function hitPosterImage(scene,point){
   const info=scene?.media;if(!info)return false;const r=info.frame;
   if(point.x<r.x||point.x>r.x+r.w||point.y<r.y||point.y>r.y+r.h)return false;

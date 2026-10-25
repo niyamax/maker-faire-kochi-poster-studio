@@ -304,7 +304,8 @@ canvas.addEventListener('pointerdown',event=>{
     const cell=letterHandle?.cell||hitLetter(lastScene.cells,p);selectedFooter=null;hoveredFooter=null;
     if(!cell){selected=null;activeLayer='poster';syncPoseControls();syncSelectionUI(true);dirty=true;return;}
     playing=false;syncTransport();activeLayer='letters';selected=cell.index;
-    drag={kind:'letter',id:event.pointerId,start:p,visible:{...cell},base:{...lastScene.baseCells.find(c=>c.index===cell.index)},bounds:{...lastScene.regions.type},handle:letterHandle?.handle||null,offsets:structuredClone(drafts[state.direction].offsets),moved:false};
+    const source=lastScene.unreactedCells?.find(item=>item.index===cell.index)||cell;
+    drag={kind:'letter',id:event.pointerId,start:p,visible:{...source},motionScale:{x:Math.max(.55,cell.w/source.w),y:Math.max(.55,cell.h/source.h)},base:{...lastScene.baseCells.find(c=>c.index===cell.index)},bounds:{...lastScene.regions.type},handle:letterHandle?.handle||null,offsets:structuredClone(drafts[state.direction].offsets),moved:false};
   }
   drag.priorRedo=priorRedo;syncSelectionUI(true);
   if(drag.kind==='letter'&&drag.handle){canvas.style.setProperty('--resize-cursor',resizeCursor(drag.handle));canvas.classList.add('resizing');}
@@ -334,7 +335,8 @@ canvas.addEventListener('pointermove',event=>{
     }
     Object.assign(drafts[state.direction].footer[drag.part],settings);syncFooterControls();
   }else{
-    const offsets=structuredClone(drag.offsets);offsets[drag.visible.index]=drag.handle?resizeLetterOffset(drag.base,drag.visible,drag.start,p,drag.bounds,drag.handle):dragLetterOffset(drag.base,drag.visible,drag.start,p,drag.bounds,'move');drafts[state.direction].offsets=offsets;
+    const target={x:drag.start.x+(p.x-drag.start.x)/drag.motionScale.x,y:drag.start.y+(p.y-drag.start.y)/drag.motionScale.y};
+    const offsets=structuredClone(drag.offsets);offsets[drag.visible.index]=drag.handle?resizeLetterOffset(drag.base,drag.visible,drag.start,target,drag.bounds,drag.handle):dragLetterOffset(drag.base,drag.visible,drag.start,target,drag.bounds,'move');drafts[state.direction].offsets=offsets;
   }
   syncPoseControls();dirty=true;
 });
@@ -381,7 +383,9 @@ canvas.addEventListener('keydown',event=>{
   const cell=lastScene.cells.find(c=>c.index===selected)||lastScene.cells[0];selected=cell.index;activeLayer='letters';
   const base=lastScene.baseCells.find(c=>c.index===cell.index),b=lastScene.regions.type,step=Math.min(b.w,b.h)*(event.shiftKey?.035:.01),factor=(event.key==='-'||event.key==='_')?-.02:.02;
   const delta=resize?{x:cell.w*factor,y:cell.h*factor}:{x:event.key==='ArrowRight'?step:event.key==='ArrowLeft'?-step:0,y:event.key==='ArrowDown'?step:event.key==='ArrowUp'?-step:0};
-  rememberPose();drafts[state.direction].offsets[cell.index]=resize?resizeLetterOffset(base,cell,{x:0,y:0},delta,b,'se'):dragLetterOffset(base,cell,{x:0,y:0},delta,b,'move');syncPoseControls();dirty=true;saveState();
+  const source=lastScene.unreactedCells?.find(item=>item.index===cell.index)||cell;
+  const target={x:delta.x/Math.max(.55,cell.w/source.w),y:delta.y/Math.max(.55,cell.h/source.h)};
+  rememberPose();drafts[state.direction].offsets[cell.index]=resize?resizeLetterOffset(base,source,{x:0,y:0},target,b,'se'):dragLetterOffset(base,source,{x:0,y:0},target,b,'move');syncPoseControls();dirty=true;saveState();
 });
 $('#snapping').addEventListener('change',event=>{state.snapping=event.target.checked;snapGuides=[];dirty=true;saveState();});
 $('#undo-pose').addEventListener('click',undoEdit);$('#redo-pose').addEventListener('click',redoEdit);

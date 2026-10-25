@@ -49,7 +49,7 @@ export function mountImageEditor({getMedia,onChange,prepareAssets,announce}){
     for(const element of document.querySelectorAll('[data-image-mode]'))element.hidden=element.dataset.imageMode!==media.layout;
     for(const [id,key]of [['image-zoom','zoom'],['image-size','size'],['image-overlap','overlap']]){$(id).value=Math.round(media[key]*100);$(id+'-value').textContent=`${Math.round(media[key]*100)}%`;}
     for(const button of document.querySelectorAll('[data-image-position]'))button.setAttribute('aria-pressed',String(Math.abs(Number(button.dataset.imagePosition)-media.position)<.015));
-    $('image-object-hint').textContent=media.asset.hasAlpha?'Drag the object to place it. Overlap stays limited to the lettering.':'Use a transparent PNG or WebP for a floating object. This image keeps its background.';
+    $('image-object-hint').textContent=media.asset.hasAlpha?'Drag the object to place it. Nearby letters yield around its silhouette.':'Use a transparent PNG or WebP for a floating object. This image keeps its background.';
   }
   sync();return {sync};
 }

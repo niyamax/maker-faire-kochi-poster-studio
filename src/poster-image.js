@@ -1,3 +1,4 @@
+import {normalizeSilhouette} from './cutout-response.js';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const number=(n,fallback,a,b)=>Number.isFinite(n)?clamp(n,a,b):fallback;
 export const MAX_IMAGE_DATA_LENGTH=1_800_000;
@@ -9,7 +10,7 @@ export function normalizePosterImage(value){
   if(!asset||typeof asset.src!=='string'||asset.src.length>MAX_IMAGE_DATA_LENGTH||!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(asset.src))throw Error('Choose a PNG, JPG or WebP image.');
   if(!Number.isFinite(asset.width)||!Number.isFinite(asset.height)||asset.width<1||asset.height<1||asset.width>1600||asset.height>1600)throw Error('This project image has invalid dimensions.');
   return {
-    asset:{src:asset.src,width:asset.width,height:asset.height,name:String(asset.name||'Poster image').replace(/[\x00-\x1f]/g,'').slice(0,80),hasAlpha:asset.hasAlpha===true},
+    asset:{src:asset.src,width:asset.width,height:asset.height,name:String(asset.name||'Poster image').replace(/[\x00-\x1f]/g,'').slice(0,80),hasAlpha:asset.hasAlpha===true,silhouette:normalizeSilhouette(asset.silhouette)},
     layout:value.layout==='cutout'?'cutout':'window',
     zoom:number(value.zoom,1,1,2),focusX:number(value.focusX,.5,0,1),focusY:number(value.focusY,.5,0,1),
     size:number(value.size,1,.6,1.4),overlap:number(value.overlap,.22,0,.3),position:number(value.position,1,0,1),

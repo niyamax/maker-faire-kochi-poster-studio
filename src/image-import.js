@@ -1,4 +1,5 @@
 import {MAX_IMAGE_DATA_LENGTH} from './poster-image.js';
+import {silhouetteFromPixels} from './cutout-response.js';
 
 /** Decode and re-encode locally: portable pixels, bounded size, no SVG or
  * external image URLs, and no source-file metadata in saved projects. */
@@ -30,7 +31,10 @@ export async function importPosterImage(file){
       smaller.getContext('2d').drawImage(output,0,0,smaller.width,smaller.height);output=smaller;src=output.toDataURL('image/webp',.84);
     }
     if(src.length>MAX_IMAGE_DATA_LENGTH)throw Error('This image is too detailed to save. Try a smaller image.');
-    return {src,width:output.width,height:output.height,name:file.name,hasAlpha};
+    const mask=document.createElement('canvas');mask.width=64;mask.height=64;
+    const maskContext=mask.getContext('2d',{willReadFrequently:true});maskContext.drawImage(output,0,0,64,64);
+    const silhouette=silhouetteFromPixels(maskContext.getImageData(0,0,64,64).data,64,64);
+    return {src,width:output.width,height:output.height,name:file.name,hasAlpha,silhouette};
   }catch(error){if(error.name==='EncodingError')throw Error('This image could not be opened. Try another PNG, JPG or WebP.');throw error;}
   finally{URL.revokeObjectURL(url);}
 }
