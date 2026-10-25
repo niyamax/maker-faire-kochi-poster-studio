@@ -56,7 +56,7 @@ export const EDITOR_BEHAVIOUR=Object.freeze({
   snapByDefault:true,
   snapBypassKey:'Alt',
   scaleLogoUniformly:true,
-  supportingTextAlignment:'left',
+  supportingTextAlignments:['left','center','right'],
   supportingTextFont:'Inter',
   supportingTextLines:2,
   letterBodyAction:'move',

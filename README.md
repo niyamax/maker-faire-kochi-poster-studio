@@ -39,7 +39,7 @@ PORT=8801 npm run dev
 1. Enter a headline and supporting text. Headlines accept **120 characters**, including spaces and line breaks. Use line breaks to shape the composition.
 2. Choose **Air**, **Flex** or **Packed** above the canvas, then select a font and layout in the properties panel.
 3. Adjust **Contrast** for emphasis, **Inflation** or **Stroke** for drawing weight, and **Character** for shape variation.
-4. Drag a letter to move it. Pull its handles to reshape it; nearby letters make room. Select text or the logo to resize or align them to the poster.
+4. Drag a letter to move it. Pull its handles to reshape it; nearby letters make room. Select supporting text to align its lines left, centre or right. Text and logo blocks can also be resized or aligned to the poster.
 5. Pick a palette or set custom colours. Press Play to preview motion, then export.
 
 ### Canvas shortcuts

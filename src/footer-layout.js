@@ -2,10 +2,12 @@ const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 export const FOOTER_LIMITS={size:{min:40,max:250,step:.1},x:{min:-100,max:100,step:.1},y:{min:-100,max:100,step:.1}};
 
 export function normalizeFooter(value){
-  return Object.fromEntries(['text','logo'].map(part=>[part,Object.fromEntries(Object.entries(FOOTER_LIMITS).map(([key,limit])=>{
+  const footer=Object.fromEntries(['text','logo'].map(part=>[part,Object.fromEntries(Object.entries(FOOTER_LIMITS).map(([key,limit])=>{
     const n=value?.[part]?.[key];
     return [key,Number.isFinite(n)?clamp(n,limit.min,limit.max):key==='size'?100:0];
   }))]));
+  footer.text.align=['left','center','right'].includes(value?.text?.align)?value.text.align:'left';
+  return footer;
 }
 
 /** Scale about the composed footer anchor, then apply relative board offsets.

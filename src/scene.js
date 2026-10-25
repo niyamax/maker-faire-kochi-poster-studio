@@ -21,13 +21,31 @@ const n=v=>Number(v.toFixed(3));
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 export function cleanHeadline(value){return String(value||'').toUpperCase().replace(/\r\n?/g,'\n').replace(/[^A-Z0-9 &!?\n.-]/g,'').slice(0,HEADLINE_MAX_LENGTH);}
 export function cleanDetail(value){return [...String(value??'')].filter(char=>char==='\n'||COPY_FONT.glyphs[char]).join('').split('\n').slice(0,2).map(line=>line.slice(0,80)).join('\n').slice(0,160);}
-function addText(scene,text,x,y,size,color,maxWidth=Infinity){
+function addText(scene,text,x,y,size,color,maxWidth=Infinity,align='left'){
   const advance=char=>(COPY_FONT.glyphs[char]?.advance||COPY_FONT.em*.3)*size/COPY_FONT.em;
-  let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;
+  let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;const rows=[];
   for(const [row,line] of String(text).split('\n').entries()){
     const lineWidth=[...line].reduce((total,char)=>total+advance(char),0),scale=Math.min(1,maxWidth/Math.max(1,lineWidth));
     const unit=size/COPY_FONT.em*scale,baseline=y+row*size*1.35+size*.82;
-    let pen=x;for(const char of line){const glyph=COPY_FONT.glyphs[char];if(glyph?.d){scene.ops.push({kind:'path',d:glyph.d,fill:color,matrix:[unit,0,0,-unit,pen,baseline]});if(glyph.bounds){left=Math.min(left,pen+glyph.bounds[0]*unit);right=Math.max(right,pen+glyph.bounds[2]*unit);top=Math.min(top,baseline-glyph.bounds[3]*unit);bottom=Math.max(bottom,baseline-glyph.bounds[1]*unit);}}pen+=advance(char)*scale;}
+    const start=scene.ops.length;let rowLeft=Infinity,rowRight=-Infinity,pen=x;
+    for(const char of line){
+      const glyph=COPY_FONT.glyphs[char];
+      if(glyph?.d){
+        scene.ops.push({kind:'path',d:glyph.d,fill:color,matrix:[unit,0,0,-unit,pen,baseline]});
+        if(glyph.bounds){
+          rowLeft=Math.min(rowLeft,pen+glyph.bounds[0]*unit);rowRight=Math.max(rowRight,pen+glyph.bounds[2]*unit);
+          left=Math.min(left,rowLeft);right=Math.max(right,rowRight);top=Math.min(top,baseline-glyph.bounds[3]*unit);bottom=Math.max(bottom,baseline-glyph.bounds[1]*unit);
+        }
+      }
+      pen+=advance(char)*scale;
+    }
+    rows.push({start,end:scene.ops.length,left:rowLeft,right:rowRight});
+  }
+  // Align the lines inside the existing text frame, keeping its size and
+  // position stable for direct editing, snapping and every export format.
+  if(align!=='left'&&Number.isFinite(left))for(const row of rows)if(Number.isFinite(row.left)){
+    const dx=left+(right-left-row.right+row.left)*(align==='right'?1:.5)-row.left;
+    for(let i=row.start;i<row.end;i++)scene.ops[i].matrix[4]+=dx;
   }
   return Number.isFinite(top)?{x:left,y:top,w:right-left,h:bottom-top}:{x,y,w:0,h:0};
 }
@@ -58,11 +76,10 @@ export function createPosterScene({direction='air',palette='maker',format='poste
   const detailW=frameW*(sideBySide?.52:.75);
   const logoW=sideBySide?Math.min(frameW*.33,short*.40):Math.min(frameW*.47,short*.48),logoH=logoW*646/3871;
   const baseLogo={x:sideBySide?width-pad-logoW:pad,y:height-pad-logoH,w:logoW,h:logoH};
-  const copyStart=scene.ops.length;
-  const copy=addText(scene,cleanDetail(detail??spec.detail),pad,0,bodySize,colors.ink,detailW);
+  const placement=normalizeFooter(footer),copyStart=scene.ops.length;
+  const copy=addText(scene,cleanDetail(detail??spec.detail),pad,0,bodySize,colors.ink,detailW,placement.text.align);
   // Align visible ink, including descenders, to the logo's bottom edge.
   const textY=sideBySide?baseLogo.y+baseLogo.h-copy.y-copy.h:height*.805;
-  const placement=normalizeFooter(footer);
   scene.footerBases={text:{rect:{...copy,y:copy.y+textY},anchor:{x:0,y:sideBySide?1:0}},logo:{rect:baseLogo,anchor:{x:sideBySide?1:0,y:1}}};
   const placedCopy=placeFooterItem(scene.footerBases.text.rect,placement.text,width,height,scene.footerBases.text.anchor);
   for(let i=copyStart;i<scene.ops.length;i++){

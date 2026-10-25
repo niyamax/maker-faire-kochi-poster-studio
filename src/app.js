@@ -96,6 +96,25 @@ for(const part of ['text','logo']){
       input.addEventListener('blur',()=>syncFooterControls());
     }
   }
+  if(part==='text'){
+    const textAlignment=document.createElement('div');textAlignment.className='text-alignment';
+    textAlignment.innerHTML='<span class="field-label">Text alignment</span><div class="alignment-buttons" role="group" aria-label="Supporting text line alignment"></div>';
+    for(const [id,label,icon]of [
+      ['left','Left','M3 4h12M3 8h8M3 12h12M3 16h8'],
+      ['center','Centre','M3 4h12M5 8h8M3 12h12M5 16h8'],
+      ['right','Right','M3 4h12M7 8h8M3 12h12M7 16h8'],
+    ]){
+      const button=document.createElement('button');button.type='button';button.dataset.textAlign=id;
+      button.setAttribute('aria-label',`Align text lines ${label.toLowerCase()}`);button.setAttribute('aria-pressed','false');
+      button.innerHTML=`<svg viewBox="0 0 18 20" aria-hidden="true"><path d="${icon}"/></svg><span>${label}</span>`;
+      button.addEventListener('click',()=>{
+        const text=drafts[state.direction].footer.text;if(text.align===id)return;
+        rememberPose();text.align=id;selectFooter('text',false);syncFooterControls();dirty=true;saveState();
+      });
+      textAlignment.querySelector('.alignment-buttons').append(button);
+    }
+    fields.append(textAlignment);
+  }
   const alignment=document.createElement('div');alignment.className='footer-alignment';
   alignment.innerHTML='<span class="field-label">Align to poster</span>';
   for(const axis of ['x','y']){
@@ -116,6 +135,7 @@ function syncFooterControls(active=null){
   for(const part of ['text','logo'])for(const key of ['size'])for(const suffix of ['','-number']){
     const input=$(`#footer-${part}-${key}${suffix}`);if(input!==active)input.value=Math.round(footer[part][key]*10)/10;
   }
+  for(const button of document.querySelectorAll('[data-text-align]'))button.setAttribute('aria-pressed',String(button.dataset.textAlign===(footer.text.align||'left')));
 }
 function syncFooterAlignment(scene){
   for(const button of document.querySelectorAll('[data-footer-align]')){
@@ -302,7 +322,7 @@ canvas.addEventListener('pointermove',event=>{
       const snapped=snapFooterRect(rect,{width:drag.width,height:drag.height,margin:drag.margin,other:drag.other,tolerance:7/view.scale,corner:drag.corner,origin:drag.visible,minScale:FOOTER_LIMITS.size.min/actualSize,maxScale:FOOTER_LIMITS.size.max/actualSize});
       settings=footerSettingsFromRect(drag.base,snapped.rect,drag.width,drag.height);snapGuides=snapped.guides;
     }
-    drafts[state.direction].footer[drag.part]=settings;syncFooterControls();
+    Object.assign(drafts[state.direction].footer[drag.part],settings);syncFooterControls();
   }else{
     const offsets=structuredClone(drag.offsets);offsets[drag.visible.index]=drag.handle?resizeLetterOffset(drag.base,drag.visible,drag.start,p,drag.bounds,drag.handle):dragLetterOffset(drag.base,drag.visible,drag.start,p,drag.bounds,'move');drafts[state.direction].offsets=offsets;
   }
@@ -335,7 +355,7 @@ canvas.addEventListener('keydown',event=>{
     const step=event.shiftKey?10:1,delta={x:0,y:0};
     if(arrow){delta.x=event.key==='ArrowRight'?step:event.key==='ArrowLeft'?-step:0;delta.y=event.key==='ArrowDown'?step:event.key==='ArrowUp'?-step:0;}
     else{const factor=(event.key==='-'||event.key==='_')?-.02:.02;delta.x=rect.w*factor;delta.y=rect.h*factor;}
-    drafts[state.direction].footer[selectedFooter]=dragFooterItem(base,rect,lastScene.width,lastScene.height,{x:0,y:0},delta,resize?'se':null);
+    Object.assign(drafts[state.direction].footer[selectedFooter],dragFooterItem(base,rect,lastScene.width,lastScene.height,{x:0,y:0},delta,resize?'se':null));
     syncFooterControls();syncPoseControls();dirty=true;saveState();return;
   }
   if(!lastScene?.cells.length)return;

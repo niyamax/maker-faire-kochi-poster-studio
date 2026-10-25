@@ -122,3 +122,7 @@ textarea:hover,.select-field select:hover,.footer-range input[type=number]:hover
 
 .headline-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .headline-heading output{font-size:11px;line-height:16px;color:var(--studio-text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.text-alignment{display:grid;gap:8px;min-width:0}
+.text-alignment>.field-label{margin:0;font-size:12px;line-height:16px;color:var(--studio-text-primary)}
+@media(max-width:620px){[data-footer-part="text"] .footer-fields{grid-template-columns:60px minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:start}}
