@@ -7,9 +7,9 @@ import {continuousCompositionFrame,continuousLetterResponse} from './loop-motion
 import {craftTreatmentLayout,craftedLetterMatrix} from './letter-craft.js';
 
 export const TREATMENT_PROFILES=Object.freeze({
-  air:{mode:'air',font:'original',style:'jostle',render:'solid',contrast:.62,spread:.035,pressure:.84,variation:.82},
-  flex:{mode:'flex',font:'original',style:'original',render:'line',contrast:.70,spread:.32,pressure:.24,variation:.60},
-  packed:{mode:'air',font:'bowlby',style:'jostle',render:'solid',contrast:.46,spread:.46,pressure:.84,variation:.72},
+  air:{mode:'air',font:'original',style:'jostle',render:'solid',contrast:.62,spread:.035,pressure:.84,variation:0},
+  flex:{mode:'flex',font:'original',style:'original',render:'line',contrast:.70,spread:.32,pressure:.24,variation:0},
+  packed:{mode:'air',font:'bowlby',style:'jostle',render:'solid',contrast:.46,spread:.46,pressure:.84,variation:0},
 });
 export function treatmentSettings(id,values={}){
   const base=TREATMENT_PROFILES[id]||TREATMENT_PROFILES.air;
