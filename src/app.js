@@ -1,7 +1,8 @@
 import './styles/studio.css';
 import {HEADLINE_MAX_LENGTH} from './content-limits.js';
 import {mountImageEditor} from './image-editor.js';
-import {dragPosterImage,imageWithRect,scalePosterImage} from './poster-image.js';
+import {importPosterImage} from './image-import.js';
+import {IMAGE_DEFAULTS,dragPosterImage,imageWithRect,scalePosterImage} from './poster-image.js';
 import {normalizeLetterOffsets,dragLetterOffset,resizeLetterOffset,hitLetter} from './letter-drag.js';
 import {FONT_CATALOG} from './font-library.js';
 import {LAYOUT_PRESETS} from './composition.js';
@@ -21,6 +22,7 @@ const params=new URLSearchParams(location.search);
 const state={...STUDIO_DEFAULTS};
 if(VISIBLE_DIRECTION_IDS.includes(params.get('direction')))state.direction=params.get('direction');
 const drafts=defaultStudioDrafts();
+let restoredProject=false;
 let playing=false,dirty=true,last=0,view={scale:1,x:0,y:0,w:1,h:1},selected=null,selectedFooter=null,activeLayer='letters',hovered=null,hoveredFooter=null,drag=null,lastScene=null,ready=false,noticeTimer,snapGuides=[],guideUntil=0,editorShell=null,imageEditor=null,undoStack=[],redoStack=[],saveError=false,videoController=null,videoResult=null;
 const chosen=()=>TREATMENTS.find(d=>d.id===state.direction);
 const palette=()=>({...PALETTES.find(p=>p.id===state.palette),...state.customColors});
@@ -31,7 +33,7 @@ function saveState(){
 }
 try{
   const saved=localStorage.getItem(STUDIO_STORAGE_KEY);
-  if(saved){const project=normalizeStudioProject(JSON.parse(saved));Object.assign(state,project.state);Object.assign(drafts,project.drafts);if(VISIBLE_DIRECTION_IDS.includes(params.get('direction')))switchStudioTreatment(state,drafts,params.get('direction'));}
+  if(saved){const project=normalizeStudioProject(JSON.parse(saved));Object.assign(state,project.state);Object.assign(drafts,project.drafts);restoredProject=true;if(VISIBLE_DIRECTION_IDS.includes(params.get('direction')))switchStudioTreatment(state,drafts,params.get('direction'));}
 }catch{}
 
 for(const preset of EDITOR_PRESETS){const b=document.createElement('button');b.className='treatment-option';b.dataset.direction=preset.id;b.title=preset.description;b.setAttribute('aria-pressed',String(preset.id===state.direction));b.textContent=preset.label;b.addEventListener('click',()=>selectDirection(preset.id));$('.directions').append(b);}
@@ -475,6 +477,19 @@ imageEditor=mountImageEditor({getMedia:()=>state.media,getInfo:()=>lastScene?.me
 }});
 editorShell=mountEditorShell({initialLayer:'letters',onSelectLayer:chooseEditorLayer});
 new ResizeObserver(fit).observe(canvas);
-sync();fit();saveState();
-preparePosterAssets(state.media?.asset).then(()=>{ready=true;$('#loading').hidden=true;dirty=true;}).catch(()=>{$('#loading').textContent='A poster image could not load. Refresh to try again.';});
+async function startStudio(){
+  if(!restoredProject){
+    try{
+      const response=await fetch('assets/samples/studio-robot.png');
+      if(!response.ok)throw Error('The default sample could not load.');
+      const asset=await importPosterImage(new File([await response.blob()],'studio-robot-sample.png',{type:'image/png'}));
+      state.media={...IMAGE_DEFAULTS,layout:'cutout',asset};
+    }catch{announce('The sample image could not load. Choose a sample from Image to try again.');}
+  }
+  sync();fit();saveState();
+  await preparePosterAssets(state.media?.asset);
+  ready=true;$('#loading').hidden=true;dirty=true;
+}
+sync();fit();
+startStudio().catch(()=>{$('#loading').textContent='A poster image could not load. Refresh to try again.';});
 requestAnimationFrame(tick);
