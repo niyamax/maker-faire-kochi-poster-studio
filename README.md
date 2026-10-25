@@ -45,7 +45,7 @@ PORT=8801 npm run dev
 
 ### Add an image
 
-Use **Image → Add image** in the content panel, or open **Try a sample** to explore the two layouts with generated demonstration images.
+Use **Image → Add image** in the content panel, or use the **Samples** dropdown beside the Image heading to explore the two layouts with generated demonstration images.
 
 - **Image window** starts with a composed photo frame. Drag it anywhere on the poster. Corner handles resize it proportionally; edge handles change the frame shape. Double-click the photo or choose Adjust crop to reframe its contents with dragging and Crop zoom.
 - **Object cut-out** places a transparent PNG or WebP in front of the lettering. Drag it freely in two dimensions and use corner handles or Size to resize it without distortion. Moving the object keeps its size fixed. Type response controls how strongly the letters give way around the silhouette, from no response to full interaction.

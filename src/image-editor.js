@@ -42,21 +42,25 @@ export function mountImageEditor({getMedia,getInfo,onChange,prepareAssets,announ
     const media=getMedia();if(!media)return;cropping=false;
     onChange({...media,freePlacement:true,size:1,boxes:{...media.boxes,[media.layout]:null}},{remember:true});
   });
-  for(const button of document.querySelectorAll('[data-image-sample]'))button.addEventListener('click',async()=>{
-    if(busy)return;busy=true;sync();$('image-status').textContent='Preparing image…';
+  const samples={workshop:'window',robot:'cutout','studio-robot':'cutout'};
+  $('image-sample-choice').addEventListener('change',async event=>{
+    const name=event.target.value;if(busy||!Object.hasOwn(samples,name))return;
+    busy=true;sync();$('image-status').textContent='Preparing image…';
     try{
-      const name=button.dataset.imageSample,response=await fetch(`assets/samples/${name}.png`);if(!response.ok)throw Error('The sample image could not load.');
-      const blob=await response.blob();busy=false;await load(new File([blob],`${name}-sample.png`,{type:'image/png'}),button.dataset.imageSampleLayout||'window');
+      const response=await fetch(`assets/samples/${name}.png`);if(!response.ok)throw Error('The sample image could not load.');
+      const blob=await response.blob();busy=false;await load(new File([blob],`${name}-sample.png`,{type:'image/png'}),samples[name]);
     }catch(error){$('image-status').textContent=error.message;announce(error.message);}
-    finally{busy=false;sync();}
+    finally{busy=false;lastMedia=undefined;sync();}
   });
+
   function sync(){
     const media=getMedia(),info=getInfo();if(!media||media.layout!=='window')cropping=false;
     if(media===lastMedia&&info?.frame.w===lastWidth&&info?.frame.h===lastHeight&&info?.baseFrame.w===lastBaseWidth&&busy===lastBusy&&cropping===lastCropping)return;
     lastMedia=media;lastWidth=info?.frame.w;lastHeight=info?.frame.h;lastBaseWidth=info?.baseFrame.w;lastBusy=busy;lastCropping=cropping;
     $('image-empty').hidden=Boolean(media);$('image-loaded').hidden=!media;
     $('add-image').disabled=busy;$('replace-image').disabled=busy;$('remove-image').disabled=busy;
-    for(const button of document.querySelectorAll('[data-image-sample]'))button.disabled=busy;
+    $('image-sample-choice').disabled=busy;
+    if(!busy)$('image-sample-choice').value=Object.keys(samples).find(name=>media?.asset.name===`${name}-sample.png`)||'';
     for(const button of document.querySelectorAll('[data-editor-layer="image"]'))button.disabled=!media;
     if(!media)return;
     if(displayedSrc!==media.asset.src){$('image-thumb').src=media.asset.src;displayedSrc=media.asset.src;}
