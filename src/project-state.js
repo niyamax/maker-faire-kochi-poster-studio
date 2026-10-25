@@ -3,8 +3,9 @@ import {treatmentSettings} from './treatment.js';
 import {normalizeFooter} from './footer-layout.js';
 import {LOOP_CURVE_IDS} from './loop-motion.js';
 import {normalizeLetterOffsets} from './letter-drag.js';
+import {normalizePosterImage} from './poster-image.js';
 export const STUDIO_STORAGE_KEY='maker-poster-studio-v1';
-export const STUDIO_DEFAULTS=Object.freeze({direction:'air',palette:'maker-red',format:'poster',phase:0,energy:1,loop:true,motionCurve:'smooth',customColors:null,snapping:true});
+export const STUDIO_DEFAULTS=Object.freeze({direction:'air',palette:'maker-red',format:'poster',phase:0,energy:1,loop:true,motionCurve:'smooth',customColors:null,snapping:true,media:null});
 export const defaultStudioDrafts=()=>Object.fromEntries(TREATMENTS.map(d=>[d.id,{headline:d.headline,detail:d.detail,offsets:[],lettering:treatmentSettings(d.id),footer:normalizeFooter()}]));
 
 /** Treatments share content, placement, font and layout. Keep their expressive
@@ -23,6 +24,7 @@ export function normalizeStudioProject(input){
   if(input.kind&&input.kind!=='maker-faire-poster')throw Error('Choose a Maker Faire Poster Studio project.');
   if(input.kind&&input.version!==1)throw Error('This project version is not supported.');
   const source=input.state,state={...STUDIO_DEFAULTS},drafts=defaultStudioDrafts();
+  state.media=normalizePosterImage(source.media);
   if(TREATMENTS.some(d=>d.id===source.direction))state.direction=source.direction;
   if(PALETTES.some(p=>p.id===source.palette))state.palette=source.palette;
   if(FORMATS[source.format])state.format=source.format;

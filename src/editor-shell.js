@@ -1,5 +1,5 @@
-const LAYERS = ['letters', 'text', 'logo', 'poster'];
-const LAYER_LABELS = {letters: 'Lettering', text: 'Supporting text', logo: 'Logo', poster: 'Poster'};
+const LAYERS = ['letters', 'text', 'image', 'logo', 'poster'];
+const LAYER_LABELS = {letters: 'Lettering', text: 'Supporting text', image:'Image', logo: 'Logo', poster: 'Poster'};
 const SAVE_LABELS = {
   idle: 'Local project',
   saving: 'Saving…',

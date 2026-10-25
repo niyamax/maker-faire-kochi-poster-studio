@@ -11,6 +11,7 @@ Make expressive posters with letters that stretch, share space and move together
 - **Direct editing:** drag letters, reshape them with handles, and move or resize the supporting text and logo.
 - **Cohesive layouts:** shared margins, snapping, alignment controls and portrait, story, square and banner formats.
 - **Motion posters:** seamless eight-second loops with Smooth, Steady, Punchy and Elastic curves.
+- **Image layouts:** an Image window for photography and an Object cut-out layout for transparent objects, with local upload and crop or overlap controls.
 - **Portable output:** PNG images, outlined SVG artwork, video loops and editable JSON project files.
 
 The editor renders artwork and saves projects in your browser. It requires no account, application backend or API keys. Fonts and artwork assets are bundled locally; the application contains no analytics or cloud upload integration.
@@ -42,6 +43,19 @@ PORT=8801 npm run dev
 4. Drag a letter to move it. Pull its handles to reshape it; nearby letters make room. Select supporting text to align its lines left, centre or right. Text and logo blocks can also be resized or aligned to the poster.
 5. Pick a palette or set custom colours. Press Play to preview motion, then export.
 
+### Add an image
+
+Use **Image → Add image** in the content panel, or open **Try a sample** to explore the two layouts with generated demonstration images.
+
+- **Image window** reserves a fixed photo frame along the poster margins. Portrait formats place it below the headline; banners place it beside the lettering. Drag the photograph to adjust its crop, or use Crop zoom.
+- **Object cut-out** places an object in front of the lower lettering. A transparent PNG or WebP works best. Use Size, Overlap and Placement, or drag the object directly. Overlap is limited so the headline remains readable.
+
+Upload PNG, JPG or WebP files up to 20 MB. The browser resizes and re-encodes images locally, preserves transparency, trims transparent padding and embeds the processed pixels in saved projects. All export formats use the same image placement. Removing an image restores the full typography frame while retaining your saved type settings and offsets.
+
+| Image window | Object cut-out |
+| --- | --- |
+| [![Image window example](docs/images/image-window.png)](docs/images/image-window.png) | [![Object cut-out example](docs/images/object-cutout.png)](docs/images/object-cutout.png) |
+
 ### Canvas shortcuts
 
 | Action | Control |
@@ -57,7 +71,7 @@ PORT=8801 npm run dev
 
 Projects autosave to local browser storage. Use **Poster Studio → Save project** to download an editable JSON file, and **Open project…** to restore it.
 
-Browser storage is specific to the address and port you use. Save a project file before switching addresses, clearing browser storage or moving to another device. Project files contain the poster settings; fonts and the logo are supplied by the application.
+Browser storage is specific to the address and port you use. Save a project file before switching addresses, clearing browser storage or moving to another device. Project files contain the poster settings and any uploaded image. Fonts and the logo are supplied by the application. Project files can be up to 4 MB.
 
 ### Export
 

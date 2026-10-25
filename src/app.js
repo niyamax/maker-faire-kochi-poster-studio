@@ -1,5 +1,7 @@
 import './styles/studio.css';
 import {HEADLINE_MAX_LENGTH} from './content-limits.js';
+import {mountImageEditor} from './image-editor.js';
+import {dragPosterImage} from './poster-image.js';
 import {normalizeLetterOffsets,dragLetterOffset,resizeLetterOffset,hitLetter} from './letter-drag.js';
 import {FONT_CATALOG} from './font-library.js';
 import {LAYOUT_PRESETS} from './composition.js';
@@ -11,7 +13,7 @@ import {getVideoExportSupport,exportVideo} from './video-export.js';
 import {mountEditorShell} from './editor-shell.js';
 import {VISIBLE_DIRECTION_IDS,VISIBLE_FONT_IDS,VISIBLE_LAYOUT_IDS,VISIBLE_STYLE_IDS,VISIBLE_PALETTE_IDS,EDITOR_PRESETS,EDITOR_PALETTE_LABELS,retainCurrentOption} from './editor-config.js';
 import {STUDIO_STORAGE_KEY,STUDIO_DEFAULTS,defaultStudioDrafts,normalizeStudioProject,studioProject,switchStudioTreatment} from './project-state.js';
-import {TREATMENTS,PALETTES,FORMATS,cleanHeadline,cleanDetail,createPosterScene,preparePosterAssets,drawPosterScene,posterSVG} from './scene.js';
+import {TREATMENTS,PALETTES,FORMATS,cleanHeadline,cleanDetail,createPosterScene,preparePosterAssets,drawPosterScene,posterSVG,hitPosterImage} from './scene.js';
 
 const $=selector=>document.querySelector(selector),canvas=$('#artwork'),ctx=canvas.getContext('2d');
 $('#headline').maxLength=HEADLINE_MAX_LENGTH;
@@ -19,7 +21,7 @@ const params=new URLSearchParams(location.search);
 const state={...STUDIO_DEFAULTS};
 if(VISIBLE_DIRECTION_IDS.includes(params.get('direction')))state.direction=params.get('direction');
 const drafts=defaultStudioDrafts();
-let playing=false,dirty=true,last=0,view={scale:1,x:0,y:0,w:1,h:1},selected=null,selectedFooter=null,activeLayer='letters',hovered=null,hoveredFooter=null,drag=null,lastScene=null,ready=false,noticeTimer,snapGuides=[],guideUntil=0,editorShell=null,undoStack=[],redoStack=[],saveError=false,videoController=null,videoResult=null;
+let playing=false,dirty=true,last=0,view={scale:1,x:0,y:0,w:1,h:1},selected=null,selectedFooter=null,activeLayer='letters',hovered=null,hoveredFooter=null,drag=null,lastScene=null,ready=false,noticeTimer,snapGuides=[],guideUntil=0,editorShell=null,imageEditor=null,undoStack=[],redoStack=[],saveError=false,videoController=null,videoResult=null;
 const chosen=()=>TREATMENTS.find(d=>d.id===state.direction);
 const palette=()=>({...PALETTES.find(p=>p.id===state.palette),...state.customColors});
 function announce(message){$('#status').textContent=message;$('#status').classList.add('visible');clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>$('#status').classList.remove('visible'),3200);}
@@ -47,7 +49,7 @@ function selectDirection(id){if(id===state.direction)return;rememberPose();switc
 function sync(){
   const d=chosen();for(const b of document.querySelectorAll('button[data-direction]'))b.setAttribute('aria-pressed',String(b.dataset.direction===d.id));
   syncCuratedChoices();$('#headline').value=drafts[d.id].headline;$('#detail').value=drafts[d.id].detail;$('#format').value=state.format;$('#palette').value=state.palette;$('#motion-curve').value=state.motionCurve;$('#energy').value=state.energy*100;$('#energy-value').value=Math.round(state.energy*100);$('#snapping').checked=state.snapping;
-  syncHeadlineCount();syncColors();syncTransport();syncLetteringControls();syncFooterControls();syncPoseControls();dirty=true;
+  imageEditor?.sync();syncHeadlineCount();syncColors();syncTransport();syncLetteringControls();syncFooterControls();syncPoseControls();dirty=true;
 }
 function syncHeadlineCount(){$('#headline-count').textContent=`${$('#headline').value.length} / ${HEADLINE_MAX_LENGTH}`;}
 function syncLetteringControls(){
@@ -234,7 +236,8 @@ function render(){
   if(!playing){
     drawAlignmentGuides();
     const active=lastScene.cells.find(c=>c.index===selected);
-    if(!selectedFooter){if(active)drawLetterSelection(active,true);else if(hovered!==null)drawLetterSelection(lastScene.cells.find(c=>c.index===hovered),false);}
+    if(activeLayer==='image'&&lastScene.media){const r=lastScene.media.frame;ctx.save();ctx.strokeStyle='#1769E0';ctx.lineWidth=1/view.scale;ctx.strokeRect(r.x,r.y,r.w,r.h);ctx.restore();}
+    if(!selectedFooter&&activeLayer!=='image'){if(active)drawLetterSelection(active,true);else if(hovered!==null)drawLetterSelection(lastScene.cells.find(c=>c.index===hovered),false);}
     if(selectedFooter)drawFooterSelection(selectedFooter,true);else if(hoveredFooter)drawFooterSelection(hoveredFooter,false);
   }
   dirty=false;
@@ -257,7 +260,9 @@ function point(event){const r=canvas.getBoundingClientRect();return{x:(event.cli
 function syncPoseControls(){
   $('#undo-pose').disabled=!undoStack.length;$('#redo-pose').disabled=!redoStack.length;
   const cell=lastScene?.cells.find(c=>c.index===selected);
-  if(selectedFooter){
+  if(activeLayer==='image'&&state.media){
+    $('#reset-pose').disabled=true;$('#drag-note').textContent=state.media.layout==='window'?'Image selected · drag to crop':'Object selected · drag to place';
+  }else if(selectedFooter){
     const item=drafts[state.direction].footer[selectedFooter],name=selectedFooter==='text'?'Supporting text':'Logo';
     $('#reset-pose').disabled=item.size===100&&item.x===0&&item.y===0;
     $('#reset-pose').textContent=selectedFooter==='text'?'Reset text':'Reset logo';
@@ -272,7 +277,7 @@ function captureEdit(){return {project:studioProject(state,drafts),selection:{se
 function restoreEdit(edit){
   Object.assign(state,edit.project.state);Object.assign(drafts,structuredClone(edit.project.drafts));playing=false;drag=null;snapGuides=[];
   selected=edit.selection.selected;selectedFooter=edit.selection.selectedFooter;activeLayer=edit.selection.activeLayer;
-  sync();saveState();window.history.replaceState(null,'',`${location.pathname}?direction=${state.direction}`);
+  sync();preparePosterAssets(state.media?.asset).then(()=>dirty=true).catch(error=>announce(error.message));saveState();window.history.replaceState(null,'',`${location.pathname}?direction=${state.direction}`);
 }
 function rememberPose(){undoStack.push(captureEdit());if(undoStack.length>60)undoStack.shift();redoStack=[];syncPoseControls();}
 function undoEdit(){const previous=undoStack.pop();if(!previous)return;redoStack.push(captureEdit());restoreEdit(previous);}
@@ -293,6 +298,8 @@ canvas.addEventListener('pointerdown',event=>{
     selectFooter(item.part);
     drag={kind:'footer',id:event.pointerId,start:p,part:item.part,corner:item.corner,visible:{...footerRect(item.part)},base:structuredClone(lastScene.footerBases[item.part]),width:lastScene.width,height:lastScene.height,margin:lastScene.margin,other:{...footerRect(item.part==='text'?'logo':'text')},footer:structuredClone(drafts[state.direction].footer),moved:false};
     if(item.corner){canvas.style.setProperty('--resize-cursor',resizeCursor(item.corner));canvas.classList.add('resizing');}
+  }else if(!letterHandle&&hitPosterImage(lastScene,p)&&(lastScene.media.layout==='cutout'||activeLayer==='image'||!hitLetter(lastScene.cells,p))){
+    chooseEditorLayer('image');hovered=hoveredFooter=null;drag={kind:'image',id:event.pointerId,start:p,media:state.media,info:lastScene.media,moved:false};
   }else{
     const cell=letterHandle?.cell||hitLetter(lastScene.cells,p);selectedFooter=null;hoveredFooter=null;
     if(!cell){selected=null;activeLayer='poster';syncPoseControls();syncSelectionUI(true);dirty=true;return;}
@@ -309,12 +316,15 @@ canvas.addEventListener('pointermove',event=>{
     const handle=letterHandleHit(p,event.pointerType),item=handle?null:footerHit(p,event.pointerType),cell=handle?.cell||(item?null:lastScene&&hitLetter(lastScene.cells,p));
     if(hoveredFooter!==(item?.part??null)||hovered!==(cell?.index??null))dirty=true;
     hoveredFooter=item?.part??null;hovered=cell?.index??null;
-    canvas.style.cursor=handle?resizeCursor(handle.handle):item?.corner?resizeCursor(item.corner):item||cell?'grab':'default';return;
+    const image=hitPosterImage(lastScene,p)&&(lastScene.media.layout==='cutout'||activeLayer==='image'||!cell);
+    canvas.style.cursor=image?'grab':handle?resizeCursor(handle.handle):item?.corner?resizeCursor(item.corner):item||cell?'grab':'default';return;
   }
   if(event.pointerId!==drag.id)return;
   if(Math.hypot(p.x-drag.start.x,p.y-drag.start.y)<1/view.scale&&!drag.moved)return;
   if(!drag.moved){rememberPose();drag.moved=true;}
-  if(drag.kind==='footer'){
+  if(drag.kind==='image'){
+    state.media=dragPosterImage(drag.media,drag.info,drag.start,p);imageEditor.sync();
+  }else if(drag.kind==='footer'){
     let settings=dragFooterItem(drag.base,drag.visible,drag.width,drag.height,drag.start,p,drag.corner);drag.free=event.altKey;
     snapGuides=[];
     if(state.snapping&&!event.altKey){
@@ -332,10 +342,10 @@ function releaseDrag(cancel=false){
   if(!drag)return;const previous=drag;drag=null;guideUntil=performance.now()+850;if(cancel)snapGuides=[];canvas.classList.remove('dragging','resizing');
   if(canvas.hasPointerCapture(previous.id))canvas.releasePointerCapture(previous.id);
   if(cancel&&previous.moved){
-    if(previous.kind==='footer')drafts[state.direction].footer=previous.footer;else drafts[state.direction].offsets=previous.offsets;
+    if(previous.kind==='image')state.media=previous.media;else if(previous.kind==='footer')drafts[state.direction].footer=previous.footer;else drafts[state.direction].offsets=previous.offsets;
     undoStack.pop();redoStack=previous.priorRedo||[];
   }
-  syncFooterControls();syncPoseControls();dirty=true;saveState();
+  imageEditor.sync();syncFooterControls();syncPoseControls();dirty=true;saveState();
 }
 canvas.addEventListener('pointerup',()=>releaseDrag());canvas.addEventListener('pointercancel',()=>releaseDrag(true));canvas.addEventListener('lostpointercapture',()=>releaseDrag(true));
 canvas.addEventListener('pointerleave',()=>{if(!drag){hovered=hoveredFooter=null;canvas.style.cursor='default';dirty=true;}});
@@ -345,8 +355,15 @@ canvas.addEventListener('keydown',event=>{
   if(event.code==='Space'){event.preventDefault();$('#play').click();return;}
   if(event.key==='Escape'){
     if(drag){event.preventDefault();event.stopPropagation();releaseDrag(true);}
-    else if(selectedFooter||selected!==null){event.preventDefault();event.stopPropagation();selectedFooter=null;selected=null;activeLayer='poster';snapGuides=[];syncPoseControls();dirty=true;}
+    else if(selectedFooter||selected!==null||activeLayer==='image'){event.preventDefault();event.stopPropagation();selectedFooter=null;selected=null;activeLayer='poster';snapGuides=[];syncPoseControls();dirty=true;}
     return;
+  }
+  if(activeLayer==='image'&&state.media&&lastScene.media){
+    const arrow=event.key.startsWith('Arrow'),resize=['+','=','-','_'].includes(event.key);if(!arrow&&!resize)return;
+    event.preventDefault();rememberPose();playing=false;syncTransport();
+    if(arrow){const step=event.shiftKey?10:1;state.media=dragPosterImage(state.media,lastScene.media,{x:0,y:0},{x:event.key==='ArrowRight'?step:event.key==='ArrowLeft'?-step:0,y:event.key==='ArrowDown'?step:event.key==='ArrowUp'?-step:0});}
+    else{const key=state.media.layout==='window'?'zoom':'size',delta=['-','_'].includes(event.key)?-.02:.02;state.media={...state.media,[key]:Math.max(key==='zoom'?1:.6,Math.min(key==='zoom'?2:1.4,state.media[key]+delta))};}
+    imageEditor.sync();syncPoseControls();dirty=true;saveState();return;
   }
   if(selectedFooter&&lastScene){
     const arrow=event.key.startsWith('Arrow'),resize=['+','=','-','_'].includes(event.key);if(!arrow&&!resize)return;
@@ -384,7 +401,7 @@ document.addEventListener('keydown',event=>{
 
 function download(blob,extension){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`maker-faire-kochi-${state.direction}-${state.format}.${extension}`;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);announce(extension==='json'?'Project file ready.':`${extension.toUpperCase()} ready.`);}
 $('#export-svg').addEventListener('click',()=>{const scene=makeScene();download(new Blob([posterSVG(scene)],{type:'image/svg+xml;charset=utf-8'}),'svg');});
-$('#export-png').addEventListener('click',()=>{const scene=makeScene(),scale=Math.min(2,4096/Math.max(scene.width,scene.height)),output=document.createElement('canvas');output.width=Math.round(scene.width*scale);output.height=Math.round(scene.height*scale);const context=output.getContext('2d');context.scale(scale,scale);drawPosterScene(context,scene);output.toBlob(blob=>{if(blob)download(blob,'png');else announce('The PNG could not be created. Try SVG.');},'image/png');});
+$('#export-png').addEventListener('click',async()=>{const scene=makeScene(),asset=state.media?.asset;try{await preparePosterAssets(asset);}catch(error){announce(error.message);return;}const scale=Math.min(2,4096/Math.max(scene.width,scene.height)),output=document.createElement('canvas');output.width=Math.round(scene.width*scale);output.height=Math.round(scene.height*scale);const context=output.getContext('2d');context.scale(scale,scale);drawPosterScene(context,scene);output.toBlob(blob=>{if(blob)download(blob,'png');else announce('The PNG could not be created. Try SVG.');},'image/png');});
 
 const videoSupport=getVideoExportSupport();$('#export-video-label').textContent=videoSupport.label;$('#export-video').disabled=!videoSupport.supported;if(!videoSupport.supported)$('#export-video').title=videoSupport.reason;
 function disposeVideoResult(){if(videoResult){$('#video-preview').pause();$('#video-preview').removeAttribute('src');$('#video-preview').load();URL.revokeObjectURL(videoResult.url);videoResult=null;}}
@@ -396,7 +413,7 @@ $('#export-video').addEventListener('click',async()=>{
   const project=studioProject(state,drafts),draft=project.drafts[project.state.direction],first=createPosterScene({...project.state,...draft,phase:0}),controller=new AbortController();videoController=controller;
   $('#video-title').textContent='Exporting loop';$('#video-progress-wrap').hidden=false;$('#video-preview').hidden=true;$('#download-video').hidden=true;$('#video-progress').value=0;$('#video-details').textContent='';$('#video-progress-label').textContent='Preparing video…';$('#cancel-video').textContent='Cancel';$('#video-dialog').showModal();
   try{
-    await preparePosterAssets();
+    await preparePosterAssets(project.state.media?.asset);
     const result=await exportVideo({width:first.width,height:first.height,duration:8,fps:30,signal:controller.signal,renderFrame:(context,phase)=>drawPosterScene(context,createPosterScene({...project.state,...draft,phase})),onProgress:progress=>{$('#video-progress').value=progress;$('#video-progress-label').textContent=`Rendering ${Math.round(progress*100)}%`;}});
     videoController=null;videoResult={...result,url:URL.createObjectURL(result.blob),direction:project.state.direction,format:project.state.format};
     $('#video-title').textContent='Video ready';$('#video-progress-wrap').hidden=true;$('#video-preview').src=videoResult.url;$('#video-preview').hidden=false;$('#download-video').hidden=false;$('#download-video').textContent=`Download ${result.extension.toUpperCase()}`;$('#cancel-video').textContent='Done';$('#video-details').textContent=`${result.width} × ${result.height} · 8 seconds · 30 fps`;$('#video-preview').play().catch(()=>{});
@@ -413,14 +430,18 @@ $('#open-project').addEventListener('click',()=>$('#project-file').click());
 $('#project-file').addEventListener('change',async event=>{
   const file=event.target.files?.[0];if(!file)return;
   try{
-    if(file.size>262144)throw Error('Choose a Poster Studio project smaller than 256 KB.');
+    if(file.size>4*1024*1024)throw Error('Choose a Poster Studio project smaller than 4 MB.');
     const project=normalizeStudioProject(JSON.parse(await file.text()));rememberPose();
     restoreEdit({project,selection:{selected:null,selectedFooter:null,activeLayer:'letters'}});announce('Project opened.');
   }catch(error){announce(error instanceof SyntaxError?'This project file could not be read.':error.message);}
   finally{event.target.value='';}
 });
+imageEditor=mountImageEditor({getMedia:()=>state.media,prepareAssets:preparePosterAssets,announce,onChange:(media,{remember=false}={})=>{
+  if(remember)rememberPose();state.media=media;activeLayer=media?'image':'letters';selected=selectedFooter=null;playing=false;
+  imageEditor?.sync();syncTransport();syncPoseControls();syncSelectionUI(true);dirty=true;saveState();
+}});
 editorShell=mountEditorShell({initialLayer:'letters',onSelectLayer:chooseEditorLayer});
 new ResizeObserver(fit).observe(canvas);
 sync();fit();saveState();
-preparePosterAssets().then(()=>{ready=true;$('#loading').hidden=true;dirty=true;}).catch(()=>{$('#loading').textContent='The supplied logo could not load. Refresh to try again.';});
+preparePosterAssets(state.media?.asset).then(()=>{ready=true;$('#loading').hidden=true;dirty=true;}).catch(()=>{$('#loading').textContent='A poster image could not load. Refresh to try again.';});
 requestAnimationFrame(tick);
