@@ -24,6 +24,7 @@ The build produces a self-contained `dist/` directory. It needs no application s
 ## Editing
 
 - Air, Flex and Packed share the headline, supporting copy, selected font, layout and saved positions.
+- Headlines support up to 120 characters, including spaces and line breaks, with a live character counter and no separate per-line cap.
 - Drag letters to move them; use their handles to reshape them. Adjacent letters yield within the poster frame.
 - Drag and resize supporting text or the logo, or align them to the poster margins and centre. Hold Alt to bypass snapping.
 - Choose portrait, story, square or banner formats, curated palettes or custom colours.

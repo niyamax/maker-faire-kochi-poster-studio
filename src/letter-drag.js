@@ -1,8 +1,9 @@
+import {HEADLINE_MAX_LENGTH} from './content-limits.js';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const finite=(n,f=0)=>Number.isFinite(Number(n))?Number(n):f;
 export function normalizeLetterOffsets(value){
   if(value==null)return [];
-  if(!Array.isArray(value)||value.length>60)throw Error('Invalid letter positions.');
+  if(!Array.isArray(value)||value.length>HEADLINE_MAX_LENGTH)throw Error('Invalid letter positions.');
   return value.map(entry=>{
     if(entry==null)return null;
     if(typeof entry!=='object'||['x','y','w','h'].some(key=>entry[key]!==undefined&&!Number.isFinite(entry[key])))throw Error('Invalid letter position.');

@@ -1,4 +1,5 @@
 import './styles/studio.css';
+import {HEADLINE_MAX_LENGTH} from './content-limits.js';
 import {normalizeLetterOffsets,dragLetterOffset,resizeLetterOffset,hitLetter} from './letter-drag.js';
 import {FONT_CATALOG} from './font-library.js';
 import {LAYOUT_PRESETS} from './composition.js';
@@ -13,6 +14,7 @@ import {STUDIO_STORAGE_KEY,STUDIO_DEFAULTS,defaultStudioDrafts,normalizeStudioPr
 import {TREATMENTS,PALETTES,FORMATS,cleanHeadline,cleanDetail,createPosterScene,preparePosterAssets,drawPosterScene,posterSVG} from './scene.js';
 
 const $=selector=>document.querySelector(selector),canvas=$('#artwork'),ctx=canvas.getContext('2d');
+$('#headline').maxLength=HEADLINE_MAX_LENGTH;
 const params=new URLSearchParams(location.search);
 const state={...STUDIO_DEFAULTS};
 if(VISIBLE_DIRECTION_IDS.includes(params.get('direction')))state.direction=params.get('direction');
@@ -45,8 +47,9 @@ function selectDirection(id){if(id===state.direction)return;rememberPose();switc
 function sync(){
   const d=chosen();for(const b of document.querySelectorAll('button[data-direction]'))b.setAttribute('aria-pressed',String(b.dataset.direction===d.id));
   syncCuratedChoices();$('#headline').value=drafts[d.id].headline;$('#detail').value=drafts[d.id].detail;$('#format').value=state.format;$('#palette').value=state.palette;$('#motion-curve').value=state.motionCurve;$('#energy').value=state.energy*100;$('#energy-value').value=Math.round(state.energy*100);$('#snapping').checked=state.snapping;
-  syncColors();syncTransport();syncLetteringControls();syncFooterControls();syncPoseControls();dirty=true;
+  syncHeadlineCount();syncColors();syncTransport();syncLetteringControls();syncFooterControls();syncPoseControls();dirty=true;
 }
+function syncHeadlineCount(){$('#headline-count').textContent=`${$('#headline').value.length} / ${HEADLINE_MAX_LENGTH}`;}
 function syncLetteringControls(){
   const settings=drafts[state.direction].lettering;
   for(const key of ['font','style','render','layout'])$('#type-'+key).value=settings[key];
@@ -225,7 +228,7 @@ $('#motion-curve').addEventListener('change',event=>{state.motionCurve=event.tar
 $('#loop').addEventListener('change',event=>{state.loop=event.target.checked;saveState();});
 $('#format').addEventListener('change',event=>{state.format=event.target.value;dirty=true;saveState();});
 $('#palette').addEventListener('change',event=>{state.palette=event.target.value;state.customColors=null;syncColors();dirty=true;saveState();});
-$('#headline').addEventListener('input',event=>{activeLayer='letters';selectedFooter=null;const clean=cleanHeadline(event.target.value);drafts[state.direction].headline=clean;drafts[state.direction].offsets=[];selected=null;syncPoseControls();if(event.target.value!==clean)event.target.value=clean;dirty=true;saveState();});
+$('#headline').addEventListener('input',event=>{activeLayer='letters';selectedFooter=null;const clean=cleanHeadline(event.target.value);drafts[state.direction].headline=clean;drafts[state.direction].offsets=[];selected=null;syncPoseControls();if(event.target.value!==clean)event.target.value=clean;syncHeadlineCount();dirty=true;saveState();});
 $('#detail').addEventListener('input',event=>{drafts[state.direction].detail=cleanDetail(event.target.value);if(event.target.value!==drafts[state.direction].detail)event.target.value=drafts[state.direction].detail;dirty=true;saveState();});
 $('#energy').addEventListener('input',event=>{state.energy=Number(event.target.value)/100;$('#energy-value').value=Math.round(state.energy*100);dirty=true;saveState();});
 for(const key of ['bg','fg','accent'])$('#custom-'+key).addEventListener('input',event=>{const p=palette();state.customColors={bg:p.bg,fg:p.fg,accent:p.accent,[key]:event.target.value};syncColors();dirty=true;saveState();});

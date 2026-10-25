@@ -3,6 +3,7 @@ import {LOGO_DATA} from './data/logo.js';
 import {layoutTreatment,appendTreatmentArtwork} from './treatment.js';
 import {displaceLetters} from './letter-drag.js';
 import {normalizeFooter,placeFooterItem} from './footer-layout.js';
+import {HEADLINE_MAX_LENGTH} from './content-limits.js';
 
 export const PALETTES=Object.freeze([
   {id:'maker',name:'Maker Faire',bg:'#FFFFFF',fg:'#ED1C24',accent:'#00AEEF',ink:'#172C35'},
@@ -18,7 +19,7 @@ export const TREATMENTS=Object.freeze([
 export const FORMATS={poster:{name:'Poster · 4:5',w:1080,h:1350},story:{name:'Story · 9:16',w:1080,h:1920},square:{name:'Square · 1:1',w:1080,h:1080},banner:{name:'Banner · 16:9',w:1920,h:1080}};
 const n=v=>Number(v.toFixed(3));
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
-export function cleanHeadline(value){return String(value||'').toUpperCase().replace(/[^A-Z0-9 &!?\n.-]/g,'').split('\n').slice(0,4).map(row=>row.slice(0,14)).join('\n').slice(0,52);}
+export function cleanHeadline(value){return String(value||'').toUpperCase().replace(/\r\n?/g,'\n').replace(/[^A-Z0-9 &!?\n.-]/g,'').slice(0,HEADLINE_MAX_LENGTH);}
 export function cleanDetail(value){return [...String(value??'')].filter(char=>char==='\n'||COPY_FONT.glyphs[char]).join('').split('\n').slice(0,2).map(line=>line.slice(0,80)).join('\n').slice(0,160);}
 function addText(scene,text,x,y,size,color,maxWidth=Infinity){
   const advance=char=>(COPY_FONT.glyphs[char]?.advance||COPY_FONT.em*.3)*size/COPY_FONT.em;

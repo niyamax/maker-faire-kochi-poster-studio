@@ -117,7 +117,7 @@ test('SVG exports keep vector copy and embed the original logo',()=>{
 });
 
 test('editable copy and the motion phrase retain safe readable limits',()=>{
-  assert.ok(cleanHeadline('a'.repeat(100)).length<=14);
+  assert.equal(cleanHeadline('a'.repeat(150)).length,120);
   assert.equal(cleanHeadline('<script>'), 'SCRIPT');
   assert.equal(cleanDetail('One\nTwo\nThree'),'One\nTwo');
   assert.ok(cleanDetail('A'.repeat(200)).length<=80);

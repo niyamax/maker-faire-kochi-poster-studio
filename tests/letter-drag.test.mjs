@@ -38,7 +38,7 @@ test('reset returns the exact authored arrangement and a previously yielded lett
 });
 
 test('positions validate before loading and hit testing chooses the topmost visible cell',()=>{
-  assert.throws(()=>normalizeLetterOffsets([{x:NaN}]));assert.throws(()=>normalizeLetterOffsets(Array(61).fill(null)));
+  assert.throws(()=>normalizeLetterOffsets([{x:NaN}]));assert.throws(()=>normalizeLetterOffsets(Array(121).fill(null)));
   assert.deepEqual(normalizeLetterOffsets([{x:4,y:-3,w:20,h:.01}]),[{x:1,y:-1,w:1.8,h:.45}]);
   assert.equal(hitLetter([{...cells[0]}, {...cells[1],x:20}],{x:40,y:40}).index,1);
   assert.equal(hitLetter(cells,{x:490,y:390}),null);

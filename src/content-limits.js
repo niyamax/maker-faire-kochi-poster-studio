@@ -1,0 +1,1 @@
+export const HEADLINE_MAX_LENGTH=120;
