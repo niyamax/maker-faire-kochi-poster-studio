@@ -47,8 +47,10 @@ PORT=8801 npm run dev
 
 Use **Image → Add image** in the content panel, or open **Try a sample** to explore the two layouts with generated demonstration images.
 
-- **Image window** reserves a fixed photo frame along the poster margins. Portrait formats place it below the headline; banners place it beside the lettering. Drag the photograph to adjust its crop, or use Crop zoom.
-- **Object cut-out** places an object in front of the lower lettering. A transparent PNG or WebP works best. Use Size, Overlap and Placement, or drag the object directly. Nearby letters compress and share space around the visible silhouette; the pressure tapers through the rows above. The response follows the object during editing and motion, while saved type offsets remain intact.
+- **Image window** starts with a composed photo frame. Drag it anywhere on the poster. Corner handles resize it proportionally; edge handles change the frame shape. Double-click the photo or choose Adjust crop to reframe its contents with dragging and Crop zoom.
+- **Object cut-out** places a transparent PNG or WebP in front of the lettering. Drag it freely in two dimensions and use corner handles or Size to resize it without distortion. Moving the object keeps its size fixed. Type response controls how strongly the letters give way around the silhouette, from no response to full interaction.
+
+Both layouts have poster alignment controls, snapping guides and Reset image placement. Images may extend beyond the poster edge for intentional cropping. Image position, frame size and crop are saved separately.
 
 Upload PNG, JPG or WebP files up to 20 MB. The browser resizes and re-encodes images locally, preserves transparency, trims transparent padding and embeds the processed pixels in saved projects. All export formats use the same image placement. Removing an image restores the full typography frame while retaining your saved type settings and offsets.
 

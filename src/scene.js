@@ -91,7 +91,7 @@ export function createPosterScene({direction='air',palette='maker',format='poste
   letters.cells=displaceLetters(placed,offsets,fullType);
   if(photo&&image.layout==='cutout'){
     scene.unreactedCells=letters.cells.map(cell=>({...cell}));
-    letters.cells=reactTypeToCutout(letters.cells,photo.frame,image.asset.silhouette||silhouettes.get(image.asset.src),typeRect);
+    letters.cells=reactTypeToCutout(letters.cells,photo.frame,image.asset.silhouette||silhouettes.get(image.asset.src),typeRect,image.reaction);
   }
   for(const row of letters.rows)row.cells=letters.cells.filter(cell=>cell.row===row.index);
   if(photo&&image.layout==='window')scene.ops.push(photo.op);
@@ -120,12 +120,13 @@ async function loadPosterImage(src,alpha=false){
 }
 export async function preparePosterAssets(asset=null){
   await Promise.all([loadPosterImage(LOGO_DATA),...(asset?[loadPosterImage(asset.src,asset.hasAlpha)]:[])]);
-  if(asset&&!asset.silhouette&&silhouettes.has(asset.src))asset.silhouette=silhouettes.get(asset.src);
+  if(asset&&(!asset.silhouette||!asset.silhouette.bottom)&&silhouettes.has(asset.src))asset.silhouette=silhouettes.get(asset.src);
 }
-export function hitPosterImage(scene,point){
+export function hitPosterImage(scene,point,{includeTransparent=false}={}){
   const info=scene?.media;if(!info)return false;const r=info.frame;
+  if(!includeTransparent&&(point.x<0||point.y<0||point.x>scene.width||point.y>scene.height))return false;
   if(point.x<r.x||point.x>r.x+r.w||point.y<r.y||point.y>r.y+r.h)return false;
-  if(info.layout==='window')return true;
+  if(info.layout==='window'||includeTransparent)return true;
   const mask=alphaMasks.get(info.op.src);if(!mask)return true;
   const x=Math.min(63,Math.floor((point.x-r.x)/r.w*64)),y=Math.min(63,Math.floor((point.y-r.y)/r.h*64));
   return mask[(y*64+x)*4+3]>24;

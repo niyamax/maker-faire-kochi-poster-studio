@@ -5,18 +5,23 @@ const SAMPLES=48;
 /** A small, portable top contour keeps the response independent of browser
  * timing. Empty columns stay transparent instead of becoming an obstacle. */
 export function silhouetteFromPixels(pixels,width,height){
-  const top=[];
+  const top=[],bottom=[];
   for(let i=0;i<SAMPLES;i++){
-    let first=height;
-    for(let x=Math.floor(i*width/SAMPLES);x<Math.ceil((i+1)*width/SAMPLES);x++)for(let y=0;y<first;y++)if(pixels[(y*width+x)*4+3]>32){first=y;break;}
+    let first=height,last=-1;
+    for(let x=Math.floor(i*width/SAMPLES);x<Math.ceil((i+1)*width/SAMPLES);x++){
+      for(let y=0;y<first;y++)if(pixels[(y*width+x)*4+3]>32){first=y;break;}
+      for(let y=height-1;y>last;y--)if(pixels[(y*width+x)*4+3]>32){last=y;break;}
+    }
     top.push(first===height?null:first/height);
+    bottom.push(last<0?null:(last+1)/height);
   }
-  return {top};
+  return {top,bottom};
 }
 
 export function normalizeSilhouette(value){
   if(!Array.isArray(value?.top)||value.top.length!==SAMPLES||value.top.some(n=>n!==null&&(!Number.isFinite(n)||n<0||n>1)))return null;
-  return {top:[...value.top]};
+  const bottom=Array.isArray(value.bottom)&&value.bottom.length===SAMPLES&&value.bottom.every((n,i)=>value.top[i]===null?n===null:Number.isFinite(n)&&n>=value.top[i]&&n<=1)?[...value.bottom]:null;
+  return {top:[...value.top],bottom};
 }
 
 function contourPressure(frame,silhouette,bounds){
@@ -35,7 +40,26 @@ function contourPressure(frame,silhouette,bounds){
 /** Compress a continuous vertical field above the object. Squared distance
  * leaves the top of the title quiet and carries the pressure through the rows.
  * Saved offsets remain untouched; moving or removing the object is reversible. */
-export function reactTypeToCutout(cells,frame,silhouette,bounds){
+export function reactTypeToCutout(cells,frame,silhouette,bounds,amount=1){
+  if(amount<=0||frame.y>=bounds.y+bounds.h||frame.y+frame.h<=bounds.y)return cells;
+  const weight=smooth(((frame.y+frame.h*.5-bounds.y)/bounds.h-.3)/.4);
+  const above=weight>0?reactAbove(cells,frame,silhouette,bounds,amount):cells;
+  if(weight===1)return above;
+  const mirrorY=y=>2*bounds.y+bounds.h-y,maxRow=Math.max(...cells.map(cell=>cell.row));
+  const mirrored=cells.map(cell=>({...cell,row:maxRow-cell.row,y:mirrorY(cell.y+cell.h)}));
+  const bottom=silhouette?.bottom||silhouette?.top?.map(n=>n===null?null:1)||Array(SAMPLES).fill(1);
+  const shape={top:bottom.map(n=>n===null?null:1-n)};
+  const below=reactAbove(mirrored,{...frame,y:mirrorY(frame.y+frame.h)},shape,bounds,amount);
+  const originals=new Map(cells.map(cell=>[cell.index,cell]));
+  return below.map((cell,i)=>{
+    const original=originals.get(cell.index),upper=above[i],y=mirrorY(cell.y+cell.h)*(1-weight)+upper.y*weight;
+    const h=cell.h*(1-weight)+upper.h*weight;
+    return {...original,x:cell.x*(1-weight)+upper.x*weight,y,w:cell.w*(1-weight)+upper.w*weight,h,response:{...original.response,angle:(cell.response?.angle||0)*(1-weight)+(upper.response?.angle||0)*weight},objectResponse:{strength:(cell.objectResponse?.strength||0)*(1-weight)+(upper.objectResponse?.strength||0)*weight,dy:y-original.y,scaleY:h/original.h}};
+  });
+}
+
+function reactAbove(cells,frame,silhouette,bounds,amount){
+  const response=clamp(amount,0,1);
   const pressureAt=contourPressure(frame,silhouette,bounds),result=[];
   const rows=new Map();
   for(const cell of cells){if(!rows.has(cell.row))rows.set(cell.row,[]);rows.get(cell.row).push(cell);}
@@ -44,7 +68,7 @@ export function reactTypeToCutout(cells,frame,silhouette,bounds){
       const samples=Array.from({length:9},(_,i)=>pressureAt(cell.x+cell.w*i/8));
       const coverage=samples.reduce((total,value)=>total+smooth(value/(bounds.h*.04)),0)/samples.length;
       const peak=(samples.reduce((total,value)=>total+value**8,0)/samples.length)**(1/8)*1.1;
-      const pressure=Math.min(bounds.h*.33,peak*smooth(coverage/.32));
+      const pressure=Math.min(bounds.h*.33,peak*smooth(coverage/.32)*response);
       const warp=y=>y-pressure*clamp((y-bounds.y)/bounds.h,0,1)**2;
       const y=warp(cell.y),bottom=warp(cell.y+cell.h),h=Math.max(cell.h*.55,bottom-y);
       const depth=clamp((cell.y+cell.h*.5-bounds.y)/bounds.h,0,1);

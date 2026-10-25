@@ -2,7 +2,7 @@ const anchors=rect=>({x:[rect.x,rect.x+rect.w/2,rect.x+rect.w],y:[rect.y,rect.y+
 const inside=(r,w,h)=>r.x>=-.001&&r.y>=-.001&&r.x+r.w<=w+.001&&r.y+r.h<=h+.001;
 
 /** Pure geometry: guide UI never enters the saved scene or exported artwork. */
-export function snapFooterRect(rect,{width,height,margin,other=null,tolerance=8,corner=null,origin=rect,minScale=0,maxScale=Infinity}={}){
+export function snapFooterRect(rect,{width,height,margin,other=null,tolerance=8,corner=null,origin=rect,minScale=0,maxScale=Infinity,allowOverflow=false}={}){
   const sources=anchors(rect),targets={x:[],y:[]};
   for(const [axis,extent]of [['x',width],['y',height]]){
     targets[axis].push({value:margin,index:0,label:axis==='x'?'Left margin':'Top margin',full:true},
@@ -15,7 +15,7 @@ export function snapFooterRect(rect,{width,height,margin,other=null,tolerance=8,
   if(!corner){
     for(const axis of ['x','y']){
       const candidates=[0,1,2].flatMap(index=>match(axis,index)).sort((a,b)=>Math.abs(a.delta)-Math.abs(b.delta));
-      const best=candidates.find(t=>inside({...result,[axis]:result[axis]+t.delta},width,height));
+      const best=candidates.find(t=>allowOverflow||inside({...result,[axis]:result[axis]+t.delta},width,height));
       if(best){result[axis]+=best.delta;chosen.push(best);}
     }
   }else{
