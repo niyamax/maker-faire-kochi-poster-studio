@@ -37,7 +37,7 @@ PORT=8801 npm run dev
 
 ## Create a poster
 
-1. Enter a headline and supporting text. Headlines accept **120 characters**, including spaces and line breaks. Use line breaks to shape the composition.
+1. Enter a headline and supporting text. Headlines accept **120 characters**, including spaces and line breaks. Press Enter to start a new poster line. Repeated spaces, leading spaces and trailing spaces are retained for gaps and indentation in every format.
 2. Choose **Air**, **Flex** or **Packed** above the canvas, then select a font and layout in the properties panel.
 3. Adjust **Contrast** for emphasis, **Inflation** or **Stroke** for drawing weight, and **Character** for shape variation.
 4. Drag a letter to move it. Pull its handles to reshape it; nearby letters make room. Select supporting text to align its lines left, centre or right. Text and logo blocks can also be resized or aligned to the poster.
@@ -81,9 +81,9 @@ Browser storage is specific to the address and port you use. Save a project file
 | --- | --- |
 | PNG | A still image of the current poster |
 | SVG | Vector artwork with outlined text and an embedded logo |
-| Video | One complete eight-second loop, up to 1920 pixels on its longest side |
+| Video | One complete eight-second loop, targeting twice the poster dimensions at 60 fps (up to 3840 pixels on its longest side) |
 
-Video exports use MP4 when supported by the browser, with WebM as a fallback. Keep the tab visible while recording. The editor reports when canvas video recording is unavailable.
+Video exports render every frame before encoding, using WebCodecs in quality mode. The default portrait target is 2160 × 2700 at 60 fps; Story and banner exports are capped at a 3840-pixel longest side. MP4 is preferred, with WebM and compatible resolution or frame-rate fallbacks reported in the result. Quality scales with output size. The video is available only after all frames are encoded and the file is finalized. Uploaded images retain their source resolution. A browser with WebCodecs support is required.
 
 Headlines use the supported Latin uppercase letters, numbers and punctuation. Supporting text uses the bundled Inter character set and up to two lines. Connected-script shaping is not implemented.
 
@@ -130,3 +130,5 @@ The **application code is licensed under MIT**. See [LICENSE](LICENSE).
 Bundled fonts and their derived outlines retain the **SIL Open Font License 1.1**, with individual notices in [licenses/](licenses/) and source details in [assets/font-manifest.json](assets/font-manifest.json).
 
 The Maker Faire Kochi logo and Maker Faire names and marks are separate from the application-code licence. No trademark rights are granted. See [NOTICE.md](NOTICE.md) for the asset notices.
+
+Video encoding and MP4/WebM muxing use Mediabunny 1.62.1. The MPL-2.0 dependency notice and corresponding source link are in [NOTICE.md](NOTICE.md). All encoding runs locally on this device.

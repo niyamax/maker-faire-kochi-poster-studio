@@ -1,188 +1,101 @@
-// Canvas capture is a real-time recorder: the poster is drawn on its own canvas,
-// with the same scene renderer as the preview and image exports.
-const MIME_CANDIDATES = [
-  'video/mp4;codecs=avc1.42E028',
-  'video/mp4',
-  'video/webm;codecs=vp8',
-  'video/webm;codecs=vp9',
-  'video/webm',
-];
+import {Output,BufferTarget,Mp4OutputFormat,WebMOutputFormat,CanvasSource,Quality,canEncodeVideo} from 'mediabunny';
 
-export function videoFormatForMime(mimeType) {
-  const type = String(mimeType || '').split(';')[0].trim().toLowerCase();
-  if (type === 'video/mp4') return {mimeType, extension: 'mp4', label: 'MP4 video'};
-  if (type === 'video/webm') return {mimeType, extension: 'webm', label: 'WebM video'};
+export const VIDEO_DEFAULTS=Object.freeze({fps:60,renderScale:2,maxSide:3840});
+const abortError=()=>new DOMException('Video export cancelled.','AbortError');
+const checkAbort=signal=>{if(signal?.aborted)throw abortError();};
+const artworkError=value=>Object.assign(value instanceof Error?value:new Error(String(value)),{artworkFailure:true});
+
+export function videoFormatForMime(mimeType){
+  const type=String(mimeType||'').split(';')[0].trim().toLowerCase();
+  if(type==='video/mp4')return {mimeType,extension:'mp4',label:'MP4 video'};
+  if(type==='video/webm')return {mimeType,extension:'webm',label:'WebM video'};
   return null;
 }
 
-/** Query without allocating a stream or asking for device permissions. */
-export function getVideoExportSupport(environment = globalThis) {
-  const Recorder = environment.MediaRecorder;
-  if (typeof Recorder !== 'function' || typeof environment.HTMLCanvasElement?.prototype?.captureStream !== 'function') {
-    return {supported: false, mimeType: null, extension: null, label: 'Video unavailable', formats: [], reason: 'This browser does not support canvas video export.'};
+// Codec and dimension support is negotiated when the user starts an export.
+export function getVideoExportSupport(environment=globalThis){
+  const supported=typeof environment.VideoEncoder==='function'&&typeof environment.VideoFrame==='function';
+  if(!supported)return {supported:false,mimeType:null,extension:null,label:'Video unavailable',formats:[],reason:'High-quality video export needs WebCodecs. Open this page in a current Chrome, Edge or Safari browser.'};
+  return {supported:true,mimeType:'video/mp4',extension:'mp4',label:'Video · High quality',formats:[videoFormatForMime('video/mp4'),videoFormatForMime('video/webm')],reason:null};
+}
+
+export function videoOutputSize(width,height,maxSide=VIDEO_DEFAULTS.maxSide,renderScale=VIDEO_DEFAULTS.renderScale){
+  if(![width,height,maxSide,renderScale].every(n=>Number.isFinite(n)&&n>0))throw new RangeError('Video dimensions must be positive numbers.');
+  const scale=Math.min(renderScale,maxSide/Math.max(width,height));
+  const even=n=>Math.max(2,Math.min(Math.floor(maxSide/2)*2,Math.round(n*scale/2)*2));
+  return {width:even(width),height:even(height)};
+}
+export function videoBitrateForSize(width,height,fps=60){return Math.round(Math.max(16e6,Math.min(64e6,width*height*fps*.14)));}
+
+async function configurations(width,height,{fps,maxSide,renderScale,signal}){
+  const high=videoOutputSize(width,height,maxSide,renderScale),native=videoOutputSize(width,height,maxSide,1);
+  const sizes=[high];if(native.width!==high.width||native.height!==high.height)sizes.push(native);
+  const rates=fps>30?[fps,30]:[fps],configs=[];
+  for(const rate of rates)for(const size of sizes)for(const codec of ['avc','vp9']){
+    checkAbort(signal);
+    const bitrate=videoBitrateForSize(size.width,size.height,rate);
+    const quality=new Quality({quantizer:18,bitrate,bitrateMode:'variable'});
+    const settings={codec,quality,latencyMode:'quality',hardwareAcceleration:'no-preference',contentHint:'detail',alpha:'discard',keyFrameInterval:2};
+    let supported=false;
+    try{supported=await canEncodeVideo(codec,{...size,frameRate:rate,quality,latencyMode:'quality',hardwareAcceleration:'no-preference',contentHint:'detail',alpha:'discard'});}catch{}
+    if(supported)configs.push({...size,fps:rate,codec,quality,settings,bitrate,...videoFormatForMime(codec==='avc'?'video/mp4':'video/webm')});
   }
-  const formats = MIME_CANDIDATES.filter(mime => {
-    try { return Recorder.isTypeSupported(mime); } catch { return false; }
-  }).map(videoFormatForMime);
-  if (!formats.length) return {supported: false, mimeType: null, extension: null, label: 'Video unavailable', formats, reason: 'This browser has no supported MP4 or WebM recorder.'};
-  return {supported: true, ...formats[0], formats, reason: null};
+  return configs;
 }
 
-export function videoOutputSize(width, height, maxSide = 1920) {
-  if (![width, height, maxSide].every(value => Number.isFinite(value) && value > 0)) throw new RangeError('Video dimensions must be positive numbers.');
-  const scale = Math.min(1, maxSide / Math.max(width, height));
-  const even = value => Math.max(2, Math.min(Math.floor(maxSide / 2) * 2, Math.round(value * scale / 2) * 2));
-  return {width: even(width), height: even(height)};
-}
-
-const abortError = () => new DOMException('Video export cancelled.', 'AbortError');
-
-/**
- * Record one loop. renderFrame(ctx, phase) is synchronous and receives source
- * poster coordinates; output scaling is already applied. phase never reaches 1.
- * onProgress is a number from 0 to 1; 1 means the complete Blob is available.
+/** Render each exact timestamp, await encoding backpressure, then finalize.
+ * Drawing may take longer than playback; no wall-clock frame skipping occurs.
+ * renderFrame receives poster coordinates and may return a promise.
  */
-export async function exportVideo({width, height, duration = 8, fps = 30, renderFrame, onProgress = () => {}, signal} = {}) {
-  if (signal?.aborted) throw abortError();
-  if (typeof renderFrame !== 'function') throw new TypeError('A poster frame renderer is required.');
-  if (!Number.isFinite(duration) || duration <= 0 || duration > 60 || !Number.isFinite(fps) || fps < 1 || fps > 60) throw new RangeError('Choose a video duration up to 60 seconds and a frame rate from 1 to 60.');
-  const size = videoOutputSize(width, height), support = getVideoExportSupport();
-  if (!support.supported) throw new Error(support.reason);
-  if (document.hidden) throw new Error('Keep the poster tab visible while exporting a video.');
-
-  const canvas = document.createElement('canvas');
-  canvas.width = size.width;
-  canvas.height = size.height;
-  const ctx = canvas.getContext('2d', {alpha: false});
-  if (!ctx) throw new Error('A video drawing surface could not be created.');
-  const scaleX = size.width / width, scaleY = size.height / height;
-  function draw(phase) {
-    ctx.save();
-    try {
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, size.width, size.height);
-      ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
-      const result = renderFrame(ctx, phase);
-      if (result && typeof result.then === 'function') throw new TypeError('Video frame rendering must be synchronous.');
-    } finally { ctx.restore(); }
-  }
-
-  // Prepare a complete poster before capture starts, so the stream cannot begin
-  // with an empty or selection-overlay frame.
-  draw(0);
-  let stream = null, recorder = null;
-  try {
-    stream = canvas.captureStream(0);
-    let track = stream.getVideoTracks()[0];
-    if (!track) throw new Error('The browser could not create a video track.');
-    if (typeof track.requestFrame !== 'function') {
-      for (const item of stream.getTracks()) item.stop();
-      stream = canvas.captureStream(fps);
-      track = stream.getVideoTracks()[0];
-      if (!track) throw new Error('The browser could not create a video track.');
+export async function exportVideo({width,height,duration=8,fps=60,maxSide=3840,renderScale=2,renderFrame,onSetup=()=>{},onProgress=()=>{},signal}={}){
+  checkAbort(signal);
+  if(typeof renderFrame!=='function')throw new TypeError('A poster frame renderer is required.');
+  if(!Number.isFinite(duration)||duration<=0||duration>60||!Number.isInteger(fps)||fps<1||fps>60)throw new RangeError('Choose a duration up to 60 seconds and a frame rate from 1 to 60.');
+  const support=getVideoExportSupport();if(!support.supported)throw new Error(support.reason);
+  onProgress(0,{stage:'preparing'});
+  const options=await configurations(width,height,{fps,maxSide,renderScale,signal});checkAbort(signal);
+  if(!options.length)throw new Error('This browser cannot encode this poster at high quality. Try Chrome or Edge.');
+  let lastError;
+  for(const config of options){
+    checkAbort(signal);let output,cancelPromise,success=false,framesEncoded=0;
+    const canvas=document.createElement('canvas');canvas.width=config.width;canvas.height=config.height;
+    const ctx=canvas.getContext('2d',{alpha:false,colorSpace:'srgb'});
+    if(!ctx)throw new Error('A video drawing surface could not be created.');
+    const totalFrames=Math.max(1,Math.round(duration*config.fps)),exactDuration=totalFrames/config.fps;
+    const cancel=()=>{if(output&&output.state!=='finalized'&&output.state!=='canceled'&&!cancelPromise)cancelPromise=output.cancel().catch(()=>{});};
+    signal?.addEventListener('abort',cancel,{once:true});
+    try{
+      const info={width:config.width,height:config.height,fps:config.fps,codec:config.codec,targetBitrate:config.bitrate,totalFrames,duration:exactDuration};
+      try{await onSetup(info);}catch(error){throw artworkError(error);}
+      checkAbort(signal);onProgress(0,{...info,stage:'rendering',frame:0});
+      const target=new BufferTarget();output=new Output({format:config.codec==='avc'?new Mp4OutputFormat({fastStart:'in-memory'}):new WebMOutputFormat(),target});
+      const source=new CanvasSource(canvas,{...config.settings,onEncodedPacket:()=>{framesEncoded++;}});
+      output.addVideoTrack(source,{frameRate:config.fps,maximumPacketCount:totalFrames});await output.start();
+      for(let frame=0;frame<totalFrames;frame++){
+        checkAbort(signal);ctx.save();
+        try{
+          ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,canvas.width,canvas.height);
+          ctx.setTransform(config.width/width,0,0,config.height/height,0,0);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+          await renderFrame(ctx,frame/totalFrames,{...info,frame,timestamp:frame/config.fps});
+        }catch(error){throw artworkError(error);}finally{ctx.restore();}
+        checkAbort(signal);
+        await source.add(frame/config.fps,1/config.fps,{keyFrame:frame%(config.fps*2)===0});
+        onProgress(.96*(frame+1)/totalFrames,{...info,stage:'rendering',frame:frame+1});
+        if(frame%3===2)await new Promise(resolve=>setTimeout(resolve,0));
+      }
+      checkAbort(signal);onProgress(.97,{...info,stage:'finalizing',frame:totalFrames});await output.finalize();checkAbort(signal);
+      if(framesEncoded!==totalFrames)throw new Error('The encoder did not preserve every frame.');
+      if(!target.buffer?.byteLength)throw new Error('The encoder did not produce a video file.');
+      const blob=new Blob([target.buffer],{type:config.mimeType});success=true;onProgress(1,{...info,stage:'complete',frame:totalFrames});
+      return {blob,mimeType:config.mimeType,extension:config.extension,label:config.label,...info,framesRendered:totalFrames,framesEncoded,actualBitrate:Math.round(blob.size*8/exactDuration),encoding:'frame-by-frame'};
+    }catch(error){
+      if(signal?.aborted)throw abortError();
+      if(error?.artworkFailure)throw error;
+      lastError=error;
+    }finally{
+      signal?.removeEventListener('abort',cancel);if(!success){cancel();if(cancelPromise)await cancelPromise;}
+      canvas.width=canvas.height=1;
     }
-    // Hardware encoders may reject a MIME that isTypeSupported advertised. Try
-    // the remaining supported containers before showing a failure.
-    for (const format of support.formats) {
-      try {
-        recorder = new MediaRecorder(stream, {mimeType: format.mimeType, videoBitsPerSecond: 10000000});
-        break;
-      } catch { /* Try the next supported native format. */ }
-    }
-    if (!recorder) throw new Error('The browser could not start an MP4 or WebM encoder.');
-    if (signal?.aborted) throw abortError();
-
-    return await new Promise((resolve, reject) => {
-      const chunks = [], totalFrames = Math.max(1, Math.round(duration * fps)), durationMs = duration * 1000, frameMs = durationMs / totalFrames;
-      let finished = false, stopping = false, frameTimer = null, watchdog = null, startedAt = 0, lastFrame = -1, framesRendered = 0;
-      const listeners = [];
-      function listen(target, name, callback) {
-        target.addEventListener(name, callback);
-        listeners.push(() => target.removeEventListener(name, callback));
-      }
-      function cleanup() {
-        clearTimeout(frameTimer);
-        clearTimeout(watchdog);
-        for (const remove of listeners) remove();
-        if (recorder.state !== 'inactive') { try { recorder.stop(); } catch {} }
-        for (const item of stream.getTracks()) item.stop();
-      }
-      function fail(error) {
-        if (finished) return;
-        finished = true;
-        cleanup();
-        reject(error instanceof Error || error instanceof DOMException ? error : new Error('Video export failed.'));
-      }
-      function stopRecording() {
-        if (stopping || finished) return;
-        stopping = true;
-        clearTimeout(frameTimer);
-        clearTimeout(watchdog);
-        watchdog = setTimeout(() => fail(new Error('The video encoder did not finish. Please try again.')), 10000);
-        try { recorder.stop(); } catch (error) { fail(error); }
-      }
-      function paintFrame() {
-        if (finished || stopping) return;
-        try {
-          const elapsed = Math.max(0, performance.now() - startedAt);
-          if (elapsed >= durationMs) { stopRecording(); return; }
-          // Use wall time rather than a cumulative timeout. A delayed callback
-          // skips ahead instead of stretching the loop or batching stale frames.
-          const index = Math.min(totalFrames - 1, Math.floor(elapsed / frameMs));
-          if (index > lastFrame) {
-            draw(index / totalFrames);
-            track.requestFrame?.();
-            lastFrame = index;
-            framesRendered++;
-            onProgress(Math.min(.99, elapsed / durationMs));
-          }
-          if (finished || stopping) return;
-          const nextTime = Math.min(durationMs, (index + 1) * frameMs);
-          frameTimer = setTimeout(paintFrame, Math.max(1, startedAt + nextTime - performance.now()));
-        } catch (error) { fail(error); }
-      }
-
-      listen(recorder, 'dataavailable', event => { if (!finished && event.data?.size) chunks.push(event.data); });
-      listen(recorder, 'error', event => fail(event.error || new Error('The browser video encoder failed.')));
-      listen(recorder, 'start', () => {
-        clearTimeout(watchdog);
-        watchdog = setTimeout(() => fail(new Error('Video export took too long. Please try again.')), durationMs + 10000);
-        paintFrame();
-      });
-      listen(recorder, 'stop', () => {
-        if (finished) return;
-        if (!stopping) { fail(new Error('Video recording ended before the loop finished.')); return; }
-        const mimeType = recorder.mimeType || chunks.find(chunk => chunk.type)?.type || support.mimeType;
-        const format = videoFormatForMime(mimeType);
-        const blob = new Blob(chunks, {type: mimeType});
-        if (!format || !blob.size) { fail(new Error('The encoder did not produce a playable video. Please try again.')); return; }
-        try { onProgress(1); } catch (error) { fail(error); return; }
-        if (finished) return;
-        finished = true;
-        cleanup();
-        resolve({blob, ...format, ...size, duration, fps, framesRendered});
-      });
-      if (signal) listen(signal, 'abort', () => fail(abortError()));
-      listen(document, 'visibilitychange', () => {
-        if (document.hidden) fail(new Error('Video export paused because the poster tab was hidden. Keep it visible and try again.'));
-      });
-      if (signal?.aborted) { fail(abortError()); return; }
-      watchdog = setTimeout(() => fail(new Error('The video encoder did not start. Please try again.')), 5000);
-      try {
-        startedAt = performance.now();
-        recorder.start();
-        // Some recorders emit `start` only after receiving their first sample.
-        // Push that sample now instead of waiting for the event to draw it.
-        draw(0);
-        track.requestFrame?.();
-        lastFrame = 0;
-        framesRendered = 1;
-        onProgress(0);
-      } catch (error) { fail(error); }
-    });
-  } catch (error) {
-    if (recorder?.state !== 'inactive') { try { recorder?.stop(); } catch {} }
-    for (const track of stream?.getTracks() || []) track.stop();
-    throw error;
   }
+  throw new Error(`High-quality video encoding failed. ${lastError?.message||'Try another browser.'}`);
 }

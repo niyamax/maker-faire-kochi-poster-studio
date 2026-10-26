@@ -21,3 +21,7 @@ The source logo is `assets/MF_Kochi_Logo_long.png`; its embedded rendering data 
 ## Demonstration images
 
 The images in `assets/samples/` were generated for this project's layout demonstrations and are provided under the MIT licence. They illustrate sample maker projects. User-uploaded images retain their own rights and are processed locally in the browser.
+
+## Media encoding
+
+Mediabunny 1.62.1 by Vanilagy and contributors is bundled, unmodified, for WebCodecs encoding and MP4/WebM muxing. It is licensed under the Mozilla Public License 2.0; see `licenses/MEDIABUNNY-MPL-2.0.txt`. The corresponding source is distributed in the [exact npm source package](https://registry.npmjs.org/mediabunny/-/mediabunny-1.62.1.tgz) and maintained at [Vanilagy/mediabunny](https://github.com/Vanilagy/mediabunny). This separate dependency retains its licence; the surrounding application code retains its MIT licence.

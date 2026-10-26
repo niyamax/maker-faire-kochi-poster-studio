@@ -449,9 +449,13 @@ $('#export-video').addEventListener('click',async()=>{
   $('#video-title').textContent='Exporting loop';$('#video-progress-wrap').hidden=false;$('#video-preview').hidden=true;$('#download-video').hidden=true;$('#video-progress').value=0;$('#video-details').textContent='';$('#video-progress-label').textContent='Preparing video…';$('#cancel-video').textContent='Cancel';$('#video-dialog').showModal();
   try{
     await preparePosterAssets(project.state.media?.asset);
-    const result=await exportVideo({width:first.width,height:first.height,duration:8,fps:30,signal:controller.signal,renderFrame:(context,phase)=>drawPosterScene(context,createPosterScene({...project.state,...draft,phase})),onProgress:progress=>{$('#video-progress').value=progress;$('#video-progress-label').textContent=`Rendering ${Math.round(progress*100)}%`;}});
+    const result=await exportVideo({width:first.width,height:first.height,duration:8,fps:60,signal:controller.signal,onSetup:info=>{
+      $('#video-details').textContent=`${info.width} × ${info.height} · ${info.fps} fps`;
+    },renderFrame:(context,phase)=>drawPosterScene(context,createPosterScene({...project.state,...draft,phase})),onProgress:(progress,info)=>{
+      $('#video-progress').value=progress;$('#video-progress-label').textContent=info?.stage==='finalizing'?'Finishing video…':info?.totalFrames?`Rendering frame ${info.frame} of ${info.totalFrames}`:'Preparing high-quality video…';
+    }});
     videoController=null;videoResult={...result,url:URL.createObjectURL(result.blob),direction:project.state.direction,format:project.state.format};
-    $('#video-title').textContent='Video ready';$('#video-progress-wrap').hidden=true;$('#video-preview').src=videoResult.url;$('#video-preview').hidden=false;$('#download-video').hidden=false;$('#download-video').textContent=`Download ${result.extension.toUpperCase()}`;$('#cancel-video').textContent='Done';$('#video-details').textContent=`${result.width} × ${result.height} · 8 seconds · 30 fps`;$('#video-preview').play().catch(()=>{});
+    $('#video-title').textContent='Video ready';$('#video-progress-wrap').hidden=true;$('#video-preview').src=videoResult.url;$('#video-preview').hidden=false;$('#download-video').hidden=false;$('#download-video').textContent=`Download ${result.extension.toUpperCase()}`;$('#cancel-video').textContent='Done';$('#video-details').textContent=`${result.width} × ${result.height} · ${result.duration} seconds · ${result.fps} fps · ${(result.blob.size/1048576).toFixed(1)} MB`;$('#video-preview').play().catch(()=>{});
   }catch(error){videoController=null;if(error.name==='AbortError'){$('#video-dialog').close();announce('Video export cancelled.');}else{$('#video-title').textContent='Video export failed';$('#video-progress-label').textContent=error.message;$('#cancel-video').textContent='Close';}}
 });
 for(const id of ['headline','detail','type-font','type-style','type-render','type-layout','type-contrast','type-pressure','type-variation','palette','format','energy','custom-bg','custom-fg','custom-accent','loop','snapping','motion-curve']){

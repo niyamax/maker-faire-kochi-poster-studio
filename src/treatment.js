@@ -24,7 +24,7 @@ export function layoutTreatment(words,rect,id,phase=0,energy=1,settings={},curve
   const profile=treatmentSettings(id,settings);
   const rhythm=[[1.55,.62,.86,.52,1.26],[.68,1.60,.62,1.34,.8],[.88,1.46,.66,1.14,.8]];
   const coefficient=id==='packed'?.32:profile.mode==='flex'?.92:.35;
-  const rowCount=Math.max(32,String(words).split(/\s+/).length),colCount=Math.max(32,...String(words).split('\n').map(line=>line.length));
+  const rowCount=Math.max(32,String(words).split('\n').length),colCount=Math.max(32,...String(words).split('\n').map(line=>line.length));
   const weights=Array.from({length:rowCount},(_,row)=>Array.from({length:colCount},(_,col)=>1+(rhythm[row%3][col%5]-1)*profile.contrast*coefficient));
   const metrics=char=>profile.font==='original'?glyphMetrics(char):fontGlyphMetrics(profile.font,char)?.width;
   const options={width:rect.w,height:rect.h,mode:profile.mode,layout:profile.layout,spread:profile.spread,pressure:profile.pressure,variation:profile.variation,weights,metrics};

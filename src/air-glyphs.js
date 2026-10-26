@@ -60,7 +60,10 @@ function skeletons(d) {
     point = c;
   }
   for (const path of paths) {
-    path.closed = path.points.length > 8 && dist(path.points[0], path.points.at(-1)) < .005;
+    // Flex represents punctuation dots with a tiny round-capped segment. Its
+    // endpoints are close, but it is a point stroke rather than a closed loop.
+    path.point = path.points.every(point => dist(path.points[0], point) < .005);
+    path.closed = !path.point && path.points.length > 8 && dist(path.points[0], path.points.at(-1)) < .005;
     if (path.closed) path.points.pop();
   }
   return paths;
@@ -133,7 +136,9 @@ export function airGlyphPaths(character, width, height, options = {}) {
   const narrow = glyphMetrics(char) <= .35;
   const stacked = 'ABGPRS2345689&?@'.includes(char);
   const ring = 'OQ0'.includes(char);
-  const cap = Math.min(W * (narrow ? .46 : ring ? .205 : .235), H * (stacked ? .135 : .195));
+  const punctuated = char === '?' || char === '!';
+  // Preserve a clear gap above the lower dot, including in wide/inflated cells.
+  const cap = Math.min(W * (narrow ? .46 : ring ? .205 : .235), H * (punctuated ? .115 : stacked ? .135 : .195));
   const radius = cap * (.42 + pressure * .58) * clamp(finite(options.volume,1),.3,1.2);
   // A small amount of overfill supplies broad, flat contact rather than a gap
   // between the drawing's edge and the visible bounds of the packed cell.
@@ -145,6 +150,11 @@ export function airGlyphPaths(character, width, height, options = {}) {
 
   paths.forEach((path, pathIndex) => {
     const points = path.points, count = points.length;
+    if (path.point) {
+      const center = points.reduce((total, point) => ({x:total.x+point.x/count,y:total.y+point.y/count}), {x:0,y:0});
+      output.push(disk(center, radius, W, H));
+      return;
+    }
     const lengths = [0];
     for (let i = 1; i < count; i++) lengths.push(lengths.at(-1) + dist(points[i], points[i - 1]));
     const total = lengths.at(-1) + (path.closed ? dist(points[0], points.at(-1)) : 0) || 1;

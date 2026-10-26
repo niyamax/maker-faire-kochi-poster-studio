@@ -58,8 +58,7 @@ export function createPosterScene({direction='air',palette='maker',format='poste
   const {w:width,h:height}=size,short=Math.min(width,height),pad=short*.065,frameW=width-pad*2;
   const scene={width,height,margin:pad,background:colors.bg,ops:[],direction:spec.id,description:spec.description};
   const fullType={x:short*.035,y:height*.055,w:width-short*.07,h:height*.705};
-  let lines=cleanHeadline(headline??spec.headline).split('\n').map(line=>line.trim()).filter(Boolean);if(!lines.length)lines=['MAKE'];
-  if(width<height)lines=lines.flatMap(line=>line.split(/ +/));
+  let lines=cleanHeadline(headline??spec.headline).split('\n').filter(line=>line.trim().length>0);if(!lines.length)lines=['MAKE'];
 
   // Footer placement remains independent of the image layout.
   const bodySize=short*.026,sideBySide=width>=height,detailW=frameW*(sideBySide?.52:.75);
@@ -99,8 +98,6 @@ export function createPosterScene({direction='air',palette='maker',format='poste
   if(photo&&image.layout==='cutout')scene.ops.push(photo.op);
   if(photo){
     scene.media={...photo,layout:image.layout,width,height};scene.regions.image=photo.frame;
-    const r=scene.regions.details,f=photo.frame;
-    if(r.w>0&&r.x<f.x+f.w&&r.x+r.w>f.x&&r.y<f.y+f.h&&r.y+r.h>f.y)scene.ops.push({kind:'rect',x:r.x-8,y:r.y-6,w:r.w+16,h:r.h+12,fill:colors.bg});
   }
   scene.ops.push(...footerOps);scene.cells=letters.cells;return scene;
 }

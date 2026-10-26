@@ -40,10 +40,10 @@ export function shareHeroWidth(widths,hero,strain){
   return result;
 }
 
-function spaceBreaks(text){
-  const breaks=[];let col=-1;
-  for(const char of text){if(char===' '){if(col>=0)breaks[col]=true;}else col++;}
-  return breaks;
+function spaceSlots(text,count){
+  const slots=Array(count+1).fill(0);let before=0;
+  for(const char of text){if(char===' ')slots[before]++;else before++;}
+  return slots;
 }
 
 /** Refine inside the selected row arrangement. The caller retains original
@@ -59,18 +59,22 @@ export function craftTreatmentLayout(layout,profile,phase,energy,curve){
       const emphasis=index===hero&&group.length>1?1+profile.contrast*exaggeration:1;
       return metric*emphasis;
     });
-    const wordBreaks=spaceBreaks(row.text);
+    const spaces=spaceSlots(row.text,group.length),spaceCount=sum(spaces);
+    const spaceWeight=(fontGlyphMetrics(profile.font,' ')?.advance||.36)*(profile.mode==='air'?.7:1.2);
     const nominal=Math.min(row.h*.032,Math.min(layout.width,layout.height)*(profile.mode==='flex'?.009:.007));
-    let widths=scores.map(value=>row.w*value/sum(scores)),gaps=[];
+    let widths=scores.map(value=>row.w*value/sum(scores)),gaps=[],leading=0;
     for(let pass=0;pass<2;pass++){
-      gaps=group.slice(0,-1).map((cell,index)=>wordBreaks[index]?nominal*3.2:opticalPairGap(profile.font,{...cell,w:widths[index]},{...group[index+1],w:widths[index+1]},nominal));
+      gaps=group.slice(0,-1).map((cell,index)=>spaces[index+1]?nominal:opticalPairGap(profile.font,{...cell,w:widths[index]},{...group[index+1],w:widths[index+1]},nominal));
       // Keep long headlines readable even on unusually small artboards.
       const scale=Math.min(1,row.w*.16/(sum(gaps)||1));gaps=gaps.map(gap=>gap*scale);
-      widths=scores.map(value=>(row.w-sum(gaps))*value/sum(scores));
+      const advance=(row.w-sum(gaps))/(sum(scores)+spaceCount*spaceWeight);
+      widths=scores.map(value=>advance*value);
+      leading=spaces[0]*spaceWeight*advance;
+      gaps=gaps.map((gap,index)=>gap+spaces[index+1]*spaceWeight*advance);
     }
     const responses=connectedRowResponses(phase,group,hero,energy,curve,motion);
     widths=shareHeroWidth(widths,hero,responses[hero].width-1);
-    const refined=[];let x=row.x;
+    const refined=[];let x=row.x+leading;
     for(let index=0;index<group.length;index++){
       const original=group[index],response=responses[index],isHero=index===hero;
       // Squash has a smooth maximum at the resting pose. Clipping a sinusoid

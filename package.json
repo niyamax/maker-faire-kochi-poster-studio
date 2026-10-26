@@ -32,5 +32,8 @@
     "creative-coding",
     "maker-faire",
     "canvas"
-  ]
+  ],
+  "dependencies": {
+    "mediabunny": "1.62.1"
+  }
 }

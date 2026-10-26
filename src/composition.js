@@ -4,8 +4,8 @@ import { glyphMetrics } from './flex-glyphs.js';
  * Deterministic, space-sharing typography. Every letter owns a non-overlapping
  * rectangle; enlarging its weight redistributes the same finite row width.
  *
- * `layout`: one of LAYOUT_IDS. Stack uses one word per row unless newlines are
- * supplied. Centered uses a shaped centred rag; Offset alternates open edges.
+ * `layout`: one of LAYOUT_IDS. Only explicit newlines create rows; spaces stay
+ * within a row. Centered uses a shaped centred rag; Offset alternates open edges.
  * `weights[row][col]` and `rowWeights[row]` are positive multipliers. Missing or
  * invalid multipliers are 1. Focus uses zero-based, fractional row/col indices;
  * its amount is -1…1 (negative contracts, positive expands).
@@ -39,13 +39,10 @@ export const LAYOUT_PRESETS = Object.freeze([
 ].map(preset => Object.freeze(preset)));
 export const LAYOUT_IDS = Object.freeze(LAYOUT_PRESETS.map(preset => preset.id));
 
-function textRows(text, layout) {
-  const source = String(text ?? 'MAKER\nFAIRE\nKOCHI').replace(/\r\n?/g, '\n').trim();
-  if (!source) return [];
-  const lines = source.includes('\n')
-    ? source.split('\n').map(line => line.trim().replace(/[^\S\n]+/g, ' ')).filter(Boolean)
-    : source.split(/\s+/);
-  return lines;
+function textRows(text) {
+  const source = String(text ?? 'MAKER\nFAIRE\nKOCHI').replace(/\r\n?/g, '\n');
+  if (!source.trim()) return [];
+  return source.split('\n').map(line => line.replace(/[^\S\n]/g, ' ')).filter(line => line.trim().length > 0);
 }
 
 export function layoutComposition(text, options = {}) {
@@ -57,7 +54,7 @@ export function layoutComposition(text, options = {}) {
   const pressure = unit(options.pressure, mode === 'air' ? .7 : .4);
   const variation = unit(options.variation, .7);
   const metric = char => { const value = typeof options.metrics === 'function' ? options.metrics(char) : glyphMetrics(char); return Math.max(.18, finite(value, glyphMetrics(char))); };
-  const lines = textRows(text, layout);
+  const lines = textRows(text);
   const cells = [], rows = [];
   if (!lines.length) return { cells, width, height, rows };
 
