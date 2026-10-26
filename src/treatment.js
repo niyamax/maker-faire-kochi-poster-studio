@@ -10,7 +10,7 @@ import {glyphStrokeWidth,easeInkLimit} from './glyph-anatomy.js';
 export const TREATMENT_PROFILES=Object.freeze({
   air:{mode:'air',font:'original',style:'jostle',render:'solid',contrast:.62,spread:.035,pressure:.84,variation:0},
   flex:{mode:'flex',font:'original',style:'original',render:'line',contrast:.70,spread:.32,pressure:.24,variation:0},
-  packed:{mode:'air',font:'bowlby',style:'jostle',render:'solid',contrast:.46,spread:.46,pressure:.84,variation:0},
+  packed:{mode:'air',font:'original',style:'jostle',render:'solid',contrast:.46,spread:.46,pressure:.84,variation:0},
 });
 export function treatmentSettings(id,values={}){
   const base=TREATMENT_PROFILES[id]||TREATMENT_PROFILES.air;
@@ -61,7 +61,7 @@ export function appendTreatmentArtwork(scene,letters,colors,rect){
     if(p.render==='line'&&!geometry.strokeOnly)geometry.weight=p.mode==='air'?airOutline:Math.min(short*.7,p.strokeWidth);
     if(inset){const m=info.matrix;info.matrix=[m[0],m[1],m[2],m[3],m[4]+(m[0]+m[2])*inset,m[5]+(m[1]+m[3])*inset];}
     for(const layer of paintLayers(p.mode,p.render,info,{fg:colors.fg,bg:colors.bg,weight:geometry.weight,scale:1}))for(const d of geometry.paths){
-      scene.ops.push({kind:'path',d,fill:geometry.strokeOnly?'none':layer.fill,matrix:info.matrix,...(layer.stroke!=='none'?{stroke:layer.stroke,width:layer.width}:{})});
+      scene.ops.push({kind:'path',d,fill:geometry.strokeOnly?'none':layer.fill,matrix:info.matrix,letterIndex:cell.index,letterInk:!layer.knockout,...(layer.stroke!=='none'?{stroke:layer.stroke,width:layer.width}:{})});
     }
   }
 }

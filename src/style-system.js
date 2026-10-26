@@ -22,7 +22,7 @@ export function styleCell(cell,{style='original',cells=[],gesture,focus,width,he
   return {matrix:[c,s,-s,c,e,f],angle,seam:style==='jostle'};
 }
 export function paintLayers(mode,render,info,{fg,bg,weight,scale=1}){
-  if(mode==='air'&&render==='line')return [{fill:fg,stroke:fg,width:weight},{fill:bg,stroke:'none',width:0}];
-  if(mode==='air')return [...(info.seam?[{fill:bg,stroke:bg,width:2.4/scale}]:[]),{fill:fg,stroke:'none',width:0}];
+  if(mode==='air'&&render==='line')return [{fill:fg,stroke:fg,width:weight},{fill:bg,stroke:'none',width:0,knockout:true}];
+  if(mode==='air')return [...(info.seam?[{fill:bg,stroke:bg,width:2.4/scale,knockout:true}]:[]),{fill:fg,stroke:'none',width:0}];
   return [{fill:render==='solid'?fg:'none',stroke:fg,width:weight}];
 }

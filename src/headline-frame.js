@@ -1,14 +1,16 @@
+import {resizeRect} from './resize-rect.js';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-export const HEADLINE_FRAME_DEFAULTS=Object.freeze({fit:'scale',box:null,basis:null});
+export const HEADLINE_FRAME_DEFAULTS=Object.freeze({fit:'scale',box:null,basis:null,locked:false});
 
 /** Store placement relative to the poster so saved projects survive a format
  * change. The frame is independent of animation phase and letter offsets. */
 export function normalizeHeadlineFrame(value){
   const fit=value?.fit==='fill'?'fill':'scale',box=value?.box;
+  const locked=typeof value?.locked==='boolean'?value.locked:Boolean(box&&fit==='scale');
   const basis=value?.basis&&['w','h'].every(key=>Number.isFinite(value.basis[key])&&value.basis[key]>0)?{w:clamp(value.basis.w,1,10000),h:clamp(value.basis.h,1,10000)}:null;
-  if(!box||!['x','y','w','h'].every(key=>Number.isFinite(box[key])))return {fit,box:null,basis:null};
+  if(!box||!['x','y','w','h'].every(key=>Number.isFinite(box[key])))return {fit,box:null,basis:null,locked};
   const w=clamp(box.w,.01,1),h=clamp(box.h,.01,1);
-  return {fit,box:{x:clamp(box.x,0,1-w),y:clamp(box.y,0,1-h),w,h},basis};
+  return {fit,box:{x:clamp(box.x,0,1-w),y:clamp(box.y,0,1-h),w,h},basis,locked};
 }
 export function constrainHeadlineRect(rect,width,height){
   const w=clamp(rect.w,Math.min(32,width),width),h=clamp(rect.h,Math.min(32,height),height);
@@ -25,35 +27,20 @@ export function resolveHeadlineFrame(automatic,value,width,height){
   }
   return rect;
 }
-export function headlineSettingsFromRect(rect,width,height,fit='scale',basis=null){
+export function headlineSettingsFromRect(rect,width,height,fit='scale',basis=null,locked=false){
   const box=constrainHeadlineRect(rect,width,height);
-  return normalizeHeadlineFrame({fit,box:{x:box.x/width,y:box.y/height,w:box.w/width,h:box.h/height},basis});
+  return normalizeHeadlineFrame({fit,box:{x:box.x/width,y:box.y/height,w:box.w/width,h:box.h/height},basis,locked});
 }
 
-/** Corners scale uniformly. In Fill frame, a side changes that dimension;
- * in Scale, a side preserves the frame's proportions around its opposite edge. */
-export function dragHeadlineRect(rect,start,point,handle,width,height,fit='scale'){
-  const dx=point.x-start.x,dy=point.y-start.y;
-  if(!handle)return constrainHeadlineRect({...rect,x:rect.x+dx,y:rect.y+dy},width,height);
-  const horizontal=/[ew]/.test(handle),vertical=/[ns]/.test(handle),corner=horizontal&&vertical;
-  const sx=handle.includes('w')?-1:1,sy=handle.includes('n')?-1:1;
-  const anchor={x:horizontal?rect.x+(sx<0?rect.w:0):rect.x+rect.w/2,y:vertical?rect.y+(sy<0?rect.h:0):rect.y+rect.h/2};
-  let w=rect.w,h=rect.h;
-  if(corner||fit==='scale'){
-    const factor=corner?1+(dx*sx*w+dy*sy*h)/(w*w+h*h):horizontal?1+dx*sx/w:1+dy*sy/h;
-    const maxW=horizontal?(sx>0?width-anchor.x:anchor.x):2*Math.min(anchor.x,width-anchor.x);
-    const maxH=vertical?(sy>0?height-anchor.y:anchor.y):2*Math.min(anchor.y,height-anchor.y);
-    const size=clamp(factor,Math.min(1,Math.max(32/w,32/h)),Math.min(maxW/w,maxH/h));
-    w*=size;h*=size;
-  }else{
-    if(horizontal)w=clamp(w+dx*sx,32,sx>0?width-anchor.x:anchor.x);
-    if(vertical)h=clamp(h+dy*sy,32,sy>0?height-anchor.y:anchor.y);
-  }
-  return constrainHeadlineRect({x:horizontal?anchor.x+(sx<0?-w:0):anchor.x-w/2,y:vertical?anchor.y+(sy<0?-h:0):anchor.y-h/2,w,h},width,height);
+/** Corners always keep proportions; unlocked sides reshape independently. */
+export function dragHeadlineRect(rect,start,point,handle,width,height,locked=false){
+  if(!handle)return constrainHeadlineRect({...rect,x:rect.x+point.x-start.x,y:rect.y+point.y-start.y},width,height);
+  const keep=typeof locked==='string'?locked==='scale':locked;
+  return resizeRect(rect,start,point,{x:0,y:0,w:width,h:height},handle,{locked:keep,minW:Math.min(32,rect.w),minH:Math.min(32,rect.h),maxW:width,maxH:height});
 }
-export function headlineRectFromValue(rect,key,value,width,height,fit){
+export function headlineRectFromValue(rect,key,value,width,height,locked=false){
   if(key==='x'||key==='y')return constrainHeadlineRect({...rect,[key]:value},width,height);
-  if(fit==='fill')return constrainHeadlineRect({...rect,[key]:value},width,height);
+  if(!(typeof locked==='string'?locked==='scale':locked))return constrainHeadlineRect({...rect,[key]:value},width,height);
   const factor=Math.max(Math.min(1,Math.max(32/rect.w,32/rect.h)),value/rect[key]);
   const size=Math.min(factor,(width-rect.x)/rect.w,(height-rect.y)/rect.h);
   return constrainHeadlineRect({...rect,w:rect.w*size,h:rect.h*size},width,height);

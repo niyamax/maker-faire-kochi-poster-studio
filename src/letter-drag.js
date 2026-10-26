@@ -1,4 +1,5 @@
 import {HEADLINE_MAX_LENGTH} from './content-limits.js';
+import {resizeRect} from './resize-rect.js';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const finite=(n,f=0)=>Number.isFinite(Number(n))?Number(n):f;
 export function normalizeLetterOffsets(value){
@@ -8,7 +9,7 @@ export function normalizeLetterOffsets(value){
     if(entry==null)return null;
     if(typeof entry!=='object'||['x','y','w','h'].some(key=>entry[key]!==undefined&&!Number.isFinite(entry[key])))throw Error('Invalid letter position.');
     const stable=entry.basis==='rest';
-    return {x:clamp(finite(entry.x),-1,1),y:clamp(finite(entry.y),-1,1),w:clamp(finite(entry.w,1),stable?.05:.45,stable?8:1.8),h:clamp(finite(entry.h,1),stable?.05:.45,stable?8:1.8),...(stable?{basis:'rest'}:{})};
+    return {x:clamp(finite(entry.x),-1,1),y:clamp(finite(entry.y),-1,1),w:clamp(finite(entry.w,1),stable?.05:.45,stable?8:1.8),h:clamp(finite(entry.h,1),stable?.05:.45,stable?8:1.8),...(stable?{basis:'rest'}:{}),...(typeof entry.locked==='boolean'?{locked:entry.locked}:{})};
   });
 }
 const edited=entry=>entry&&(Math.abs(entry.x||0)+Math.abs(entry.y||0)+Math.abs((entry.w??1)-1)+Math.abs((entry.h??1)-1)>1e-8);
@@ -89,27 +90,22 @@ export function dragLetterOffset(base,visible,start,point,bounds,action='move'){
 
 /** Edge/corner handles reshape the grabbed letter without switching tools.
  * The opposite edges stay fixed while the neighbouring letters yield. */
-export function resizeLetterOffset(base,visible,start,point,bounds,handle,{min=.45,max=1.8}={}){
-  const dx=point.x-start.x,dy=point.y-start.y;
-  let left=visible.x,right=visible.x+visible.w,top=visible.y,bottom=visible.y+visible.h;
-  if(handle.includes('e'))right=clamp(right+dx,left+base.w*min,Math.min(bounds.x+bounds.w,left+base.w*max));
-  if(handle.includes('w'))left=clamp(left+dx,Math.max(bounds.x,right-base.w*max),right-base.w*min);
-  if(handle.includes('s'))bottom=clamp(bottom+dy,top+base.h*min,Math.min(bounds.y+bounds.h,top+base.h*max));
-  if(handle.includes('n'))top=clamp(top+dy,Math.max(bounds.y,bottom-base.h*max),bottom-base.h*min);
-  return {x:(left-base.x)/bounds.w,y:(top-base.y)/bounds.h,w:(right-left)/base.w,h:(bottom-top)/base.h};
+export function resizeLetterOffset(base,visible,start,point,bounds,handle,{min=.45,max=1.8,locked=false}={}){
+  const rect=resizeRect(visible,start,point,bounds,handle,{locked,minW:base.w*min,minH:base.h*min,maxW:base.w*max,maxH:base.h*max});
+  return {x:(rect.x-base.x)/bounds.w,y:(rect.y-base.y)/bounds.h,w:rect.w/base.w,h:rect.h/base.h};
 }
 
 /** Invert the current motion and image response before saving an edit.
  * A zero-distance grab reproduces the exact rest pose instead of baking the
  * currently animated scale/translation into the next animation cycle.
  */
-export function letterOffsetFromDisplay(base,rest,visible,start,point,bounds,handle=null,unreacted=visible){
+export function letterOffsetFromDisplay(base,rest,visible,start,point,bounds,handle=null,unreacted=visible,{locked=false}={}){
   const sx=unreacted.w/Math.max(.0001,rest.w),sy=unreacted.h/Math.max(.0001,rest.h);
   const dx=unreacted.x+unreacted.w/2-rest.x-rest.w/2,dy=unreacted.y+unreacted.h/2-rest.y-rest.h/2;
   const imageX=visible.w/Math.max(.0001,unreacted.w),imageY=visible.h/Math.max(.0001,unreacted.h);
   const toMotion=rect=>({x:rect.x+rect.w/2+dx-rect.w*sx/2,y:rect.y+rect.h/2+dy-rect.h*sy/2,w:rect.w*sx,h:rect.h*sy});
   const motionBase=toMotion(base),displayBase={x:visible.x+(motionBase.x-unreacted.x)*imageX,y:visible.y+(motionBase.y-unreacted.y)*imageY,w:motionBase.w*imageX,h:motionBase.h*imageY};
-  const limits={min:Math.min(.45,rest.w/base.w,rest.h/base.h),max:Math.max(1.8,rest.w/base.w,rest.h/base.h)};
+  const limits={min:Math.min(.45,rest.w/base.w,rest.h/base.h),max:Math.max(1.8,rest.w/base.w,rest.h/base.h),locked};
   const edit=handle?resizeLetterOffset(displayBase,visible,start,point,bounds,handle,limits):dragLetterOffset(displayBase,visible,start,point,bounds,'move');
   const w=Math.min(bounds.w,displayBase.w*edit.w),h=Math.min(bounds.h,displayBase.h*edit.h);
   const x=clamp(displayBase.x+edit.x*bounds.w,bounds.x,bounds.x+bounds.w-w),y=clamp(displayBase.y+edit.y*bounds.h,bounds.y,bounds.y+bounds.h-h);

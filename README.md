@@ -7,7 +7,7 @@ Make expressive posters with letters that stretch, share space and move together
 ## What you can make
 
 - **Three treatments:** Air, Flex and Packed. Switching treatments keeps your font, layout, headline, supporting text and saved positions.
-- **Expressive type:** seven font choices, optical spacing, selective exaggeration, inflation and outline drawing.
+- **Expressive type:** Studio Sans lettering, optical spacing, selective exaggeration, inflation and outline drawing.
 - **Direct editing:** drag letters, reshape them with handles, and move or resize the supporting text and logo.
 - **Cohesive layouts:** shared margins, snapping, alignment controls and portrait, story, square and banner formats.
 - **Motion posters:** seamless 20-second loops with Smooth, Steady, Punchy and Elastic curves.
@@ -38,10 +38,10 @@ PORT=8801 npm run dev
 ## Create a poster
 
 1. Enter a headline and supporting text. Headlines accept **120 characters**, including spaces and line breaks. Press Enter to start a new poster line. Repeated spaces, leading spaces and trailing spaces are retained for gaps and indentation in every format.
-2. Choose **Air**, **Flex** or **Packed** above the canvas, then select a font and layout in the properties panel.
+2. Choose **Air**, **Flex** or **Packed** above the canvas, then select a drawing style and layout in the properties panel. Studio Sans is the default for all three treatments; the font picker is temporarily hidden. Older project files retain their saved font.
 3. Adjust **Contrast** for emphasis, **Inflation** or **Stroke** for drawing weight, and **Character** for shape variation.
-4. Select **Headline** in Layers to move the whole headline frame. Drag its body, use corner or side handles, or enter X, Y, width and height in poster pixels. **Scale** keeps the letter shapes proportional; **Fill frame** lets side handles and independent width/height values reshape the lettering inside the frame. **Fit width**, **Fit height**, **Centre** and **Reset frame** provide quick placement actions. Proportional fitting stays inside the poster margins, so the other dimension can limit its size.
-5. Choose **Letters**, or double-click a headline letter, to adjust individual letters. Drag a letter to move it and pull its handles to reshape it; nearby letters make room. Frame placement and individual adjustments are saved separately. Animation runs within the saved frame and does not bake an animated pose into the edit. Manual line breaks and repeated spaces are retained. Select supporting text to align its lines left, centre or right. Text and logo blocks can also be resized or aligned to the poster.
+4. Hover over the artwork to preview what a click will select. At headline-container level, clicking or dragging anywhere inside the headline keeps the whole container selected, including over its letters. A drag retains its initial target until release. **Width**, **Height** and the chain-shaped proportion lock apply to the selected headline or letter. Corners always resize proportionally. Unlocked side handles and numeric dimensions reshape independently; enabling the lock links both dimensions. New objects start unlocked, and older projects retain an explicit proportional headline setting. Expand **Position** for exact distances from the left and top edges; the headline's **Centre on poster** action is there too. **Reset** restores only the current selection's placement or letter adjustments.
+5. Double-click the headline, or press **Enter**, to enter its letters, selecting the letter beneath the pointer when there is one. Within that scope, hovering previews individual letter ink and a single click selects the previewed letter. Clicking an empty gap or frame edge reselects the parent headline and leaves letter scope. Press **Escape** to return from a letter to the headline frame; press it again to clear the headline selection. Drag a letter to move it and pull its handles to reshape it; nearby letters make room. Each letter's proportion lock is saved with its adjustments. Frame placement and individual adjustments are saved separately. Animation runs within the saved frame and does not bake an animated pose into the edit. Manual line breaks and repeated spaces are retained. Select supporting text to align its lines left, centre or right. Text and logo blocks can also be resized or aligned to the poster.
 6. Pick a palette or set custom colours. Press Play to preview motion, then export.
 
 Studio Sans preserves uniform strokes while protecting G/C openings, E/F bar spacing and closed counters. Inflation and outline limits ease back as a letter becomes compressed. The G's crossbar accounts for its rounded tip and the bowl beside it. Flex uses the same constrained stroke width for construction and drawing, and its centreline paths remain stroked in Solid drawing so their counters stay open. Preview and exports share this geometry.
@@ -67,6 +67,8 @@ Upload PNG, JPG or WebP files up to 20 MB. The browser resizes and re-encodes im
 | Action | Control |
 | --- | --- |
 | Move a selected item | Arrow keys |
+| Enter headline letters | Enter or double-click |
+| Select the previous or next letter | [ or ] |
 | Bypass snapping while dragging | Hold Alt |
 | Cancel a drag or clear selection | Escape |
 | Play or pause with canvas focus | Space |

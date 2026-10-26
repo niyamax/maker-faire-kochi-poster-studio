@@ -149,6 +149,42 @@ export function hitPosterImage(scene,point,{includeTransparent=false}={}){
   const x=Math.min(63,Math.floor((point.x-r.x)/r.w*64)),y=Math.min(63,Math.floor((point.y-r.y)/r.h*64));
   return mask[(y*64+x)*4+3]>24;
 }
+
+let letterHitContext;
+/** Pick the rendered ink, including outline knockouts and transformed glyphs.
+ * A counter or a gap is empty frame area, rather than an invisible letter box.
+ * This metadata never enters SVG output or changes any drawing operation. */
+export function hitPosterLetter(scene,point,{tolerance=0}={}){
+  if(!scene?.cells?.length)return null;
+  const pad=tolerance+2,candidates=new Map(scene.cells.filter(c=>point.x>=c.x-pad&&point.x<=c.x+c.w+pad&&point.y>=c.y-pad&&point.y<=c.y+c.h+pad).map(c=>[c.index,c]));
+  if(!candidates.size)return null;
+  letterHitContext??=document.createElement('canvas').getContext('2d');
+  const test=letterHitContext,ops=scene.ops.filter(op=>op.kind==='path'&&candidates.has(op.letterIndex)).reverse();
+  test.setTransform(1,0,0,1,0,0);test.lineCap='round';test.lineJoin='round';
+  const local=(p,m)=>{
+    if(!m)return p;const [a,b,c,d,e,f]=m,det=a*d-b*c;
+    return Math.abs(det)<1e-12?null:{x:(d*(p.x-e)-c*(p.y-f))/det,y:(a*(p.y-f)-b*(p.x-e))/det};
+  };
+  function at(p){
+    for(const op of ops){
+      if(op.opacity===0)continue;
+      if(op.clip&&(p.x<op.clip.x||p.x>op.clip.x+op.clip.w||p.y<op.clip.y||p.y>op.clip.y+op.clip.h))continue;
+      if(op.pathClip){const q=local(p,op.pathClip.matrix);if(!q||!test.isPointInPath(canvasPath(op.pathClip.d),q.x,q.y))continue;}
+      const q=local(p,op.matrix);if(!q)continue;
+      const path=canvasPath(op.d),filled=op.fill!=='none'&&test.isPointInPath(path,q.x,q.y,op.rule||'nonzero');
+      test.lineWidth=op.width||.0001;
+      const stroked=op.stroke&&test.isPointInStroke(path,q.x,q.y);
+      if(filled||stroked)return op.letterInk===false?null:candidates.get(op.letterIndex);
+    }
+    return null;
+  }
+  const direct=at(point);if(direct||tolerance<=0)return direct;
+  for(const radius of [tolerance*.5,tolerance])for(let i=0;i<12;i++){
+    const angle=i*Math.PI/6,near=at({x:point.x+Math.cos(angle)*radius,y:point.y+Math.sin(angle)*radius});
+    if(near)return near;
+  }
+  return null;
+}
 export function drawPosterScene(ctx,scene){
   ctx.save();ctx.fillStyle=scene.background;ctx.fillRect(0,0,scene.width,scene.height);
   for(const op of scene.ops){ctx.save();if(op.opacity!==undefined)ctx.globalAlpha*=op.opacity;

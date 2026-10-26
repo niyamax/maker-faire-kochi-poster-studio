@@ -5,7 +5,7 @@
  * truth for loading, rendering and export.
  */
 export const VISIBLE_DIRECTION_IDS=Object.freeze(['air','flex','packed']);
-export const VISIBLE_FONT_IDS=Object.freeze(['original','geist','inter','anton','bowlby','dela','bricolage']);
+export const VISIBLE_FONT_IDS=Object.freeze(['original']);
 export const VISIBLE_LAYOUT_IDS=Object.freeze(['stack','centered','offset']);
 export const VISIBLE_STYLE_IDS=Object.freeze(['original','jostle']);
 export const VISIBLE_PALETTE_IDS=Object.freeze(['maker-red','maker','maker-cyan','noise']);
