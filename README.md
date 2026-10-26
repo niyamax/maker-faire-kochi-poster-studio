@@ -94,11 +94,20 @@ Headlines use the supported Latin uppercase letters, numbers and punctuation. Su
 | `npm run dev` | Start the local editor with JavaScript and CSS rebuilds |
 | `npm run build` | Generate the distributable application in `dist/` |
 | `npm run preview` | Serve an existing `dist/` build locally |
+| `npm run protect:main` | Install the local guard against publishing held experiments |
 | `npm test` | Run the geometry, motion, state and export tests |
 
 The `dist/` folder can be served by a static web host. It includes the application, runtime assets, licence and asset notices. Keep these files together when distributing the build. The development server is for local use.
 
 The npm package has `private: true` to prevent accidental publication to the npm registry; this does not restrict the public GitHub repository or the MIT licence.
+
+### Development isolation
+
+`main` contains the production editor. The held 3D and poster experiments live on the local-only branch `codex/3d-poster-experiments`, checked out separately in `../maker-faire-kochi-3d-lab`. Keep that branch local and do not merge its source or copy its generated files into `main` without explicit approval.
+
+Each checkout has its own dependencies and `dist/` directory. Use port **8800** for the production editor and **8820** for the experiment preview. Save a project file before moving work between these addresses because browser storage is separate for each port.
+
+Production builds clear `dist/` and reject experimental source paths, bundled inputs and preview outputs. CI runs this guarded build for `main` and pull requests targeting it. Run `npm run protect:main` after cloning to install the additional Git push guard; it blocks publishing the held branch and pushing experimental files to `main`.
 
 ### Source map
 

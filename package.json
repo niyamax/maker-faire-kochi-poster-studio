@@ -12,6 +12,7 @@
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
     "preview": "node scripts/dev.mjs --preview",
+    "protect:main": "node scripts/install-production-hook.mjs",
     "test": "node --test tests/*.test.mjs",
     "check": "npm test && npm run build"
   },

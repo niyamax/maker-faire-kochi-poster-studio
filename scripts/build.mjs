@@ -1,7 +1,8 @@
 import {build} from 'esbuild';
-import {mkdir,copyFile,cp} from 'node:fs/promises';
+import {mkdir,copyFile,cp,rm} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
+import {assertProductionSources,assertProductionInputs,assertProductionOutput,prepareProductionBuild} from './production-scope.mjs';
 
 export const root=fileURLToPath(new URL('../',import.meta.url));
 export async function copyPublic(){
@@ -21,12 +22,20 @@ export const buildOptions={
   outdir:'dist',
   assetNames:'assets/[name]-[hash]',
   bundle:true,
+  metafile:true,
   format:'iife',
   target:'es2020',
   minify:true,
   legalComments:'none',
   loader:{'.woff2':'file'},
   logLevel:'info',
-  plugins:[{name:'public-assets',setup(builder){builder.onEnd(async result=>{if(!result.errors.length)await copyPublic();});}}],
+  plugins:[{name:'production-scope',setup(builder){
+    builder.onStart(()=>assertProductionSources(root));
+    builder.onEnd(async result=>{
+      if(result.errors.length)return;
+      try{assertProductionInputs(result.metafile);await copyPublic();await assertProductionOutput(root);}
+      catch(error){await rm(resolve(root,'dist'),{recursive:true,force:true});throw error;}
+    });
+  }}],
 };
-if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))await build(buildOptions);
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){await prepareProductionBuild(root);await build(buildOptions);}

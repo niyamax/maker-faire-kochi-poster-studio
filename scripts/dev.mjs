@@ -3,12 +3,14 @@ import {createServer} from 'node:http';
 import {readFile,stat} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {root,buildOptions} from './build.mjs';
+import {assertProductionSources,assertProductionOutput,prepareProductionBuild} from './production-scope.mjs';
 
 const preview=process.argv.includes('--preview');
 const port=Number(process.env.PORT||8800);
 if(!Number.isInteger(port)||port<1||port>65535)throw Error('PORT must be between 1 and 65535.');
 let builder;
-if(!preview){builder=await context(buildOptions);await builder.rebuild();await builder.watch();}
+if(!preview){await prepareProductionBuild(root);builder=await context(buildOptions);await builder.rebuild();await builder.watch();}
+else{await assertProductionSources(root);await assertProductionOutput(root);}
 const directory=resolve(root,'dist');
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.woff2':'font/woff2','.svg':'image/svg+xml'};
 const server=createServer(async(req,res)=>{

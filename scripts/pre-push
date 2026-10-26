@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+while read -r local_ref local_oid remote_ref remote_oid
+do
+  case "$local_ref" in
+    refs/heads/codex/3d-poster-experiments)
+      printf '%s\n' 'The 3D experiment branch is local-only and remains on hold.' >&2
+      exit 1
+      ;;
+  esac
+  if [ "$remote_ref" != 'refs/heads/main' ]; then
+    continue
+  fi
+  case "$local_oid" in
+    0000000000000000000000000000000000000000) continue ;;
+  esac
+  blocked=$(git ls-tree -r --name-only "$local_oid" -- src/constructed src/poster-series src/export-artwork.js public/constructed.html public/posters.html licenses/THREE-MIT.txt)
+  if [ -n "$blocked" ]; then
+    printf '%s\n' 'Blocked: held experimental files cannot be pushed to main.' "$blocked" >&2
+    exit 1
+  fi
+done
