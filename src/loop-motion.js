@@ -1,4 +1,5 @@
 const TAU=Math.PI*2;
+export const POSTER_LOOP_SECONDS=20;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const unitPhase=value=>Number.isFinite(value)?((value%1)+1)%1:0;
 const amount=value=>Number.isFinite(value)?clamp(value,0,1.5):1;

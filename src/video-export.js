@@ -1,6 +1,7 @@
 import {Output,BufferTarget,Mp4OutputFormat,WebMOutputFormat,CanvasSource,Quality,canEncodeVideo} from 'mediabunny';
+import {POSTER_LOOP_SECONDS} from './loop-motion.js';
 
-export const VIDEO_DEFAULTS=Object.freeze({fps:60,renderScale:2,maxSide:3840});
+export const VIDEO_DEFAULTS=Object.freeze({duration:POSTER_LOOP_SECONDS,fps:60,renderScale:2,maxSide:3840});
 const abortError=()=>new DOMException('Video export cancelled.','AbortError');
 const checkAbort=signal=>{if(signal?.aborted)throw abortError();};
 const artworkError=value=>Object.assign(value instanceof Error?value:new Error(String(value)),{artworkFailure:true});
@@ -47,7 +48,7 @@ async function configurations(width,height,{fps,maxSide,renderScale,signal}){
  * Drawing may take longer than playback; no wall-clock frame skipping occurs.
  * renderFrame receives poster coordinates and may return a promise.
  */
-export async function exportVideo({width,height,duration=8,fps=60,maxSide=3840,renderScale=2,renderFrame,onSetup=()=>{},onProgress=()=>{},signal}={}){
+export async function exportVideo({width,height,duration=POSTER_LOOP_SECONDS,fps=60,maxSide=3840,renderScale=2,renderFrame,onSetup=()=>{},onProgress=()=>{},signal}={}){
   checkAbort(signal);
   if(typeof renderFrame!=='function')throw new TypeError('A poster frame renderer is required.');
   if(!Number.isFinite(duration)||duration<=0||duration>60||!Number.isInteger(fps)||fps<1||fps>60)throw new RangeError('Choose a duration up to 60 seconds and a frame rate from 1 to 60.');
@@ -68,7 +69,7 @@ export async function exportVideo({width,height,duration=8,fps=60,maxSide=3840,r
       const info={width:config.width,height:config.height,fps:config.fps,codec:config.codec,targetBitrate:config.bitrate,totalFrames,duration:exactDuration};
       try{await onSetup(info);}catch(error){throw artworkError(error);}
       checkAbort(signal);onProgress(0,{...info,stage:'rendering',frame:0});
-      const target=new BufferTarget();output=new Output({format:config.codec==='avc'?new Mp4OutputFormat({fastStart:'in-memory'}):new WebMOutputFormat(),target});
+      const target=new BufferTarget();output=new Output({format:config.codec==='avc'?new Mp4OutputFormat({fastStart:'reserve'}):new WebMOutputFormat(),target});
       const source=new CanvasSource(canvas,{...config.settings,onEncodedPacket:()=>{framesEncoded++;}});
       output.addVideoTrack(source,{frameRate:config.fps,maximumPacketCount:totalFrames});await output.start();
       for(let frame=0;frame<totalFrames;frame++){

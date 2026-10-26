@@ -10,7 +10,7 @@ Make expressive posters with letters that stretch, share space and move together
 - **Expressive type:** seven font choices, optical spacing, selective exaggeration, inflation and outline drawing.
 - **Direct editing:** drag letters, reshape them with handles, and move or resize the supporting text and logo.
 - **Cohesive layouts:** shared margins, snapping, alignment controls and portrait, story, square and banner formats.
-- **Motion posters:** seamless eight-second loops with Smooth, Steady, Punchy and Elastic curves.
+- **Motion posters:** seamless 20-second loops with Smooth, Steady, Punchy and Elastic curves.
 - **Image layouts:** an Image window for photography and an Object cut-out layout for transparent objects, with local upload and crop or overlap controls.
 - **Portable output:** PNG images, outlined SVG artwork, video loops and editable JSON project files.
 
@@ -40,7 +40,7 @@ PORT=8801 npm run dev
 1. Enter a headline and supporting text. Headlines accept **120 characters**, including spaces and line breaks. Press Enter to start a new poster line. Repeated spaces, leading spaces and trailing spaces are retained for gaps and indentation in every format.
 2. Choose **Air**, **Flex** or **Packed** above the canvas, then select a font and layout in the properties panel.
 3. Adjust **Contrast** for emphasis, **Inflation** or **Stroke** for drawing weight, and **Character** for shape variation.
-4. Drag a letter to move it. Pull its handles to reshape it; nearby letters make room. Select supporting text to align its lines left, centre or right. Text and logo blocks can also be resized or aligned to the poster.
+4. Drag a letter to move it. Pull its handles to reshape it; nearby letters make room. Adjustments are stored against a stable layout, so playback animates around the edited arrangement. Neighbour clearance is resolved at rest, and pointer edits are converted back from the visible animated pose. Select supporting text to align its lines left, centre or right. Text and logo blocks can also be resized or aligned to the poster.
 5. Pick a palette or set custom colours. Press Play to preview motion, then export.
 
 ### Add an image
@@ -81,7 +81,7 @@ Browser storage is specific to the address and port you use. Save a project file
 | --- | --- |
 | PNG | A still image of the current poster |
 | SVG | Vector artwork with outlined text and an embedded logo |
-| Video | One complete eight-second loop, targeting twice the poster dimensions at 60 fps (up to 3840 pixels on its longest side) |
+| Video | One complete 20-second loop, targeting twice the poster dimensions at 60 fps (up to 3840 pixels on its longest side) |
 
 Video exports render every frame before encoding, using WebCodecs in quality mode. The default portrait target is 2160 × 2700 at 60 fps; Story and banner exports are capped at a 3840-pixel longest side. MP4 is preferred, with WebM and compatible resolution or frame-rate fallbacks reported in the result. Quality scales with output size. The video is available only after all frames are encoded and the file is finalized. Uploaded images retain their source resolution. A browser with WebCodecs support is required.
 

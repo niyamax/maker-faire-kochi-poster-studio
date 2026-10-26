@@ -1,7 +1,8 @@
 import {COPY_FONT} from './data/copy-outlines.js';
 import {LOGO_DATA} from './data/logo.js';
 import {layoutTreatment,appendTreatmentArtwork} from './treatment.js';
-import {displaceLetters} from './letter-drag.js';
+import {animateLetterPose} from './letter-drag.js';
+import {stableLetterPose} from './letter-pose.js';
 import {normalizeFooter,placeFooterItem} from './footer-layout.js';
 import {HEADLINE_MAX_LENGTH} from './content-limits.js';
 import {normalizePosterImage,posterImageLayout} from './poster-image.js';
@@ -80,14 +81,14 @@ export function createPosterScene({direction='air',palette='maker',format='poste
 
   const image=normalizePosterImage(media),photo=posterImageLayout(image,width,height,fullType,scene.regions);
   const typeRect=photo&&image.layout==='cutout'?{...photo.typeRect,h:height*.62}:photo?.typeRect||fullType;
-  const letters=layoutTreatment(lines.join('\n'),typeRect,spec.id,phase,energy,lettering,motionCurve);
-  const anchors=photo?layoutTreatment(lines.join('\n'),fullType,spec.id,phase,energy,lettering,motionCurve):letters;
-  scene.baseCells=(anchors.unrefinedCells||anchors.cells).map(cell=>({...cell}));
-  const placed=letters.cells.map(cell=>{
-    const edit=offsets[cell.index],pinned=edit&&(Math.abs(edit.x||0)+Math.abs(edit.y||0)+Math.abs((edit.w??1)-1)+Math.abs((edit.h??1)-1)>1e-8);
-    return pinned?{...scene.baseCells[cell.index],response:cell.response,craft:cell.craft}:cell;
-  });
-  letters.cells=displaceLetters(placed,offsets,fullType);
+  const words=lines.join('\n');
+  const createLayout=(atPhase,rect)=>layoutTreatment(words,rect,spec.id,atPhase,energy,lettering,motionCurve);
+  const letters=createLayout(phase,typeRect);
+  const poseKey=JSON.stringify([words,typeRect,fullType,spec.id,energy,lettering,motionCurve,offsets]);
+  const pose=stableLetterPose(poseKey,()=>createLayout(0,typeRect),()=>createLayout(0,fullType),offsets,fullType);
+  scene.baseCells=pose.referenceCells.map(cell=>({...cell}));
+  scene.editCells=pose.restCells.map(cell=>({...cell}));
+  if(pose.hasEdits)letters.cells=animateLetterPose(pose.restCells,pose.referenceCells,letters.cells,fullType);
   if(photo&&image.layout==='cutout'){
     scene.unreactedCells=letters.cells.map(cell=>({...cell}));
     letters.cells=reactTypeToCutout(letters.cells,photo.frame,image.asset.silhouette||silhouettes.get(image.asset.src),typeRect,image.reaction);

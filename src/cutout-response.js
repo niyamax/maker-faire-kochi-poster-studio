@@ -73,7 +73,7 @@ function reactAbove(cells,frame,silhouette,bounds,amount){
       const y=warp(cell.y),bottom=warp(cell.y+cell.h),h=Math.max(cell.h*.55,bottom-y);
       const depth=clamp((cell.y+cell.h*.5-bounds.y)/bounds.h,0,1);
       const strength=clamp(pressure/bounds.h/.33*(.25+.75*depth*depth),0,1);
-      const away=Math.sign(cell.x+cell.w*.5-frame.x-frame.w*.5);
+      const away=Math.tanh((cell.x+cell.w*.5-frame.x-frame.w*.5)/Math.max(1,cell.w*.5));
       return {...cell,y,h,response:{...cell.response,angle:(cell.response?.angle||0)+away*.018*strength},objectResponse:{strength,pressure,dy:y-cell.y,scaleY:h/cell.h}};
     });
     // Adjacent letters trade a little width as the compressed form expands.
