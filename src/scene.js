@@ -7,6 +7,7 @@ import {normalizeFooter,placeFooterItem} from './footer-layout.js';
 import {HEADLINE_MAX_LENGTH} from './content-limits.js';
 import {normalizePosterImage,posterImageLayout} from './poster-image.js';
 import {reactTypeToCutout,silhouetteFromPixels} from './cutout-response.js';
+import {normalizeHeadlineFrame,resolveHeadlineFrame,transformHeadlineRect,inverseHeadlineRect} from './headline-frame.js';
 
 export const PALETTES=Object.freeze([
   {id:'maker',name:'Maker Faire',bg:'#FFFFFF',fg:'#ED1C24',accent:'#00AEEF',ink:'#172C35'},
@@ -52,7 +53,7 @@ function addText(scene,text,x,y,size,color,maxWidth=Infinity,align='left'){
   }
   return Number.isFinite(top)?{x:left,y:top,w:right-left,h:bottom-top}:{x,y,w:0,h:0};
 }
-export function createPosterScene({direction='air',palette='maker',format='poster',headline,detail,phase=0,energy=1,customColors=null,offsets=[],lettering={},footer={},motionCurve='smooth',media=null}={}){
+export function createPosterScene({direction='air',palette='maker',format='poster',headline,detail,phase=0,energy=1,customColors=null,offsets=[],lettering={},footer={},headlineFrame={},motionCurve='smooth',media=null}={}){
   const spec=TREATMENTS.find(d=>d.id===direction)||TREATMENTS[0],size=FORMATS[format]||FORMATS.poster;
   const original=PALETTES.find(p=>p.id===palette)||PALETTES[0];
   const colors={...original,...customColors};if(customColors?.fg)colors.ink=customColors.fg;
@@ -81,26 +82,45 @@ export function createPosterScene({direction='air',palette='maker',format='poste
 
   const image=normalizePosterImage(media),photo=posterImageLayout(image,width,height,fullType,scene.regions);
   const typeRect=photo&&image.layout==='cutout'?{...photo.typeRect,h:height*.62}:photo?.typeRect||fullType;
+  const frameSettings=normalizeHeadlineFrame(headlineFrame);
+  const sourceRect=frameSettings.fit==='scale'&&frameSettings.basis?{...typeRect,...frameSettings.basis}:typeRect;
+  const frame=resolveHeadlineFrame(sourceRect,frameSettings,width,height);
+  const fill=Boolean(frameSettings.box&&frameSettings.fit==='fill');
+  const layoutRect=fill?{...typeRect,w:frame.w,h:frame.h}:sourceRect;
+  const rx=layoutRect.w/typeRect.w,ry=layoutRect.h/typeRect.h;
+  const editBounds={x:layoutRect.x+(fullType.x-typeRect.x)*rx,y:layoutRect.y+(fullType.y-typeRect.y)*ry,w:fullType.w*rx,h:fullType.h*ry};
+  const transform={sx:frame.w/layoutRect.w,sy:frame.h/layoutRect.h};
+  transform.tx=frame.x-layoutRect.x*transform.sx;transform.ty=frame.y-layoutRect.y*transform.sy;
+  scene.headlinePlacement={rect:frame,automatic:typeRect,source:{w:layoutRect.w,h:layoutRect.h},fit:frameSettings.fit,custom:Boolean(frameSettings.box)};
+  scene.regions.headline=frame;scene.regions.type=transformHeadlineRect(editBounds,transform);
   const words=lines.join('\n');
+  // Resolve edits in local, phase-independent coordinates. Placement changes
+  // apply one outer transform to artwork and hit boxes, without baking motion
+  // into the saved layout or recalculating neighbour clearance on every move.
   const createLayout=(atPhase,rect)=>layoutTreatment(words,rect,spec.id,atPhase,energy,lettering,motionCurve);
-  const letters=createLayout(phase,typeRect);
-  const poseKey=JSON.stringify([words,typeRect,fullType,spec.id,energy,lettering,motionCurve,offsets]);
-  const pose=stableLetterPose(poseKey,()=>createLayout(0,typeRect),()=>createLayout(0,fullType),offsets,fullType);
-  scene.baseCells=pose.referenceCells.map(cell=>({...cell}));
-  scene.editCells=pose.restCells.map(cell=>({...cell}));
-  if(pose.hasEdits)letters.cells=animateLetterPose(pose.restCells,pose.referenceCells,letters.cells,fullType);
+  const letters=createLayout(phase,layoutRect);
+  const poseKey=JSON.stringify([words,layoutRect,editBounds,spec.id,energy,lettering,motionCurve,offsets]);
+  const pose=stableLetterPose(poseKey,()=>createLayout(0,layoutRect),()=>createLayout(0,editBounds),offsets,editBounds);
+  scene.baseCells=pose.referenceCells.map(cell=>transformHeadlineRect(cell,transform));
+  scene.editCells=pose.restCells.map(cell=>transformHeadlineRect(cell,transform));
+  if(pose.hasEdits)letters.cells=animateLetterPose(pose.restCells,pose.referenceCells,letters.cells,editBounds);
   if(photo&&image.layout==='cutout'){
-    scene.unreactedCells=letters.cells.map(cell=>({...cell}));
-    letters.cells=reactTypeToCutout(letters.cells,photo.frame,image.asset.silhouette||silhouettes.get(image.asset.src),typeRect,image.reaction);
+    scene.unreactedCells=letters.cells.map(cell=>transformHeadlineRect(cell,transform));
+    letters.cells=reactTypeToCutout(letters.cells,inverseHeadlineRect(photo.frame,transform),image.asset.silhouette||silhouettes.get(image.asset.src),layoutRect,image.reaction);
   }
   for(const row of letters.rows)row.cells=letters.cells.filter(cell=>cell.row===row.index);
   if(photo&&image.layout==='window')scene.ops.push(photo.op);
-  appendTreatmentArtwork(scene,letters,colors,fullType);
+  const firstLetterOp=scene.ops.length;
+  appendTreatmentArtwork(scene,letters,colors,editBounds);
+  for(const op of scene.ops.slice(firstLetterOp)){
+    const m=op.matrix||[1,0,0,1,0,0];
+    op.matrix=[m[0]*transform.sx,m[1]*transform.sy,m[2]*transform.sx,m[3]*transform.sy,m[4]*transform.sx+transform.tx,m[5]*transform.sy+transform.ty];
+  }
   if(photo&&image.layout==='cutout')scene.ops.push(photo.op);
   if(photo){
     scene.media={...photo,layout:image.layout,width,height};scene.regions.image=photo.frame;
   }
-  scene.ops.push(...footerOps);scene.cells=letters.cells;return scene;
+  scene.ops.push(...footerOps);scene.cells=letters.cells.map(cell=>transformHeadlineRect(cell,transform));return scene;
 }
 
 const imageCache=new Map(),canvasPaths=new Map();

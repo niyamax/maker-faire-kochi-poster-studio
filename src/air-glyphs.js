@@ -12,6 +12,7 @@
  * Silhouettes meet a cell's bounds softly, so packed cells become constraints.
  */
 import { glyphPath, glyphMetrics } from './flex-glyphs.js';
+import {openGlyphRadius} from './glyph-anatomy.js';
 
 const TAU = Math.PI * 2;
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
@@ -139,12 +140,13 @@ export function airGlyphPaths(character, width, height, options = {}) {
   const punctuated = char === '?' || char === '!';
   // Preserve a clear gap above the lower dot, including in wide/inflated cells.
   const cap = Math.min(W * (narrow ? .46 : ring ? .205 : .235), H * (punctuated ? .115 : stacked ? .135 : .195));
-  const radius = cap * (.42 + pressure * .58) * clamp(finite(options.volume,1),.3,1.2);
+  const outline=Math.max(0,finite(options.outlineWidth,0));
+  const radius=openGlyphRadius(char,W,H,cap*(.42+pressure*.58)*clamp(finite(options.volume,1),.3,1.2),personality,outline);
   // A small amount of overfill supplies broad, flat contact rather than a gap
   // between the drawing's edge and the visible bounds of the packed cell.
   const d = typeof options.skeleton==='function'
     ? options.skeleton(W,H,radius*1.66)
-    : glyphPath(char, W, H, { weight: radius * 1.66, roundness: .93 + .07 * personality });
+    : glyphPath(char, W, H, { weight:radius*1.66,inkWeight:radius*(2*(1+personality*.31)+personality*.30)+outline,roundness:.93+.07*personality });
   const paths = skeletons(d), output = [];
   const identity = [...char].reduce((s, c) => (s * 17 + c.codePointAt(0)) % 101, 0) / 101;
 

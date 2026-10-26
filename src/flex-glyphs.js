@@ -14,6 +14,8 @@
  * Lowercase input intentionally maps to the uppercase display alphabet.
  */
 
+import {minimumInkGap,gCrossbarTip} from './glyph-anatomy.js';
+
 const K = 0.5522847498307936;
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 const finite = (n, fallback) => Number.isFinite(Number(n)) ? Number(n) : fallback;
@@ -130,7 +132,12 @@ export function glyphPath(character, width, height, options = {}) {
         .l(l, b - a).c(l, b - a + ak, l + a - ak, b, l + a, b)
         .l(r - terminal, b)
         .c(r - terminal + k, b, r, b - terminal + k, r, b - terminal);
-      if (char === 'G') p.l(r, y(.60)).l(x(.56), y(.60));
+      if (char === 'G') {
+        const barY=y(.60),ink=Math.max(stroke,finite(options.inkWeight,stroke));
+        const bowl=l+(barY>b-a?a-Math.sqrt(Math.max(0,a*a-(barY-b+a)**2)):0);
+        const tip=gCrossbarTip(x(.56),bowl,ink,minimumInkGap(W,H),Math.min(w,h)*.006);
+        p.l(r,barY).l(Math.min(r,tip),barY);
+      }
       break;
     }
     case 'D':

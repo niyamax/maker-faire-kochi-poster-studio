@@ -5,6 +5,7 @@ import {fontGlyphGeometry,fontGlyphMetrics,FONT_IDS} from './font-library.js';
 import {heroForRow,styleCell,paintLayers,STYLE_IDS} from './style-system.js';
 import {continuousCompositionFrame,continuousLetterResponse} from './loop-motion.js';
 import {craftTreatmentLayout,craftedLetterMatrix} from './letter-craft.js';
+import {glyphStrokeWidth,easeInkLimit} from './glyph-anatomy.js';
 
 export const TREATMENT_PROFILES=Object.freeze({
   air:{mode:'air',font:'original',style:'jostle',render:'solid',contrast:.62,spread:.035,pressure:.84,variation:0},
@@ -51,13 +52,16 @@ export function appendTreatmentArtwork(scene,letters,colors,rect){
     const info=styleCell(cell,{style:p.style,cells:letters.cells,focus:letters.motion.focus,gesture:letters.motion.gesture,width:scene.width,height:scene.height});
     info.matrix=cell.craft?craftedLetterMatrix(cell,p):contain(cell,info.matrix,rect);
     const short=Math.min(cell.w,cell.h);
+    const airOutline=p.mode==='air'&&p.render==='line'?easeInkLimit(p.strokeWidth*2,short*.20):0;
+    const inset=airOutline/2,w=Math.max(.001,cell.w-inset*2),h=Math.max(.001,cell.h-inset*2);
     let geometry;
-    if(p.font!=='original')geometry=fontGlyphGeometry(p.font,cell.char,cell.w,cell.h,{mode:p.mode,pressure:letters.pressure,character:p.variation*(cell.craft&&!cell.craft.hero?.55:1)});
-    if(!geometry&&p.mode==='air')geometry={paths:airGlyphPaths(cell.char,cell.w,cell.h,{pressure:letters.pressure,character:p.variation,phase:(cell.index*.173)%1}),weight:4.4};
-    else if(!geometry){const weight=p.render==='line'?Math.min(short*.7,p.strokeWidth):Math.min(short*.7,1.6+letters.pressure**2*22),radius=Math.min(letters.height/Math.max(1,letters.rows.length)*.4,cell.h*.55)*(.75+p.variation*.5);geometry={paths:[glyphPath(cell.char,cell.w,cell.h,{weight,roundness:.98,radius})],weight};}
-    if(p.render==='line')geometry.weight=p.mode==='air'?p.strokeWidth*2:p.strokeWidth;
+    if(p.font!=='original')geometry=fontGlyphGeometry(p.font,cell.char,w,h,{mode:p.mode,pressure:letters.pressure,character:p.variation*(cell.craft&&!cell.craft.hero?.55:1)});
+    if(!geometry&&p.mode==='air')geometry={paths:airGlyphPaths(cell.char,w,h,{pressure:letters.pressure,character:p.variation,phase:(cell.index*.173)%1,outlineWidth:airOutline}),weight:4.4};
+    else if(!geometry){const weight=glyphStrokeWidth(cell.char,w,h,p.render==='line'?p.strokeWidth:1.6+letters.pressure**2*22),radius=Math.min(letters.height/Math.max(1,letters.rows.length)*.4,h*.55)*(.75+p.variation*.5);geometry={paths:[glyphPath(cell.char,w,h,{weight,inkWeight:weight,roundness:.98,radius})],weight,strokeOnly:true};}
+    if(p.render==='line'&&!geometry.strokeOnly)geometry.weight=p.mode==='air'?airOutline:Math.min(short*.7,p.strokeWidth);
+    if(inset){const m=info.matrix;info.matrix=[m[0],m[1],m[2],m[3],m[4]+(m[0]+m[2])*inset,m[5]+(m[1]+m[3])*inset];}
     for(const layer of paintLayers(p.mode,p.render,info,{fg:colors.fg,bg:colors.bg,weight:geometry.weight,scale:1}))for(const d of geometry.paths){
-      scene.ops.push({kind:'path',d,fill:layer.fill,matrix:info.matrix,...(layer.stroke!=='none'?{stroke:layer.stroke,width:layer.width}:{})});
+      scene.ops.push({kind:'path',d,fill:geometry.strokeOnly?'none':layer.fill,matrix:info.matrix,...(layer.stroke!=='none'?{stroke:layer.stroke,width:layer.width}:{})});
     }
   }
 }

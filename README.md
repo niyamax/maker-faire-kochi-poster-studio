@@ -40,8 +40,12 @@ PORT=8801 npm run dev
 1. Enter a headline and supporting text. Headlines accept **120 characters**, including spaces and line breaks. Press Enter to start a new poster line. Repeated spaces, leading spaces and trailing spaces are retained for gaps and indentation in every format.
 2. Choose **Air**, **Flex** or **Packed** above the canvas, then select a font and layout in the properties panel.
 3. Adjust **Contrast** for emphasis, **Inflation** or **Stroke** for drawing weight, and **Character** for shape variation.
-4. Drag a letter to move it. Pull its handles to reshape it; nearby letters make room. Adjustments are stored against a stable layout, so playback animates around the edited arrangement. Neighbour clearance is resolved at rest, and pointer edits are converted back from the visible animated pose. Select supporting text to align its lines left, centre or right. Text and logo blocks can also be resized or aligned to the poster.
-5. Pick a palette or set custom colours. Press Play to preview motion, then export.
+4. Select **Headline** in Layers to move the whole headline frame. Drag its body, use corner or side handles, or enter X, Y, width and height in poster pixels. **Scale** keeps the letter shapes proportional; **Fill frame** lets side handles and independent width/height values reshape the lettering inside the frame. **Fit width**, **Fit height**, **Centre** and **Reset frame** provide quick placement actions. Proportional fitting stays inside the poster margins, so the other dimension can limit its size.
+5. Choose **Letters**, or double-click a headline letter, to adjust individual letters. Drag a letter to move it and pull its handles to reshape it; nearby letters make room. Frame placement and individual adjustments are saved separately. Animation runs within the saved frame and does not bake an animated pose into the edit. Manual line breaks and repeated spaces are retained. Select supporting text to align its lines left, centre or right. Text and logo blocks can also be resized or aligned to the poster.
+6. Pick a palette or set custom colours. Press Play to preview motion, then export.
+
+Studio Sans preserves uniform strokes while protecting G/C openings, E/F bar spacing and closed counters. Inflation and outline limits ease back as a letter becomes compressed. The G's crossbar accounts for its rounded tip and the bowl beside it. Flex uses the same constrained stroke width for construction and drawing, and its centreline paths remain stroked in Solid drawing so their counters stay open. Preview and exports share this geometry.
+
 
 ### Add an image
 
