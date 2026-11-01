@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPosterScene,posterSVG,cleanHeadline,cleanDetail,TREATMENTS,PALETTES,FORMATS} from '../src/scene.js';
 import {LOGO_DATA} from '../src/data/logo.js';
+import {getLogoVariant} from '../src/logo-library.js';
 import {dragLetterOffset} from '../src/letter-drag.js';
 import {treatmentSettings} from '../src/treatment.js';
 import {FONT_IDS} from '../src/font-library.js';
@@ -45,7 +46,7 @@ test('footer extremes stay on every artboard and preserve the supplied logo prop
   for(const format of Object.keys(FORMATS))for(const sign of [-1,1])for(const detail of ['', 'Build. Repair. Experiment.\nBring your curiosity.', 'Long supporting copy '.repeat(6)]){
     const scene=createPosterScene({format,detail,footer:{text:{size:250,x:sign*100,y:sign*100},logo:{size:250,x:sign*100,y:sign*100}}});
     for(const rect of [scene.regions.details,scene.regions.logo])assert.ok(rect.x>=0&&rect.y>=0&&rect.x+rect.w<=scene.width+.001&&rect.y+rect.h<=scene.height+.001);
-    assert.ok(Math.abs(scene.regions.logo.w/scene.regions.logo.h-3871/646)<1e-9);
+    assert.ok(Math.abs(scene.regions.logo.w/scene.regions.logo.h-getLogoVariant().width/getLogoVariant().height)<1e-9);
     assert.ok(!/NaN|Infinity|undefined/.test(posterSVG(scene)));
   }
   assert.deepEqual(normalizeFooter({text:{size:NaN,x:'20',y:Infinity}}),normalizeFooter());
@@ -100,17 +101,17 @@ test('all treatments use finite portable geometry in every colour family and art
       if(op.clip)assert.ok(Object.values(op.clip).every(Number.isFinite)&&op.clip.w>0&&op.clip.h>0);
     }
     const logos=scene.ops.filter(op=>op.kind==='image');assert.equal(logos.length,1);assert.equal(logos[0].src,LOGO_DATA);
-    assert.ok(Math.abs(logos[0].w/logos[0].h-3871/646)<1e-9,'the supplied logo is never stretched or recoloured');
+    assert.ok(Math.abs(logos[0].w/logos[0].h-getLogoVariant().width/getLogoVariant().height)<1e-9,'the selected logo retains its native proportions');
     const a=scene.regions.details,b=scene.regions.logo;
     assert.ok(a.x+a.w<=b.x||b.x+b.w<=a.x||a.y+a.h<=b.y||b.y+b.h<=a.y,'details and logo have separate space even in square and wide formats');
   }
 });
 
-test('SVG exports keep vector copy and embed the original logo',()=>{
+test('SVG exports keep vector copy and embed the vector logo',()=>{
   for(const direction of TREATMENTS){
     const svg=posterSVG(createPosterScene({direction:direction.id,phase:.4}));
     assert.ok(svg.startsWith('<svg'));
-    assert.ok(svg.includes('href="data:image/png;base64,'));
+    assert.ok(svg.includes('href="data:image/svg+xml;charset=utf-8,'));
     assert.ok(!svg.includes('<text'),'supporting copy is portable outlined type');
     assert.ok(!/NaN|undefined|Infinity/.test(svg));
   }

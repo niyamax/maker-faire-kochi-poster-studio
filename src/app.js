@@ -1,5 +1,6 @@
 import './styles/studio.css';
 import {HEADLINE_MAX_LENGTH} from './content-limits.js';
+import {LOGO_LAYOUTS,LOGO_COLOURS,getLogoVariant} from './logo-library.js';
 import {mountImageEditor} from './image-editor.js';
 import {importPosterImage} from './image-import.js';
 import {IMAGE_DEFAULTS,dragPosterImage,imageWithRect,scalePosterImage} from './poster-image.js';
@@ -39,6 +40,14 @@ try{
 for(const preset of EDITOR_PRESETS){const b=document.createElement('button');b.className='treatment-option';b.dataset.direction=preset.id;b.title=preset.description;b.setAttribute('aria-pressed',String(preset.id===state.direction));b.textContent=preset.label;b.addEventListener('click',()=>selectDirection(preset.id));$('.directions').append(b);}
 for(const [id,f]of Object.entries(FORMATS))$('#format').add(new Option(f.name,id));
 for(const curve of LOOP_CURVES)$('#motion-curve').add(new Option(curve.label,curve.id));
+for(const layout of LOGO_LAYOUTS)$('#logo-layout').add(new Option(layout.label,layout.id));
+for(const colour of LOGO_COLOURS)$('#logo-colour').add(new Option(colour.label,colour.id));
+for(const id of ['logo-layout','logo-colour'])$('#'+id).addEventListener('change',()=>{
+  const next=getLogoVariant(`${$('#logo-layout').value}-${$('#logo-colour').value}`).id;
+  if(next===state.logoVariant)return;
+  rememberPose();state.logoVariant=next;snapGuides=[];
+  syncFooterControls();syncPoseControls();dirty=true;saveState();
+});
 function syncCuratedChoices(){
   const current=drafts[state.direction].lettering;
   const populate=(id,catalog,ids,value,labels={})=>{const element=$('#'+id);element.replaceChildren(...retainCurrentOption(catalog,ids,value).map(item=>new Option(labels[item.id]||item.name||item.label,item.id)));};
@@ -136,7 +145,9 @@ for(const part of ['text','logo']){
   fields.append(alignment);
 }
 function syncFooterControls(active=null){
-  const footer=drafts[state.direction].footer;
+  const footer=drafts[state.direction].footer,logo=getLogoVariant(state.logoVariant);
+  $('#logo-layout').value=logo.layout;$('#logo-colour').value=logo.colour;
+  $('#logo-colour-hint').textContent=logo.colour==='colour'?'Original Maker Faire colours.':logo.colour==='white'?'White on transparency. Use on a dark field.':'Black on transparency. Use on a light field.';
   for(const part of ['text','logo'])for(const key of ['size'])for(const suffix of ['','-number']){
     const input=$(`#footer-${part}-${key}${suffix}`);if(input!==active)input.value=Math.round(footer[part][key]*10)/10;
   }

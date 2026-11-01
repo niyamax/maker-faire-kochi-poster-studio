@@ -8,7 +8,7 @@ Make expressive posters with letters that stretch, share space and move together
 
 - **Three treatments:** Air, Flex and Packed. Switching treatments keeps your font, layout, headline, supporting text and saved positions.
 - **Expressive type:** seven font choices, optical spacing, selective exaggeration, inflation and outline drawing.
-- **Direct editing:** drag letters, reshape them with handles, and move or resize the supporting text and logo.
+- **Direct editing:** drag letters, reshape them with handles, and move or resize the supporting text and logo. Select the logo to choose its long, bordered or square layout in original colours, black or white.
 - **Cohesive layouts:** shared margins, snapping, alignment controls and portrait, story, square and banner formats.
 - **Motion posters:** seamless eight-second loops with Smooth, Steady, Punchy and Elastic curves.
 - **Image layouts:** an Image window for photography and an Object cut-out layout for transparent objects, with local upload and crop or overlap controls.
@@ -41,7 +41,7 @@ PORT=8801 npm run dev
 2. Choose **Air**, **Flex** or **Packed** above the canvas, then select a font and layout in the properties panel.
 3. Adjust **Contrast** for emphasis, **Inflation** or **Stroke** for drawing weight, and **Character** for shape variation.
 4. Drag a letter to move it. Pull its handles to reshape it; nearby letters make room. Select supporting text to align its lines left, centre or right. Text and logo blocks can also be resized or aligned to the poster.
-5. Pick a palette or set custom colours. Press Play to preview motion, then export.
+5. Choose a Maker Faire red, white or cyan palette, or set custom colours. Select **Maker Faire logo** in Layers (or click the logo on the canvas) to change its layout and colour. Black and white logos have transparent backgrounds; choose white for dark fields and black for light fields. Logo choices are retained when switching treatments, undoing, saving and exporting. Press Play to preview motion, then export.
 
 ### Add an image
 
@@ -80,7 +80,7 @@ Browser storage is specific to the address and port you use. Save a project file
 | Format | Output |
 | --- | --- |
 | PNG | A still image of the current poster |
-| SVG | Vector artwork with outlined text and an embedded logo |
+| SVG | Vector artwork with outlined text and an embedded vector logo |
 | Video | One complete eight-second loop, targeting twice the poster dimensions at 60 fps (up to 3840 pixels on its longest side) |
 
 Video exports render every frame before encoding, using WebCodecs in quality mode. The default portrait target is 2160 × 2700 at 60 fps; Story and banner exports are capped at a 3840-pixel longest side. MP4 is preferred, with WebM and compatible resolution or frame-rate fallbacks reported in the result. Quality scales with output size. The video is available only after all frames are encoded and the file is finalized. Uploaded images retain their source resolution. A browser with WebCodecs support is required.
@@ -111,6 +111,8 @@ The npm package has `private: true` to prevent accidental publication to the npm
 | `public/` | Application HTML |
 | `scripts/` | Build, local server and optional font generation |
 | `tests/` | Rendering, continuity, positioning, state and export tests |
+
+Embedded logo SVGs are also included. After editing files in `assets/logos/`, regenerate them with `node scripts/build-logos.mjs` and update their checksums in `assets/logo.json`.
 
 Precompiled outlines are included, so normal builds need only Node.js. To regenerate them, install `fonttools[woff]` in a Python virtual environment and run:
 

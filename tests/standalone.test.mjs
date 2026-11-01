@@ -9,6 +9,7 @@ import {FONT_CATALOG} from '../src/font-library.js';
 import {LAYOUT_IDS} from '../src/composition.js';
 import {STYLE_IDS} from '../src/style-system.js';
 import {LOGO_DATA} from '../src/data/logo.js';
+import {LOGO_VARIANTS,getLogoVariant} from '../src/logo-library.js';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const sha=data=>createHash('sha256').update(data).digest('hex');
@@ -48,5 +49,11 @@ test('font sources, licence files and embedded logo match the shipped asset mani
   const logo=await readFile(resolve(root,'assets/MF_Kochi_Logo_long.png'));
   const info=JSON.parse(await readFile(resolve(root,'assets/logo.json'),'utf8'));
   assert.equal(sha(logo),info.sha256);
-  assert.deepEqual(Buffer.from(LOGO_DATA.split(',')[1],'base64'),logo);
+  assert.equal(LOGO_DATA,getLogoVariant().src);
+  for(const variant of LOGO_VARIANTS){
+    const entry=info.variants.find(item=>item.id===variant.id);
+    const svg=await readFile(resolve(root,'assets',entry.file),'utf8');
+    assert.equal(sha(svg),entry.sha256);
+    assert.equal(decodeURIComponent(variant.src.slice(variant.src.indexOf(',')+1)),svg);
+  }
 });

@@ -16,7 +16,7 @@ Keep the applicable font notices with redistributed fonts and derived outlines. 
 
 The supplied Maker Faire Kochi logo is preserved as artwork. The MIT licence for the application does not license the logo, Maker Faire names or related marks, and does not grant trademark rights. Those rights remain with their respective holders.
 
-The source logo is `assets/MF_Kochi_Logo_long.png`; its embedded rendering data is `src/data/logo.js`. Asset information is recorded in [assets/logo.json](assets/logo.json).
+The original raster logo is `assets/MF_Kochi_Logo_long.png`. The selectable long, bordered and square SVG logos, including black and white versions, are in `assets/logos/`, converted from the supplied vector PDFs. Their embedded rendering data is generated in `src/data/logo.js` by `scripts/build-logos.mjs`. Source notes are in [assets/logos/README.md](assets/logos/README.md); asset checksums are recorded in [assets/logo.json](assets/logo.json).
 
 ## Demonstration images
 

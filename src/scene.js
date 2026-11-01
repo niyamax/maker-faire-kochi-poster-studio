@@ -1,5 +1,5 @@
 import {COPY_FONT} from './data/copy-outlines.js';
-import {LOGO_DATA} from './data/logo.js';
+import {LOGO_VARIANTS,getLogoVariant} from './logo-library.js';
 import {layoutTreatment,appendTreatmentArtwork} from './treatment.js';
 import {displaceLetters} from './letter-drag.js';
 import {normalizeFooter,placeFooterItem} from './footer-layout.js';
@@ -51,7 +51,7 @@ function addText(scene,text,x,y,size,color,maxWidth=Infinity,align='left'){
   }
   return Number.isFinite(top)?{x:left,y:top,w:right-left,h:bottom-top}:{x,y,w:0,h:0};
 }
-export function createPosterScene({direction='air',palette='maker',format='poster',headline,detail,phase=0,energy=1,customColors=null,offsets=[],lettering={},footer={},motionCurve='smooth',media=null}={}){
+export function createPosterScene({direction='air',palette='maker',format='poster',headline,detail,phase=0,energy=1,customColors=null,offsets=[],lettering={},footer={},motionCurve='smooth',media=null,logoVariant}={}){
   const spec=TREATMENTS.find(d=>d.id===direction)||TREATMENTS[0],size=FORMATS[format]||FORMATS.poster;
   const original=PALETTES.find(p=>p.id===palette)||PALETTES[0];
   const colors={...original,...customColors};if(customColors?.fg)colors.ink=customColors.fg;
@@ -61,8 +61,9 @@ export function createPosterScene({direction='air',palette='maker',format='poste
   let lines=cleanHeadline(headline??spec.headline).split('\n').filter(line=>line.trim().length>0);if(!lines.length)lines=['MAKE'];
 
   // Footer placement remains independent of the image layout.
-  const bodySize=short*.026,sideBySide=width>=height,detailW=frameW*(sideBySide?.52:.75);
-  const logoW=sideBySide?Math.min(frameW*.33,short*.40):Math.min(frameW*.47,short*.48),logoH=logoW*646/3871;
+  const artwork=getLogoVariant(logoVariant),squareLogo=artwork.layout==='square';
+  const bodySize=short*.026,sideBySide=width>=height||squareLogo,detailW=frameW*(sideBySide?.52:.75);
+  const logoW=squareLogo?short*.16:sideBySide?Math.min(frameW*.33,short*.40):Math.min(frameW*.47,short*.48),logoH=logoW*artwork.height/artwork.width;
   const baseLogo={x:sideBySide?width-pad-logoW:pad,y:height-pad-logoH,w:logoW,h:logoH};
   const placement=normalizeFooter(footer),copy=addText(scene,cleanDetail(detail??spec.detail),pad,0,bodySize,colors.ink,detailW,placement.text.align);
   const textY=sideBySide?baseLogo.y+baseLogo.h-copy.y-copy.h:height*.805;
@@ -74,7 +75,7 @@ export function createPosterScene({direction='air',palette='maker',format='poste
   }
   const positionedLogo=placeFooterItem(baseLogo,placement.logo,width,height,scene.footerBases.logo.anchor);
   const logo={x:positionedLogo.x,y:positionedLogo.y,w:positionedLogo.w,h:positionedLogo.h};
-  scene.ops.push({kind:'image',src:LOGO_DATA,...logo});
+  scene.ops.push({kind:'image',src:artwork.src,...logo});
   const footerOps=scene.ops;scene.ops=[];
   scene.regions={type:fullType,details:{x:placedCopy.x,y:placedCopy.y,w:placedCopy.w,h:placedCopy.h},logo};
 
@@ -102,6 +103,7 @@ export function createPosterScene({direction='air',palette='maker',format='poste
   scene.ops.push(...footerOps);scene.cells=letters.cells;return scene;
 }
 
+const logoSources=new Set(LOGO_VARIANTS.map(variant=>variant.src));
 const imageCache=new Map(),canvasPaths=new Map();
 function canvasPath(d){let geometry=canvasPaths.get(d);if(!geometry){geometry=new Path2D(d);if(canvasPaths.size>700)canvasPaths.clear();canvasPaths.set(d,geometry);}return geometry;}
 const pendingImages=new Map(),alphaMasks=new Map(),silhouettes=new Map();
@@ -111,12 +113,12 @@ async function loadPosterImage(src,alpha=false){
   const promise=(async()=>{
     const image=new Image();image.src=src;await image.decode();imageCache.set(src,image);
     if(alpha){const mask=document.createElement('canvas');mask.width=64;mask.height=64;const context=mask.getContext('2d',{willReadFrequently:true});context.drawImage(image,0,0,64,64);const pixels=context.getImageData(0,0,64,64).data;alphaMasks.set(src,pixels);silhouettes.set(src,silhouetteFromPixels(pixels,64,64));}
-    while(imageCache.size>8){const oldest=[...imageCache.keys()].find(key=>key!==LOGO_DATA);imageCache.delete(oldest);alphaMasks.delete(oldest);silhouettes.delete(oldest);}
+    while(imageCache.size>LOGO_VARIANTS.length+8){const oldest=[...imageCache.keys()].find(key=>!logoSources.has(key));imageCache.delete(oldest);alphaMasks.delete(oldest);silhouettes.delete(oldest);}
   })();pendingImages.set(src,promise);
   try{await promise;}finally{pendingImages.delete(src);}
 }
 export async function preparePosterAssets(asset=null){
-  await Promise.all([loadPosterImage(LOGO_DATA),...(asset?[loadPosterImage(asset.src,asset.hasAlpha)]:[])]);
+  await Promise.all([...LOGO_VARIANTS.map(variant=>loadPosterImage(variant.src)),...(asset?[loadPosterImage(asset.src,asset.hasAlpha)]:[])]);
   if(asset&&(!asset.silhouette||!asset.silhouette.bottom)&&silhouettes.has(asset.src))asset.silhouette=silhouettes.get(asset.src);
 }
 export function hitPosterImage(scene,point,{includeTransparent=false}={}){
