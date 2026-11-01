@@ -12,10 +12,10 @@ Open the root page to create a **Maker Spotlight**, **Workshop**, or **Poster**.
 
 - **Maker Spotlight:** maker and project names, a short poster callout, description, handle, photographs and a link.
 - **Workshop:** full title, poster callout, host, date, time, duration, location, description and booking link. Empty event fields inherit the shared event details.
-- **Linked outputs:** feed at 1080 × 1350 and Story at 1080 × 1920 share content, colours and logo. Each output retains its own image zoom and focal point.
+- **Linked outputs:** Feed at 1080 × 1350, Story at 1080 × 1920 and Newsletter at 1536 × 1024 (3:2) share content, colours and logo. Each output retains its own image zoom and focal point. Choose Newsletter from the preview's Output selector for a dedicated landscape composition.
 - **Carousels:** cover, details and closing pages, with custom callouts/body text, image selection, duplication, ordering and removal. Choose an automatic composition, photo window, object cut-out or type-only artwork per page. Add up to 30 pages and eight photographs per item.
 - **Partner branding:** add a partner name and a dedicated logo alongside the Maker Faire identity, independently of the photo gallery.
-- **Sharing packs:** individual PNG/SVG outputs or an ordered ZIP of feed and Story PNGs, an editable project, caption text, image descriptions and an output manifest. Video export uses the same selected page and motion geometry.
+- **Sharing packs:** individual PNG/SVG outputs or an ordered ZIP of Feed, Story and Newsletter PNGs, an editable project, caption text, image descriptions and an output manifest. Video export uses the same selected page and motion geometry.
 - **Editing guides:** toggle Story safe-area guides in the preview. Guides are omitted from exports; add native social links and stickers on the destination platform.
 
 Templates follow the [Content Studio art direction](docs/art-direction.md) and use the original hero poster lettering engine. Air, Flex and Packed shape a substantial typographic field, with the same optical spacing, letter character and motion as the poster editor. Photo windows sit between rows of lettering; transparent objects interrupt the field and the letters respond to their silhouette; type-only callouts reclaim the full artwork area. Names, complete official titles and practical facts have separate reading areas.
@@ -35,7 +35,7 @@ Template text currently uses the bundled Latin glyphs. Text that cannot be rende
 - **Three treatments:** Air, Flex and Packed. Switching treatments keeps your font, layout, headline, supporting text and saved positions.
 - **Expressive type:** seven font choices, optical spacing, selective exaggeration, inflation and outline drawing.
 - **Direct editing:** drag letters, reshape them with handles, and move or resize the supporting text and logo. Select the logo to choose its long, bordered or square layout in original colours, black or white.
-- **Cohesive layouts:** shared margins, snapping, alignment controls and portrait, story, square and banner formats.
+- **Cohesive layouts:** shared margins, snapping, alignment controls and portrait, story, square, banner and 3:2 newsletter formats.
 - **Motion posters:** seamless eight-second loops with Smooth, Steady, Punchy and Elastic curves.
 - **Image layouts:** an Image window for photography and an Object cut-out layout for transparent objects, with local upload and crop or overlap controls.
 - **Portable output:** PNG images, outlined SVG artwork, video loops and editable JSON project files.

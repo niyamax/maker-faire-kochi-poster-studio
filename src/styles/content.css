@@ -16,3 +16,7 @@
 
 #field-callout{font-size:19px;line-height:1.15;font-weight:550;letter-spacing:-.35px;min-height:94px}#page-composition{margin-top:1px}
 label[for=page-composition]{margin-top:15px}
+
+@media(max-width:680px){.preview-toolbar>div{flex-wrap:wrap;justify-content:flex-end}}
+
+.preview-output-select{display:flex;align-items:center;gap:6px;font-size:10px;color:#737367;white-space:nowrap}.preview-output-select select{width:133px;padding:4px 7px;min-height:29px;font-size:11px;border-color:#d1d1c5;background:#fcfcf9}.preview-stage[data-layout=newsletter]{max-width:980px}.preview-output[data-preview-format=newsletter]{max-width:900px;flex:1}.newsletter-artwork{aspect-ratio:3/2}.newsletter-artwork canvas{width:100%;height:auto}.preview-stage[data-layout=newsletter]+.preview-footnote{max-width:900px}@media(max-width:680px){.preview-output-select{font-size:10px}.preview-output-select select{width:125px;min-height:28px;font-size:10px}.preview-stage[data-layout=newsletter]{max-width:600px}.preview-output[data-preview-format=newsletter]{max-width:100%}.newsletter-output .preview-format-button{flex-direction:row;align-items:center;gap:8px}.preview-toolbar>div{max-width:240px}}

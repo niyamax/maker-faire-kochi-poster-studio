@@ -20,7 +20,7 @@ const checkAbort=signal=>{if(signal?.aborted)throw abortError();};
 const cleanSlug=(value,fallback='content')=>String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,76).replace(/-+$/,'')||fallback;
 
 function outputOptions({format='feed',pageIndex=0,...rest}={}){
-  if(!Object.hasOwn(CONTENT_FORMATS,format))throw new RangeError('Choose a feed or Story output.');
+  if(!Object.hasOwn(CONTENT_FORMATS,format))throw new RangeError('Choose an available output format.');
   if(!Number.isInteger(pageIndex)||pageIndex<0)throw new RangeError('Choose a valid content page.');
   return {...rest,format,pageIndex};
 }

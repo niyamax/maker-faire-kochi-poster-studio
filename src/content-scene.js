@@ -4,8 +4,9 @@ import {layoutTreatment,appendTreatmentArtwork} from './treatment.js';
 import {reactTypeToCutout} from './cutout-response.js';
 import {getLogoVariant} from './logo-library.js';
 import {imageCoverCrop} from './poster-image.js';
+import {CONTENT_FORMATS} from './content-project.js';
 
-const FORMATS={feed:{w:1080,h:1350},story:{w:1080,h:1920}};
+const FORMATS=CONTENT_FORMATS;
 const MARGIN=64;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const value=(input,fallback='')=>typeof input==='string'&&input.trim()?input.trim():fallback;
@@ -146,6 +147,7 @@ function shortLink(scene,raw,box){
   drawCopy(scene,display,box,{size:25,leading:34,field:'Project link',align:'right'});
 }
 function signature(scene,item,event){
+  if(scene.format==='newsletter')return newsletterSignature(scene,item,event);
   const story=scene.format==='story',y=story?1660:1250,logo=getLogoVariant(scene.logoVariant);
   const partner=item.partner,hasPartner=Boolean(partner?.asset||value(partner?.name));
   const w=logo.layout==='square'?78:hasPartner?280:310,h=w*logo.height/logo.width;
@@ -237,13 +239,62 @@ function closing(scene,item,event,page,asset,crop,mode){
   omit(scene,'Closing supporting text',value(page.body,item.content?.description),'Supporting text is retained in the caption.');
 }
 
+// Landscape has its own composition and protected lower reading area. These
+// coordinates never scale or crop the portrait masters into the wider format.
+function newsletterSignature(scene,item,event){
+  const logo=getLogoVariant(scene.logoVariant),w=logo.layout==='square'?80:350,h=w*logo.height/logo.width;
+  const box={x:1472-w,y:924-h/2,w,h};
+  scene.ops.push({kind:'image',src:logo.src,...box});scene.regions.logo=box;
+  shortLink(scene,value(item.content?.url,event.url)||item.content?.handle,{x:1112,y:966,w:360,h:34});
+  const partner=item.partner;if(!partner?.asset&&!value(partner?.name))return;
+  const asset=partner?.asset;
+  if(asset){
+    const scale=Math.min(120/asset.width,38/asset.height),width=asset.width*scale;
+    scene.ops.push({kind:'image',src:asset.src,x:1472-width,y:816,w:width,h:asset.height*scale});
+    drawCopy(scene,value(partner.name),{x:1112,y:810,w:220,h:56},{size:20,leading:26,maxLines:2,field:'Partner name'});
+  }else drawCopy(scene,partner.name,{x:1112,y:810,w:360,h:56},{size:23,leading:28,maxLines:2,field:'Partner name'});
+}
+function newsletterFacts(scene,item,event){
+  const info=eventFacts(item,event);
+  drawCopy(scene,[info.date,info.time].filter(Boolean).join(' / '),{x:64,y:884,w:980,h:42},{size:30,leading:40,field:'Event date and time'});
+  drawCopy(scene,info.venue,{x:64,y:930,w:980,h:68},{size:27,leading:34,maxLines:2,field:'Event venue'});
+}
+function newsletterObject(asset,crop){
+  const area={x:960,y:390,w:512,h:420},fit=Math.min(area.w/asset.width,area.h/asset.height);
+  const scale=Math.min(fit*(crop?.zoom??1),560/asset.width,480/asset.height);
+  const w=asset.width*scale,h=asset.height*scale;
+  return {x:clamp(area.x+(area.w-w)*(crop?.focusX??.5),900,1472-w),y:clamp(area.y+(area.h-h)*(crop?.focusY??.5),330,822-h),w,h};
+}
+function newsletter(scene,item,event,page,asset,crop,mode){
+  const lines=chooseCallout(scene,item,page),hasImage=mode!=='type';
+  if(page.role==='details'){
+    expressive(scene,lines,{x:34,y:38,w:hasImage?830:1468,h:420});
+    if(hasImage)photo(scene,asset,{x:940,y:64,w:532,h:690},crop);
+    const width=hasImage?790:980;
+    const name=drawCopy(scene,person(item),{x:64,y:492,w:width,h:44},{size:34,leading:44,field:item.type==='maker'?'Maker name':'Workshop host'});
+    const top=492+(name.drawn?name.height+16:0);
+    drawStory(scene,value(page.body,item.content?.description),{x:64,y:top,w:width,h:762-top},{size:32,leading:42,maxLines:5,field:'Project or workshop story'});
+    drawCopy(scene,contentTitle(item),{x:64,y:784,w:840,h:76},{size:30,leading:38,maxLines:2,field:'Full project or workshop title'});
+  }else{
+    const frame=mode==='cutout'?newsletterObject(asset,crop):null;
+    expressive(scene,lines,{x:34,y:38,w:mode==='window'?800:1468,h:650},{object:frame?{asset,frame}:null});
+    if(mode==='window')photo(scene,asset,{x:880,y:64,w:592,h:600},crop);
+    if(frame)drawObject(scene,asset,frame);
+    context(scene,item,{y:736,width:840});
+    omit(scene,page.role==='closing'?'Closing supporting text':'Cover story',value(page.body,item.content?.description),'The full supporting text is retained in the caption.');
+  }
+  newsletterFacts(scene,item,event);
+  if(item.content?.handle)omit(scene,'Social handle',item.content.handle);
+  if(item.content?.duration)omit(scene,'Workshop duration',item.content.duration);
+}
+
 /** Content masters adapt the original hero lettering and image response.
  * The same composed scene powers preview, still artwork and moving exports. */
 export function createContentScene(item,event={},options={}){
   const format=Object.hasOwn(FORMATS,options.format)?options.format:'feed';
   if(item?.type==='poster'){
     const p=item.legacyProject,state=p?.state||{},draft=p?.drafts?.[state.direction]||{};
-    return {...createPosterScene({...state,...draft,format:format==='story'?'story':'poster',phase:options.phase??state.phase??0}),warnings:[],omittedContent:[],textBlocks:[],hasOverflow:false,hasUnsupportedText:false};
+    return {...createPosterScene({...state,...draft,format:format==='feed'?'poster':format,phase:options.phase??state.phase??0}),warnings:[],omittedContent:[],textBlocks:[],hasOverflow:false,hasUnsupportedText:false};
   }
   const original=PALETTES.find(p=>p.id===item?.palette&&['maker','maker-red','maker-cyan'].includes(p.id))||PALETTES.find(p=>p.id==='maker-red');
   const colors={...original,fg:original.id==='maker-cyan'?original.ink:original.fg};
@@ -253,7 +304,7 @@ export function createContentScene(item,event={},options={}){
   const scene={phase:Number.isFinite(options.phase)?options.phase:0,width:size.w,height:size.h,margin:MARGIN,background:colors.bg,ops:[],cells:[],direction:item?.treatment||'air',description:`${item?.type==='workshop'?'Workshop':'Maker spotlight'} ${page.role}`,colors,displayInk:colors.fg,readingInk:original.id==='maker'?'#172C35':colors.fg,format,logoVariant,warnings:[],omittedContent:[],textBlocks:[],hasOverflow:false,hasUnsupportedText:false,regions:{},callout:''};
   const assets=item?.assets||[],asset=assets.find(image=>image.id===page.assetId)||assets[0],mode=composition(page,asset);
   scene.composition=mode;
-  (page.role==='details'?details:page.role==='closing'?closing:cover)(scene,item||{type:'maker'},event,page,asset,item?.variants?.[format],mode);
+  (format==='newsletter'?newsletter:page.role==='details'?details:page.role==='closing'?closing:cover)(scene,item||{type:'maker'},event,page,asset,item?.variants?.[format],mode);
   signature(scene,item||{},event);
   return scene;
 }

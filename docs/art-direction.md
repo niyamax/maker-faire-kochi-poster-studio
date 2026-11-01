@@ -62,6 +62,12 @@ Avoid selecting, generating or recolouring a workbench scene to repeat the poste
 - Exclude white metadata cards, nested panels, spreadsheet-like footers and repetitive administrative headers.
 - Exclude random geometry, fake diagrams, gratuitous arrows, shadows and gradients used as substitutes for composition.
 
+## Newsletter format
+
+Newsletter is a 1536 × 1024 landscape composition with a 3:2 aspect ratio. Compose for the horizontal field: a callout can occupy the full width, a photograph can sit alongside it, and a cutout can interrupt it while preserving the lower reading area. Editorial pages give the image and source excerpt distinct space. Dates and other facts retain plain Inter.
+
+Place the artwork at full newsletter-column width and preserve its aspect ratio. The lower factual copy is secondary at email size; repeat essential event details in accompanying live text. Review the actual landscape artwork rather than cropping a portrait master into a wide frame.
+
 ## Creative review
 
 Review rendered artwork at native size and at phone size, without editor chrome. Compare it directly with the original three reference posters, not merely with the previous content template revision.
@@ -77,3 +83,5 @@ The earlier approval statements are superseded by the user's visual feedback. Re
 The revised examples were manually reviewed on 1 November 2026: a red image-window cover with “DRAWN / BY THE / SUN”, the red robot hero, and a white workshop invitation with “MAKE / WITH US”. The [current three-board series](images/content-series.png) shows these examples. The workbench sample now uses bare aluminium, charcoal, brass and plywood with incidental tool colours; its material palette reads independently of the graphic field. The robot asset is unchanged. The invitation uses normal Inter for its complete date, time and venue in one aligned block.
 
 Separate Story examples were reviewed with the same image families and a longer factual block, two-line venue and partner footer. The wrapped date keeps “January 2027” together, and the practical information remains clear of the footer. These are observations about the specific revised examples. The photograph remains a generated demonstration asset, and real maker photography remains the preferred production source. Further visual decisions should follow the user's response to actual artwork.
+
+Additional manual review covered the [Newsletter format examples](images/newsletter-format.png): “BRING YOUR / CURIOSITY”, a photo window, an object cutout, editorial details, an invitation with longer facts and a partner name, and the classic poster editor. These examples retain the existing expressive identity in the wider field. Their reviewed titles, dates and factual wording remain visible, with no observed image/footer collisions. The native artwork and email-column views were both inspected; the smaller factual copy remains a consideration for placement alongside live event details.

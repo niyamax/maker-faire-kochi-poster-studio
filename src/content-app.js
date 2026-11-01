@@ -134,7 +134,7 @@ function renderLibrary(){
     const card=el('article','library-item');card.dataset.itemId=item.id;
     const open=el('button','library-item-open');open.type='button';open.setAttribute('aria-label',`Open ${contentItemLabel(item)}`);open.addEventListener('click',()=>itemRoute(item.id));
     const visual=el('span','library-item-preview'),canvas=el('canvas');canvas.width=216;canvas.height=270;canvas.setAttribute('aria-hidden','true');visual.append(canvas);
-    const text=el('span','library-item-text');text.append(el('span','library-item-type',typeLabel(item.type)),el('span','library-item-title',contentItemLabel(item)),el('span','library-item-meta',item.type==='poster'?'Original poster editor':`${item.pages.length} ${item.pages.length===1?'page':'pages'} · Feed + Story`));
+    const text=el('span','library-item-text');text.append(el('span','library-item-type',typeLabel(item.type)),el('span','library-item-title',contentItemLabel(item)),el('span','library-item-meta',item.type==='poster'?'Original poster editor':`${item.pages.length} ${item.pages.length===1?'page':'pages'} · 3 output formats`));
     open.append(visual,text);card.append(open);
     const actions=el('div','library-item-actions'),duplicate=el('button','', 'Duplicate'),remove=el('button','', 'Remove');duplicate.type=remove.type='button';
     duplicate.setAttribute('aria-label',`Duplicate ${contentItemLabel(item)}`);remove.setAttribute('aria-label',`Remove ${contentItemLabel(item)}`);
@@ -207,17 +207,20 @@ function syncPartner(){
   $('#add-partner-logo').textContent=partner.asset?'Replace partner logo':'+ Add partner logo';
 }
 function syncCrop(){
-  const item=currentItem();if(!item)return;const crop=item.variants[activeFormat];$('#crop-format').value=activeFormat;
+  const item=currentItem();if(!item)return;const crop=item.variants[activeFormat]||{zoom:1,focusX:.5,focusY:.5};$('#crop-format').value=activeFormat;$('#preview-format').value=activeFormat;
   for(const [id,key] of [['zoom','zoom'],['x','focusX'],['y','focusY']]){$(`#crop-${id}`).value=crop[key];$(`#crop-${id}-value`).value=`${Math.round(crop[key]*100)}%`;}
   for(const button of all('[data-select-format]'))button.setAttribute('aria-pressed',String(button.dataset.selectFormat===activeFormat));
-  for(const output of all('[data-preview-format]'))output.dataset.active=String(output.dataset.previewFormat===activeFormat);
+  const newsletter=activeFormat==='newsletter';
+  for(const output of all('[data-preview-format]')){output.dataset.active=String(output.dataset.previewFormat===activeFormat);output.hidden=newsletter?output.dataset.previewFormat!=='newsletter':output.dataset.previewFormat==='newsletter';}
+  $('.preview-stage').dataset.layout=newsletter?'newsletter':'paired';
+  $('#show-safe-guides').closest('label').hidden=newsletter;$('#story-safe-guide').hidden=newsletter||!$('#show-safe-guides').checked;
   $('#single-export-label').textContent=`${CONTENT_FORMATS[activeFormat].name} · Page ${pageIndex+1}`;
   const page=currentPage(),usesPhotos=pageUsesPhotos(page),noPhoto=!item.assets.length||!usesPhotos;
   const asset=item.assets.find(candidate=>candidate.id===page?.assetId)||item.assets[0],composition=page?.composition||'auto';
   const cutout=asset?.hasAlpha&&(composition==='cutout'||(composition==='auto'&&page?.role!=='closing'));
   $('#crop-format').disabled=!usesPhotos||exporting;
   for(const id of ['crop-zoom','crop-x','crop-y','reset-crop'])$('#'+id).disabled=noPhoto||exporting;
-  $('#crop-help').textContent=!usesPhotos?'This page uses type only. Choose Photo window or Object cut-out in Pages to include a photograph.':noPhoto?'Add a photograph in Content to adjust its placement.':cutout?'Scale and position the transparent object separately for Feed and Story. Its size stays within the composition.':'Each format keeps its own photo crop. Your content stays linked.';
+  $('#crop-help').textContent=!usesPhotos?'This page uses type only. Choose Photo window or Object cut-out in Pages to include a photograph.':noPhoto?'Add a photograph in Content to adjust its placement.':cutout?'Scale and position the transparent object separately for each output. Its size stays within the composition.':'Each format keeps its own photo crop. Your content stays linked.';
 }
 function renderPhotos(){
   const item=currentItem();if(!item)return;$('#photo-count').textContent=`${item.assets.length} / ${CONTENT_MAX_ASSETS}`;$('#add-photos').disabled=item.assets.length>=CONTENT_MAX_ASSETS;$('#photo-gallery').replaceChildren();
@@ -234,7 +237,7 @@ function syncPageImage(){
   const composition=page.composition||'auto',usesPhotos=pageUsesPhotos(page),asset=item.assets.find(candidate=>candidate.id===page.assetId)||item.assets[0];
   $('#page-image').replaceChildren(new Option(!usesPhotos?'Typography only':item.assets.length?'Automatic · first photo':'No photographs yet',''),...item.assets.map((asset,index)=>new Option(`${index+1}. ${asset.name}`,asset.id)));
   $('#page-image').value=usesPhotos?page.assetId||'':'';$('#page-image').disabled=!usesPhotos||!item.assets.length||exporting;
-  $('#page-image-hint').textContent=!usesPhotos?'Saved photo choices stay in the project for compositions that use an image.':item.assets.length?'Choose a photo for this page. Feed and Story keep separate placement.':'Add photographs in Content to choose one for this page.';
+  $('#page-image-hint').textContent=!usesPhotos?'Saved photo choices stay in the project for compositions that use an image.':item.assets.length?'Choose a photo for this page. Each output keeps its own image placement.':'Add photographs in Content to choose one for this page.';
   $('#page-composition-hint').textContent=composition==='type'?'A composition built entirely from expressive type.':composition==='cutout'?(!asset?'Add a genuinely transparent PNG or WebP for an object cut-out.':!asset.hasAlpha?'This image has no transparency, so it uses a photo window. Choose a transparent PNG or WebP for an object cut-out.':'The transparent object shares space with the lettering. Adjust its placement in Design.'):composition==='window'?'A photograph in a composed window, with an independent crop for each output.':page.role==='closing'?'Auto makes the closing card typographic. Choose Photo window or Object cut-out to include an image.':'Auto chooses a composition for this page and its photographs.';
 }
 function syncPageControls(){
@@ -248,14 +251,14 @@ function renderPageStrip(){
   const item=currentItem();if(!item)return;$('#page-strip').replaceChildren();
   item.pages.forEach((page,index)=>{
     const button=el('button','page-thumbnail');button.type='button';button.dataset.pageId=page.id;button.setAttribute('aria-label',`Page ${index+1}: ${roleLabel(page.role)}`);button.setAttribute('aria-pressed',String(index===pageIndex));
-    const canvas=el('canvas');canvas.width=162;canvas.height=203;canvas.setAttribute('aria-hidden','true');const text=el('span');text.append(el('span','',String(index+1).padStart(2,'0')),el('span','',roleLabel(page.role)));button.append(canvas,text);
+    const canvas=el('canvas');canvas.width=162;canvas.height=activeFormat==='newsletter'?108:203;canvas.setAttribute('aria-hidden','true');const text=el('span');text.append(el('span','',String(index+1).padStart(2,'0')),el('span','',roleLabel(page.role)));button.append(canvas,text);
     button.addEventListener('click',()=>{pageIndex=index;syncPageControls();for(const sibling of all('.page-thumbnail'))sibling.setAttribute('aria-pressed',String(sibling===button));schedulePreviews();});
     $('#page-strip').append(button);
   });
 }
 function drawPreviews(phase=0){
   const item=currentItem();if(!item)return;const warnings=new Set();let invalidCurrent=false,hasEditorialOmissions=false;
-  for(const format of Object.keys(CONTENT_FORMATS)){
+  for(const format of activeFormat==='newsletter'?['newsletter']:['feed','story']){
     const scene=createContentScene(item,workspace.event,{format,pageIndex,phase});paintCanvas($(`#preview-${format}`),scene);
     for(const warning of scene.warnings||[])warnings.add(`${CONTENT_FORMATS[format].name}: ${warning}`);
     if(scene.omittedContent?.length)hasEditorialOmissions=true;
@@ -276,7 +279,7 @@ function schedulePreviews(){
       await prepareUiAssets(item);if(generation===drawGeneration&&currentItem()?.id===item.id){
       drawPreviews(playing?(performance.now()-motionStart)/8000%1:0);
       const thumbnails=all('.page-thumbnail canvas');
-      for(const [index,canvas] of thumbnails.entries())paintCanvas(canvas,createContentScene(item,workspace.event,{format:'feed',pageIndex:index,phase:0}));
+      for(const [index,canvas] of thumbnails.entries())paintCanvas(canvas,createContentScene(item,workspace.event,{format:activeFormat==='newsletter'?'newsletter':'feed',pageIndex:index,phase:0}));
     }}
     catch(error){if(generation===drawGeneration)announce(error.message||'This preview could not be rendered.',{error:true});}
   },70);
@@ -305,7 +308,7 @@ async function exportCurrent(kind){
   const snapshot=clone(item),event=clone(workspace.event),options={format:activeFormat,pageIndex};
   stopMotion();exportController=new AbortController();exportCancelled=false;setExporting(true);
   $('#export-dialog-title').textContent=kind==='pack'?'Preparing your content pack':kind==='video'?'Rendering motion':'Preparing your page';
-  $('#export-dialog-message').textContent=kind==='pack'?'Rendering ordered Feed and Story images…':kind==='video'?'Every frame is rendered before the video is finalized.':'Preparing the selected page and format…';
+  $('#export-dialog-message').textContent=kind==='pack'?'Rendering ordered Feed, Story and Newsletter images…':kind==='video'?'Every frame is rendered before the video is finalized.':'Preparing the selected page and format…';
   $('#export-dialog-progress').value=0;$('#close-content-export').hidden=true;$('#cancel-content-export').hidden=false;$('#cancel-content-export').disabled=false;$('#cancel-content-export').textContent='Cancel';$('#export-dialog').showModal();
   const onProgress=(fraction,info={})=>{
     if(exportCancelled)throw new DOMException('Export cancelled.','AbortError');
@@ -329,7 +332,7 @@ async function exportCurrent(kind){
     else if(kind==='video'){const result=await contentVideo(snapshot,event,{...options,onProgress,signal:exportController.signal});blob=result.blob;filename=contentFilename(snapshot,{...options,extension:result.extension});}
     if(exportCancelled)throw new DOMException('Export cancelled.','AbortError');
     if(!blob?.size)throw new Error('The export did not produce a file.');
-    downloadContent(blob,filename);$('#export-dialog-progress').value=1;$('#export-dialog-title').textContent='Your download is ready';$('#export-dialog-message').textContent=kind==='pack'?'The ZIP contains Feed and Story images, captions, image descriptions and an editable project.':filename;
+    downloadContent(blob,filename);$('#export-dialog-progress').value=1;$('#export-dialog-title').textContent='Your download is ready';$('#export-dialog-message').textContent=kind==='pack'?'The ZIP contains Feed, Story and Newsletter images, captions, image descriptions and an editable project.':filename;
     $('#cancel-content-export').hidden=true;$('#close-content-export').hidden=false;
   }catch(error){
     if(error.name==='AbortError'){$('#export-dialog').close();announce('Export cancelled.');}
@@ -387,11 +390,16 @@ $('#logo-auto-contrast').addEventListener('change',event=>{
   mutate(()=>{const displayed=resolvedLogo(item);item.logoColourMode=event.target.checked?'auto':'manual';if(!event.target.checked)item.logoVariant=displayed.id;});
   syncLogoControls();renderPageStrip();
 });
-function chooseFormat(format){activeFormat=format;syncCrop();schedulePreviews();}
+function chooseFormat(format){
+  if(!Object.hasOwn(CONTENT_FORMATS,format))return;
+  const wasNewsletter=activeFormat==='newsletter';activeFormat=format;syncCrop();
+  if(wasNewsletter!==(format==='newsletter'))renderPageStrip();schedulePreviews();
+}
 for(const button of all('[data-select-format]'))button.addEventListener('click',()=>chooseFormat(button.dataset.selectFormat));
 $('#crop-format').addEventListener('change',event=>chooseFormat(event.target.value));
+$('#preview-format').addEventListener('change',event=>chooseFormat(event.target.value));
 for(const [id,key] of [['crop-zoom','zoom'],['crop-x','focusX'],['crop-y','focusY']])$('#'+id).addEventListener('input',event=>{
-  const item=currentItem();if(!item)return;rememberInput(event.target);item.variants[activeFormat][key]=Number(event.target.value);syncCrop();changed();
+  const item=currentItem();if(!item)return;rememberInput(event.target);item.variants[activeFormat]??={zoom:1,focusX:.5,focusY:.5};item.variants[activeFormat][key]=Number(event.target.value);syncCrop();changed();
 });
 $('#reset-crop').addEventListener('click',()=>{const item=currentItem();if(!item)return;mutate(()=>item.variants[activeFormat]={zoom:1,focusX:.5,focusY:.5});syncCrop();renderPageStrip();});
 $('#show-safe-guides').addEventListener('change',event=>$('#story-safe-guide').hidden=!event.target.checked);

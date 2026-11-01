@@ -10,6 +10,7 @@ export const CONTENT_TYPES=Object.freeze([
 export const CONTENT_FORMATS=Object.freeze({
   feed:Object.freeze({name:'Feed',w:1080,h:1350}),
   story:Object.freeze({name:'Story',w:1080,h:1920}),
+  newsletter:Object.freeze({name:'Newsletter',w:1536,h:1024}),
 });
 export const CONTENT_PALETTE_IDS=Object.freeze(['maker-red','maker','maker-cyan']);
 export const CONTENT_MAX_ASSETS=8;
@@ -100,7 +101,7 @@ export function normalizeContentItem(value){
     treatment:['air','flex','packed'].includes(value.treatment)?value.treatment:'air',
     assets,pages,
     partner:{name:text(partner.name,'',240,'Partner name'),asset:partner.asset==null?null:normalizeAsset(partner.asset)},
-    variants:{feed:crop(variants.feed),story:crop(variants.story)},
+    variants:Object.fromEntries(Object.keys(CONTENT_FORMATS).map(format=>[format,crop(variants[format])])),
     caption:text(value.caption,'',8000,'Caption'),
     altText:text(value.altText,'',8000,'Image description'),
   };
