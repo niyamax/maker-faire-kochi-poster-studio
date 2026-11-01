@@ -1,65 +1,63 @@
 # Content Studio art direction
 
-Content Studio must produce finished, professional festival posters. Clear composition, recognisable typography and strong imagery take priority over displaying every available field.
+Content Studio extends the expressive identity of the original Poster Studio. Its lettering is the artwork: inflated contours, irregular rhythm, tightly composed rows and a lively relationship with photographs and objects. Content templates must carry that character through the entire composition.
 
-A creative director reviews actual artwork at full size and at phone size before a template is ready. A working export or complete form does not establish design quality.
+The original [type poster](images/studio.png), [image window](images/image-window.png) and [object cutout](images/object-cutout.png) are the visual reference. A tidy generic heading, rectangular photograph and detached information stack do not meet this direction.
 
-## Current direction
+## Lettering and composition
 
-Use one consistent display face at its natural proportions, with Inter for reading information. The content templates use Anton for display headlines. Preserve the original advances, bearings, cap height and punctuation positions. Do not normalise every glyph to a full-height rectangle, stretch each letter to fill an arbitrary cell, rotate individual letters or vary word widths to create artificial expression. The classic poster editor can retain its experimental lettering; information-rich content templates need a stable typographic voice.
+Reuse the original treatment and composition engine for expressive headlines. Air, Flex and Packed retain their designed letter geometry, rhythm and response; one chosen treatment gives a content pack a consistent voice. Responsive letter widths and contours are intentional parts of this identity. Simulating them by stretching conventional font outlines is not an equivalent.
 
-Use a fixed grid, generous margins, intentional title/image/reading zones and a compact identity signature. Maker Faire red, cyan, white and dark ink remain the palette. New packs use transparent logo artwork with automatic contrast; an explicit manual colour choice remains intact.
+Use short, authored display phrases with deliberate line breaks. Keep the complete official project or workshop title in readable supporting text when it cannot serve as a strong short headline. Names, dates, times and reading copy use clear, stable type. Their scale and placement support the expressive field without competing with it.
 
-## Master compositions
+The letter silhouette should shape image placement and the surrounding space. A photograph can meet the last typographic row; an object can interrupt it; practical information can balance its weight. Expression should remain evident when the image is absent. Avoid applying an expressive heading to an otherwise generic card layout.
 
-The Feed master is 1080 × 1350, with a 64px margin and an 8px spacing rhythm. The title, photograph, maker or host, and essential event facts have clear positions and hierarchy. Natural wrapping creates a deliberate rag. The same letter proportions carry through to Story; extra height provides image area and breathing room.
+Maker Faire red, cyan, white and dark ink remain the palette. Keep colour use confident and coherent across a series. New packs use transparent logos with automatic contrast; explicit manual logo choices remain intact. Use one compact identity signature, with comfortable space around it.
 
-### Cover
+## Three composition families
 
-A strong natural-proportion title, one dominant photograph and a clearly readable maker or host name establish the first reading. Workshop date, time and venue are secondary but legible. Descriptions and social handles are omitted when they compete with the main composition. A narrow rail that splits a name into awkward fragments is excluded.
+### Type and image window
 
-Without a photograph, use the dedicated type-only composition: a larger, complete title carries the central area, with the person and signature below. Do not retain an empty image reservation.
+A dense, expressive headline field holds a dominant photograph. The image can sit beneath a single-row callout or between the upper rows and a final word below it; the complete phrase must read as one composition. The photograph has a deliberate subject crop and enough scale to explain the work. Name, full project title and essential facts occupy a compact reading area below.
 
-### Details
+For an editorial page, reduce the height of the expressive heading and give the image and story more room. Use the same lettering character and shared alignments. Do not replace the identity with a conventional editorial masthead.
 
-An editorial spread gives the photograph and reading text measured, separate zones. The text column has comfortable line length and leading. The title, person, story and practical facts are distinct. Limit secondary text to what genuinely fits. Do not squeeze an entire description into microscopic type.
+### Object-led hero
 
-### Closing
+A genuine transparent object overlaps the lower part of the letter field. Reuse the existing silhouette response so letters yield around its outline. Protect a clear reading area for the maker, project and essential facts. The object should feel physically present in the composition, not like a small thumbnail attached to it.
 
-The invitation is concise; the actual date, time and venue carry the visual weight. Project or host context supports the invitation. The booking or project address is readable. A huge generic slogan must not overpower the information that makes the invitation useful.
+Use this family only when an appropriate cutout exists. An ordinary photograph belongs in the window family; no fake object silhouette or placeholder illustration is required.
 
-## Editorial discipline
+### Typographic callout
 
-- Preserve the complete source content and caption in the project.
-- Omit a whole secondary block when it does not fit the master composition.
-- Avoid ellipses, severed names, broken dates and accidental half-sentences in artwork.
-- Give primary title, maker or host, and essential facts priority.
-- A missing photograph can produce a deliberate typographic poster, with no fake placeholder motif.
-- Explicitly authored title line breaks remain meaningful.
+A short, specific message becomes the graphic event. The original lettering engine carries the main field; a substantial date, time and venue block makes the invitation useful. A missing image produces a deliberate type poster without reserving an empty photo area.
 
-## Review criteria
+Keep the action relevant to the content. An invitation must identify what the visitor will make, see or join. Give its practical information enough weight to read at phone size.
 
-- The composition feels finished at first glance, without editor chrome.
-- One clear title, a dominant image where applicable, and essential facts establish a stable reading order.
-- Display lettering keeps its designed proportions and consistent character; punctuation retains its native height and position.
-- Primary titles remain complete. A missing final word is a defect, not an editorial choice.
-- Reading text is large enough for a phone and has sensible line length.
-- Names, dates and times are complete and clearly associated.
-- Cover, details and closing have purposeful differences while belonging to one series.
-- Photography communicates its subject through a deliberate crop and sufficient scale.
-- Negative space supports balance rather than exposing an unfinished stack of blocks.
-- There are no white metadata cards, nested information panels or spreadsheet-like footers.
-- There are no random polygons, fake diagrams, gratuitous arrows, checker patterns, shadows or gradients used as substitutes for direction.
-- One compact identity signature avoids repeating every event fact at the bottom.
-- Colour contrast and logo treatment remain intentional in red, cyan and white variants.
-- Content that exceeds the designed capacity is edited or omitted as a whole secondary block.
+## Editorial and format guardrails
 
-## Reference principles
+- Prioritise a clear display phrase, complete identity and essential event facts. Preserve the full source content and caption in the project.
+- Omit a whole secondary block when it exceeds the composition's capacity. Do not use microscopic type, ellipses, severed names or accidental half-sentences.
+- Keep official titles readable and complete somewhere appropriate in the pack. Never silently lose their final word or unsupported characters.
+- Protect names, dates, times and the identity signature from image overlap and cutout response.
+- Recompose Story using its extra height for images, expressive space and clear information. Do not stretch a finished Feed composition into a taller rectangle.
+- Keep treatment settings consistent across a pack. Changes of role should create purposeful variation within one visual language.
+- Make the still composition convincing before applying the existing motion. Motion should belong to the lettering and composition.
+- Exclude white metadata cards, nested panels, spreadsheet-like footers and repetitive administrative headers.
+- Exclude random geometry, fake diagrams, gratuitous arrows, shadows and gradients used as substitutes for composition.
 
-[Thonik’s Dutch Design Week campaigns](https://thonik.nl/stories/5-years-of-ddw-campaigns) demonstrate the value of a recognisable typographic identity. [Pentagram’s London Design Biennale identity](https://www.pentagram.com/work/london-design-biennale/story) demonstrates a graphic system that supports exhibitors’ work. These references establish the expectation of an authored, coherent cultural identity; their layouts are not being reproduced.
+## Creative review
+
+Review rendered artwork at native size and at phone size, without editor chrome. Compare it directly with the original three reference posters, not merely with the previous content template revision.
+
+Approve a composition only when its expressive silhouette, hierarchy, image relationship and information balance feel authored. Check complete titles and names, useful dates, intentional crops, comfortable reading copy and clear logo contrast. Examine Feed and Story, a photograph, a genuine cutout, no image and longer source content. A functional export does not establish design quality.
 
 ## Review status
 
-The earlier template approval is superseded. The revised natural-proportion masters were manually reviewed on 1 November 2026 using actual rendered artwork: Feed and Story, maker and workshop, cover/details/closing, red/white/cyan, and a type-only cover. The review included a native-size cover and phone-scale series.
+The previous static display-type direction and its approval are superseded. They improved legibility but removed the original studio's visual character.
 
-The reviewed masters are approved for this revision. Complete titles, native punctuation, subject crops, reading columns, practical facts and the larger type-only composition resolve the observed layout defects. This approval covers the reviewed compositions; future template changes require a fresh artwork review using the criteria above. The current three-board example is [the rendered content series](images/content-series.png).
+The replacement compositions were manually reviewed on 1 November 2026 against the original poster references. The reviewed artwork includes Feed and Story, maker and workshop, image-window covers, editorial content, an object hero, typographic invitations, a type-only cover, a single-row callout and a longer source identity. The review included native-size artwork and phone-scale compositions.
+
+The reviewed original-engine compositions are approved for this revision. Expressive lettering now drives the image relationship and overall silhouette; the corrected date fields remain legible, and the reviewed reading areas stay clear of images and footers. This approval applies to the reviewed layouts and examples. Future composition changes require a fresh artwork review. The [current six-board series](images/content-series.png) shows the approved direction.
+
+The optional partner-name footer was also reviewed in Feed and Story with a two-line venue. The Maker Faire identity, partner acknowledgement and link occupy separate footer columns without colliding with the event information.

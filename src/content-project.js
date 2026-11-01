@@ -15,7 +15,8 @@ export const CONTENT_PALETTE_IDS=Object.freeze(['maker-red','maker','maker-cyan'
 export const CONTENT_MAX_ASSETS=8;
 export const CONTENT_MAX_PAGES=30;
 const types=new Set(CONTENT_TYPES.map(type=>type.id)),roles=new Set(['cover','details','closing']);
-const fields=Object.freeze({name:240,project:240,description:8000,handle:240,title:400,host:240,date:240,time:120,duration:120,location:500,url:2000});
+const compositions=new Set(['auto','window','cutout','type']);
+const fields=Object.freeze({name:240,project:240,callout:120,description:8000,handle:240,title:400,host:240,date:240,time:120,duration:120,location:500,url:2000});
 const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 let sequence=0;
 const freshId=()=>globalThis.crypto?.randomUUID?.()||`content-${Date.now().toString(36)}-${(++sequence).toString(36)}`;
@@ -61,7 +62,7 @@ export function normalizeContentEvent(value={}){
 
 export function createContentPage(role='details'){
   if(!roles.has(role))throw new Error('Choose a cover, details or closing page.');
-  return {id:freshId(),role,heading:'',body:'',assetId:null};
+  return {id:freshId(),role,composition:'auto',heading:'',body:'',assetId:null};
 }
 function defaultPages(type){return (type==='poster'?['cover']:['cover','details','closing']).map(createContentPage);}
 function normalizeAsset(value){
@@ -82,7 +83,7 @@ export function normalizeContentItem(value){
     if(!object(page)||!roles.has(page.role))throw new Error('Choose a cover, details or closing page.');
     const assetId=page.assetId==null?null:identifier(page.assetId,'Page image ID');
     if(assetId&&!assets.some(asset=>asset.id===assetId))throw new Error('A page refers to an image that is missing from this project.');
-    return {id:identifier(page.id,'Page ID'),role:page.role,heading:text(page.heading,'',500,'Page heading'),body:text(page.body,'',8000,'Page text'),assetId};
+    return {id:identifier(page.id,'Page ID'),role:page.role,composition:compositions.has(page.composition)?page.composition:'auto',heading:text(page.heading,'',500,'Page heading'),body:text(page.body,'',8000,'Page text'),assetId};
   });
   if(!pages.length)throw new Error('Keep at least one page in this content item.');
   unique(pages,'Pages');
@@ -159,6 +160,7 @@ export function contentCaption(item,event={}){
   if(item?.caption?.trim())return item.caption;
   const details=normalizeContentEvent(event),c=item?.content||{};
   const lines=[];
+  if(c.callout?.trim())lines.push(c.callout);
   if(item?.type==='maker'){
     lines.push(c.name?`Meet ${c.name}${c.project?`, maker of ${c.project}`:''}.`:c.project||'Meet the makers.');
     if(c.description)lines.push(c.description);

@@ -1,6 +1,7 @@
 import {COPY_FONT} from './data/copy-outlines.js';
 import {createPosterScene,preparePosterAssets,PALETTES} from './scene.js';
-import {DISPLAY_FONT} from './data/display-outlines.js';
+import {layoutTreatment,appendTreatmentArtwork} from './treatment.js';
+import {reactTypeToCutout} from './cutout-response.js';
 import {getLogoVariant} from './logo-library.js';
 import {imageCoverCrop} from './poster-image.js';
 
@@ -9,8 +10,6 @@ const MARGIN=64;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const value=(input,fallback='')=>typeof input==='string'&&input.trim()?input.trim():fallback;
 const copyWidth=(text,size,tracking=0)=>[...text].reduce((sum,char,index)=>sum+(COPY_FONT.glyphs[char]?.advance??0)*size/COPY_FONT.em+(index?tracking:0),0);
-const displayAdvance=(char,size)=>(DISPLAY_FONT.glyphs[char]?.advance||0)*size/DISPLAY_FONT.capHeight;
-const displayWidth=(text,size)=>[...text].reduce((sum,char)=>sum+displayAdvance(char,size),0);
 
 function omit(scene,field,text,reason='Kept in the caption to preserve the composition.'){
   if(!value(text))return;
@@ -51,33 +50,6 @@ function drawCopy(scene,text,box,{size=36,leading=48,color=scene.readingInk,fiel
   record(scene,field,text,lines,box,size);
   return {height:lines.length*leading,drawn:true};
 }
-function drawHeadline(scene,text,box,{size=128,leading=size*1.06,maxLines=3,sizes,field='Headline',color=scene.displayInk}={}){
-  text=value(text);if(!text)return {drawn:false};
-  const upper=text.toUpperCase();
-  if([...upper].some(char=>char!=='\n'&&char!=='\r'&&!DISPLAY_FONT.glyphs[char])){
-    omit(scene,field,text,'The original wording is retained in the caption and project.');record(scene,field,text,[],box,size,true);return {drawn:false};
-  }
-  // Three authored optical sizes, always with the font's original geometry.
-  // Primary titles are never cut midway through their name.
-  const candidates=[...new Set(sizes||[size,Math.min(size,112),Math.min(size,104)])];
-  let lines=null,cap=size,lineStep=leading;
-  for(const candidate of candidates){
-    const trial=wrap(upper,box.w,candidate,displayWidth),step=leading*candidate/size;
-    if(trial&&trial.length<=maxLines&&trial.length*step<=box.h){lines=trial;cap=candidate;lineStep=step;break;}
-  }
-  if(!lines){omit(scene,field,text,'The full wording is retained in the caption; a shorter page headline can be supplied.');record(scene,field,text,[],box,size,true);return {drawn:false};}
-  const scale=cap/DISPLAY_FONT.capHeight;
-  for(const [row,line]of lines.entries()){
-    let x=box.x;
-    for(const char of line){
-      const glyph=DISPLAY_FONT.glyphs[char];
-      if(glyph?.d)scene.ops.push({kind:'path',d:glyph.d,fill:color,matrix:[scale,0,0,-scale,x,box.y+cap+row*lineStep]});
-      x+=displayAdvance(char,cap);
-    }
-  }
-  record(scene,field,text,lines,box,cap);
-  return {drawn:true,height:lines.length*lineStep};
-}
 function drawStory(scene,text,box,{size=36,leading=49,field='Project story',maxLines=10}={}){
   text=value(text);if(!text)return;
   const lines=supportedCopy(text)?wrap(text,box.w,size):null;
@@ -95,119 +67,171 @@ function drawStory(scene,text,box,{size=36,leading=49,field='Project story',maxL
   if(excerpt)drawCopy(scene,excerpt,box,{size,leading,field,maxLines:capacity});
   else record(scene,field,text,[],box,size,true);
 }
-function photo(scene,asset,box,crop){
-  if(!asset)return;
-  scene.regions.image={...box};
-  if(asset.hasAlpha){
-    const scale=Math.min(box.w/asset.width,box.h/asset.height)*(crop?.zoom||1);
-    const breathing=1+(1-Math.cos((scene.phase||0)*Math.PI*2))*.004;
-    const w=asset.width*scale*breathing,h=asset.height*scale*breathing;
-    const x=box.x+(box.w-w)*(crop?.focusX??.5),y=box.y+(box.h-h)*(crop?.focusY??.5);
-    scene.ops.push({kind:'image',src:asset.src,x,y,w,h,clip:{...box}});
-  }else{
-    const placement={zoom:clamp(Number(crop?.zoom)||1,1,4),focusX:clamp(Number(crop?.focusX)??.5,0,1),focusY:clamp(Number(crop?.focusY)??.5,0,1)};
-    placement.zoom+=(1-Math.cos((scene.phase||0)*Math.PI*2))*.004;
-    placement.focusX=Number.isFinite(placement.focusX)?placement.focusX:.5;
-    placement.focusY=Number.isFinite(placement.focusY)?placement.focusY:.5;
-    scene.ops.push({kind:'image',src:asset.src,...box,source:imageCoverCrop(asset,box,placement),naturalWidth:asset.width,naturalHeight:asset.height,clip:{...box}});
-  }
+// Callouts use the same constructed lettering, optical spacing and motion as
+// the hero poster editor. Official titles and facts keep their own reading area.
+function calloutLines(text){
+  const upper=value(text).toUpperCase().replace(/[–—]/g,'-');
+  if(!upper||/[^A-Z0-9 &!?\n\r.\-]/.test(upper))return null;
+  const lines=upper.includes('\n')?upper.replace(/\r/g,'').split('\n').map(line=>line.trim()).filter(Boolean):wrap(upper,14,1,(line)=>line.length);
+  if(!lines||lines.length>4||lines.some(line=>line.replace(/ /g,'').length>18))return null;
+  return lines;
 }
-function identity(scene,item,event,index,count){
-  const y=scene.format==='story'?176:56,logo=getLogoVariant(scene.logoVariant);
-  const square=logo.layout==='square',w=square?76:250,h=w*logo.height/logo.width;
-  const box={x:MARGIN,y:y+(76-h)/2,w,h};
-  scene.ops.push({kind:'image',src:logo.src,...box});scene.regions.logo=box;
-  const label=item.type==='workshop'?'HANDS-ON WORKSHOP':'MAKER SPOTLIGHT';
-  drawCopy(scene,label,{x:490,y:y+5,w:526,h:32},{size:23,leading:32,field:'Series label',align:'right',tracking:.6});
-  drawCopy(scene,`${String(index+1).padStart(2,'0')} / ${String(count).padStart(2,'0')}`,{x:850,y:y+40,w:166,h:28},{size:20,leading:28,field:'Page number',align:'right'});
+function chooseCallout(scene,item,page){
+  const fallback=page.role==='details'?'HOW IT\nWORKS':page.role==='closing'?'COME\nMAKE':'MAKE\nSOMETHING';
+  const candidates=[value(page.heading),page.role==='cover'?value(item.content?.callout):'',page.role==='cover'?contentTitle(item):'',fallback].filter(Boolean);
+  for(const text of candidates){
+    const lines=calloutLines(text);
+    if(lines){scene.callout=lines.join('\n');return lines;}
+    omit(scene,'Poster callout',text,'The full wording is retained in the caption. Use a short callout and authored line breaks.');
+  }
+  return ['MAKE'];
+}
+function expressive(scene,lines,box,{field='Poster callout',object=null}={}){
+  if(!lines.length)return;
+  const letters=layoutTreatment(lines.join('\n'),box,scene.direction,scene.phase,.78,{variation:.64});
+  if(object){
+    letters.cells=reactTypeToCutout(letters.cells,object.frame,object.asset.silhouette,box,.72);
+    for(const row of letters.rows)row.cells=letters.cells.filter(cell=>cell.row===row.index);
+  }
+  appendTreatmentArtwork(scene,letters,{...scene.colors,fg:scene.displayInk},box);
+  scene.cells.push(...letters.cells);
+  scene.regions.type=scene.regions.type||{...box};
+  record(scene,field,lines.join('\n'),lines,box,box.h/lines.length);
+}
+function composition(page,asset){
+  if(page.composition==='type'||!asset)return 'type';
+  if(page.composition==='window')return 'window';
+  if(page.composition==='cutout')return asset.hasAlpha?'cutout':'window';
+  if(page.role==='closing')return 'type';
+  return asset.hasAlpha?'cutout':'window';
+}
+function photo(scene,asset,box,crop){
+  scene.regions.image={...box};
+  const placement={zoom:clamp(crop?.zoom??1,1,4),focusX:clamp(crop?.focusX??.5,0,1),focusY:clamp(crop?.focusY??.5,0,1)};
+  if(asset.hasAlpha){
+    const scale=Math.min(box.w/asset.width,box.h/asset.height)*placement.zoom;
+    const w=asset.width*scale,h=asset.height*scale;
+    scene.ops.push({kind:'image',src:asset.src,x:box.x+(box.w-w)*placement.focusX,y:box.y+(box.h-h)*placement.focusY,w,h,clip:{...box}});
+  }else scene.ops.push({kind:'image',src:asset.src,...box,source:imageCoverCrop(asset,box,placement),naturalWidth:asset.width,naturalHeight:asset.height,clip:{...box}});
+}
+function objectFrame(asset,box,crop){
+  // Zoom enlarges the cut-out; focus moves it through a bounded, protected area.
+  const base=Math.min(box.w/asset.width,box.h/asset.height);
+  const scale=Math.min(base*(crop?.zoom??1),496/asset.width,(box.h+100)/asset.height);
+  const w=asset.width*scale,h=asset.height*scale;
+  const x=clamp(box.x+(box.w-w)*(crop?.focusX??.5),520,1016-w);
+  const y=clamp(box.y+(box.h-h)*(crop?.focusY??.5),box.y-100,box.y+box.h-h);
+  return {x,y,w,h};
+}
+function drawObject(scene,asset,frame){
+  scene.ops.push({kind:'image',src:asset.src,...frame});
+  scene.regions.image={...frame};
 }
 function shortLink(scene,raw,box){
   raw=value(raw);if(!raw)return;
   let display=raw.replace(/^https?:\/\//i,'').replace(/\/$/,'');
-  if(copyWidth(display,26)>box.w){
+  if(copyWidth(display,25)>box.w){
     try{display=new URL(/^https?:\/\//i.test(raw)?raw:`https://${raw}`).host;}catch{}
     if(display!==raw)omit(scene,'Full booking or project link',raw,'The complete link is included in the caption.');
   }
-  drawCopy(scene,display,box,{size:26,leading:34,field:'Project link'});
+  drawCopy(scene,display,box,{size:25,leading:34,field:'Project link',align:'right'});
 }
 function signature(scene,item,event){
-  const y=scene.format==='story'?1660:1256,c=item.content||{},partner=item.partner;
-  const hasPartner=Boolean(partner?.asset||value(partner?.name));
-  shortLink(scene,value(c.url,event.url)||c.handle,{x:MARGIN,y,w:hasPartner?480:952,h:40});
+  const story=scene.format==='story',y=story?1660:1250,logo=getLogoVariant(scene.logoVariant);
+  const partner=item.partner,hasPartner=Boolean(partner?.asset||value(partner?.name));
+  const w=logo.layout==='square'?78:hasPartner?280:310,h=w*logo.height/logo.width;
+  const box={x:MARGIN,y:y+24-h/2,w,h};
+  scene.ops.push({kind:'image',src:logo.src,...box});scene.regions.logo=box;
+  shortLink(scene,value(item.content?.url,event.url)||item.content?.handle,{x:hasPartner?720:580,y:y+5,w:hasPartner?296:436,h:38});
   if(!hasPartner)return;
-  const x=650,w=366;
-  if(partner.asset){
-    const asset=partner.asset,s=Math.min(152/asset.width,42/asset.height);
-    scene.ops.push({kind:'image',src:asset.src,x:1016-asset.width*s,y:y+(42-asset.height*s)/2,w:asset.width*s,h:asset.height*s});
-    drawCopy(scene,value(partner.name),{x,y:y+4,w:190,h:36},{size:22,leading:30,field:'Partner name',align:'right'});
-  }else drawCopy(scene,partner.name,{x,y:y+4,w,h:36},{size:24,leading:32,field:'Partner name',align:'right'});
+  const asset=partner?.asset;
+  if(asset){
+    const scale=Math.min(180/asset.width,30/asset.height),width=asset.width*scale;
+    scene.ops.push({kind:'image',src:asset.src,x:420+(240-width)/2,y:y-4,w:width,h:asset.height*scale});
+    drawCopy(scene,value(partner.name),{x:420,y:y+30,w:240,h:28},{size:20,leading:26,field:'Partner name'});
+  }else drawCopy(scene,partner.name,{x:420,y:y+2,w:240,h:60},{size:23,leading:28,maxLines:2,field:'Partner name'});
 }
 function contentTitle(item){return value(item.type==='maker'?item.content?.project:item.content?.title);}
 function person(item){return value(item.type==='maker'?item.content?.name:item.content?.host);}
 function eventFacts(item,event){const c=item.content||{};return {date:value(c.date,event.dates),time:value(c.time),venue:value(c.location,event.venue)};}
-
-function cover(scene,item,event,page,asset,crop){
-  const story=scene.format==='story',c=item.content||{},facts=eventFacts(item,event);
-  const title=value(page.heading,contentTitle(item));
-  const titleBox=asset?{x:64,y:story?312:160,w:952,h:story?408:340}:{x:64,y:story?376:224,w:952,h:story?960:720};
-  const titleStyle=asset?{size:120,leading:128,maxLines:3}:{size:story?192:176,leading:story?204:188,sizes:story?[192,176,160]:[176,160,144],maxLines:4};
-  const heading=drawHeadline(scene,title,titleBox,{...titleStyle,field:'Project or workshop title'});
-  const personIsHeadline=!heading.drawn&&drawHeadline(scene,person(item),titleBox,{...titleStyle,field:'Maker or host name'}).drawn;
-  if(asset){
-    photo(scene,asset,{x:64,y:story?752:520,w:952,h:story?704:520},crop);
-    if(!personIsHeadline)drawCopy(scene,person(item),{x:64,y:story?1496:1080,w:952,h:64},{size:46,leading:58,field:item.type==='maker'?'Maker name':'Workshop host'});
-  }else{
-    // An equally deliberate type-only master; no invented illustrations.
-    if(!personIsHeadline)drawCopy(scene,person(item),{x:64,y:story?1472:1008,w:952,h:120},{size:54,leading:66,maxLines:1,field:item.type==='maker'?'Maker name':'Workshop host'});
-  }
-  if(item.type==='workshop'){
-    drawCopy(scene,[facts.date,facts.time].filter(Boolean).join(' / '),{x:64,y:story?1564:1150,w:952,h:48},{size:34,leading:44,field:'Workshop date and time'});
-    if(!story)drawCopy(scene,facts.venue,{x:64,y:1198,w:952,h:44},{size:30,leading:40,field:'Workshop venue'});
-    else omit(scene,'Workshop venue',facts.venue,'The venue is on the invitation page and in the caption.');
-  }
-  omit(scene,'Cover story',value(page.body,c.description),'The cover prioritises the title, image and maker. The story is in the caption.');
-  if(item.type==='maker')omit(scene,'Social handle',c.handle,'The handle is included with the sharing caption.');
+function context(scene,item,{y,width=952,x=64,compact=false}={}){
+  const name=person(item),title=contentTitle(item),nameSize=compact?34:38;
+  const named=drawCopy(scene,name,{x,y,w:width,h:compact?88:50},{size:nameSize,leading:44,maxLines:compact?2:1,field:item.type==='maker'?'Maker name':'Workshop host'});
+  const top=y+(named.drawn?named.height+10:0);
+  drawCopy(scene,title,{x,y:top,w:width,h:compact?72:76},{size:28,leading:36,maxLines:2,field:'Full project or workshop title'});
 }
-function details(scene,item,event,page,asset,crop){
-  const story=scene.format==='story',c=item.content||{},facts=eventFacts(item,event);
-  drawHeadline(scene,value(page.heading,item.type==='maker'?'BEHIND THE BUILD':'IN THE WORKSHOP'),{x:64,y:story?312:160,w:952,h:220},{size:104,leading:112,maxLines:2,field:'Details headline'});
-  const top=story?640:430,height=story?840:650;
-  if(asset)photo(scene,asset,{x:64,y:top,w:480,h:height},crop);
-  const x=asset?592:64,w=asset?424:800;
-  const name=drawCopy(scene,person(item),{x,y:top,w,h:116},{size:38,leading:49,maxLines:2,field:item.type==='maker'?'Maker name':'Workshop host'});
-  const start=top+(name.drawn?name.height+34:0);
-  drawStory(scene,value(page.body,c.description),{x,y:start,w,h:height-(start-top)},{size:36,leading:49,field:'Project or workshop story',maxLines:story?12:10});
-  if(item.type==='workshop'){
-    const y=story?1534:1140;
-    drawCopy(scene,[facts.date,facts.time].filter(Boolean).join(' / '),{x:64,y,w:952,h:48},{size:32,leading:42,field:'Workshop date and time'});
-    drawCopy(scene,facts.venue,{x:64,y:y+50,w:952,h:44},{size:30,leading:40,field:'Workshop venue'});
-    omit(scene,'Workshop duration',c.duration,'The complete session information is included in the caption.');
-  }else{
-    drawCopy(scene,contentTitle(item),{x:64,y:story?1540:1144,w:952,h:64},{size:34,leading:44,field:'Project name'});
-  }
+function facts(scene,item,event,y,{size=28,width=952}={}){
+  const info=eventFacts(item,event);
+  drawCopy(scene,[info.date,info.time].filter(Boolean).join(' / '),{x:64,y,w:width,h:40},{size,leading:38,field:'Event date and time'});
+  drawCopy(scene,info.venue,{x:64,y:y+42,w:width,h:40},{size,leading:38,field:'Event venue'});
 }
-function closing(scene,item,event,page,asset,crop){
-  const story=scene.format==='story',facts=eventFacts(item,event),c=item.content||{};
-  const title=value(page.heading,item.type==='maker'?'MEET THE MAKER':'JOIN THE WORKSHOP');
-  drawHeadline(scene,title,{x:64,y:story?340:192,w:952,h:270},{size:120,leading:132,maxLines:2,field:'Invitation headline'});
-  drawCopy(scene,[contentTitle(item),person(item)].filter(Boolean).join(' / '),{x:64,y:story?670:490,w:952,h:108},{size:36,leading:46,maxLines:2,field:'Project and host context'});
-  const y=story?942:672,hasDate=Boolean(facts.date),date=hasDate?facts.date:contentTitle(item);
-  const pieces=date.match(/^(?:(\w+day)\s+)?(\d{1,2}(?:\s*[–—-]\s*\d{1,2})?)\s+([a-z]+(?:\s+\d{4})?)$/i);
+function windowCover(scene,item,event,page,asset,crop,lines){
+  const story=scene.format==='story';
+  // The image belongs inside the typographic field: the last row completes the
+  // callout beneath it, rather than reducing the lettering to a small masthead.
+  const split=lines.length>1,top=split?lines.slice(0,-1):lines;
+  expressive(scene,top,{x:34,y:story?176:32,w:1012,h:split?(story?440:306):(story?600:470)});
+  photo(scene,asset,{x:64,y:split?(story?636:354):(story?800:510),w:952,h:split?(story?570:414):(story?620:454)},crop);
+  if(split)expressive(scene,lines.slice(-1),{x:34,y:story?1224:788,w:1012,h:story?204:190});
+  context(scene,item,{y:story?1460:1008});
+  facts(scene,item,event,story?1560:1144,{size:27});
+}
+function cutoutCover(scene,item,event,page,asset,crop,lines){
+  const story=scene.format==='story';
+  const frame=objectFrame(asset,{x:520,y:story?1000:600,w:496,h:story?550:490},crop);
+  expressive(scene,lines,{x:34,y:story?176:44,w:1012,h:story?1190:920},{object:{asset,frame}});
+  drawObject(scene,asset,frame);
+  context(scene,item,{x:64,y:story?1398:1000,width:440,compact:true});
+  facts(scene,item,event,story?1558:1152,{size:26});
+}
+function typeCover(scene,item,event,page,lines){
+  const story=scene.format==='story';
+  expressive(scene,lines,{x:34,y:story?176:44,w:1012,h:story?1190:920});
+  context(scene,item,{y:story?1410:1008});
+  facts(scene,item,event,story?1560:1144,{size:27});
+}
+function cover(scene,item,event,page,asset,crop,mode){
+  const lines=chooseCallout(scene,item,page);
+  if(mode==='window')windowCover(scene,item,event,page,asset,crop,lines);
+  else if(mode==='cutout')cutoutCover(scene,item,event,page,asset,crop,lines);
+  else typeCover(scene,item,event,page,lines);
+  omit(scene,'Cover story',value(page.body,item.content?.description),'The cover keeps its callout, image and essential facts. The full story is in the caption.');
+  if(item.content?.handle)omit(scene,'Social handle',item.content.handle);
+}
+function details(scene,item,event,page,asset,crop,mode){
+  const story=scene.format==='story',lines=chooseCallout(scene,item,page);
+  const typeBox={x:34,y:story?176:40,w:1012,h:story?470:350};
+  expressive(scene,lines,typeBox);
+  const top=story?700:436,height=story?690:528,hasImage=mode!=='type';
+  if(hasImage)photo(scene,asset,{x:64,y:top,w:500,h:height},crop);
+  const x=hasImage?612:64,w=hasImage?404:860;
+  const named=drawCopy(scene,person(item),{x,y:top,w,h:100},{size:34,leading:44,maxLines:2,field:item.type==='maker'?'Maker name':'Workshop host'});
+  const start=top+(named.drawn?named.height+26:0);
+  drawStory(scene,value(page.body,item.content?.description),{x,y:start,w,h:height-(start-top)},{size:hasImage?34:40,leading:hasImage?46:54,field:'Project or workshop story',maxLines:hasImage?10:8});
+  drawCopy(scene,contentTitle(item),{x:64,y:story?1436:1004,w:952,h:90},{size:32,leading:42,maxLines:2,field:'Full project or workshop title'});
+  facts(scene,item,event,story?1558:1144,{size:27});
+  if(item.content?.duration)omit(scene,'Workshop duration',item.content.duration);
+}
+function closing(scene,item,event,page,asset,crop,mode){
+  if(mode!=='type')return cover(scene,item,event,page,asset,crop,mode);
+  const story=scene.format==='story',lines=chooseCallout(scene,item,page),info=eventFacts(item,event);
+  expressive(scene,lines,{x:34,y:story?176:44,w:1012,h:story?780:620});
+  context(scene,item,{y:story?1016:730});
+  const date=info.date,pieces=date.match(/^(?:(\w+day)\s+)?(\d{1,2}(?:\s*[–—-]\s*\d{1,2})?)\s+([a-z]+(?:\s+\d{4})?)$/i);
+  const dateY=story?1234:888;
   if(pieces){
-    if(pieces[1])drawCopy(scene,pieces[1].toUpperCase(),{x:64,y,w:952,h:40},{size:28,leading:38,field:'Day of week'});
-    drawHeadline(scene,pieces[2].replace(/\s/g,''),{x:64,y:y+(pieces[1]?48:0),w:952,h:176},{size:168,leading:176,maxLines:1,field:'Festival date'});
-    drawCopy(scene,pieces[3].toUpperCase(),{x:64,y:y+(pieces[1]?240:192),w:952,h:80},{size:58,leading:74,field:'Festival month'});
-  }else{
-    drawCopy(scene,date,{x:64,y,w:952,h:280},{size:80,leading:92,maxLines:3,field:hasDate?'Festival date':'Project name'});
-  }
-  const bottom=story?1370:1030;
-  drawCopy(scene,[item.type==='workshop'?facts.time:'',facts.venue].filter(Boolean).join(' / '),{x:64,y:bottom,w:952,h:story?150:120},{size:38,leading:50,maxLines:2,field:'Time and venue'});
-  omit(scene,'Closing supporting text',value(page.body,c.description),'The invitation retains only its essential information. Supporting text is in the caption.');
-
+    const numerals=pieces[2].replace(/\s/g,'').replace(/[–—]/g,'-');
+    const dateWidth=Math.min(pieces[1]?650:952,Math.max(320,numerals.length*140));
+    expressive(scene,[numerals],{x:34,y:dateY,w:dateWidth,h:story?220:190},{field:'Festival date'});
+    if(pieces[1])drawCopy(scene,pieces[1].toUpperCase(),{x:718,y:dateY+70,w:298,h:76},{size:30,leading:40,maxLines:2,field:'Day of week'});
+    drawCopy(scene,pieces[3].toUpperCase(),{x:64,y:dateY+(story?236:208),w:952,h:52},{size:36,leading:48,field:'Festival month'});
+  }else drawCopy(scene,date,{x:64,y:dateY,w:952,h:160},{size:48,leading:60,maxLines:2,field:'Festival date'});
+  drawCopy(scene,[info.time,info.venue].filter(Boolean).join(' / '),{x:64,y:story?1556:1164,w:952,h:76},{size:30,leading:38,maxLines:2,field:'Time and venue'});
+  omit(scene,'Closing supporting text',value(page.body,item.content?.description),'Supporting text is retained in the caption.');
 }
 
-/** Master compositions retain their proportions. Copy is selected for the
- * design; source content stays intact in the project and sharing pack. */
+/** Content masters adapt the original hero lettering and image response.
+ * The same composed scene powers preview, still artwork and moving exports. */
 export function createContentScene(item,event={},options={}){
   const format=Object.hasOwn(FORMATS,options.format)?options.format:'feed';
   if(item?.type==='poster'){
@@ -216,14 +240,13 @@ export function createContentScene(item,event={},options={}){
   }
   const original=PALETTES.find(p=>p.id===item?.palette&&['maker','maker-red','maker-cyan'].includes(p.id))||PALETTES.find(p=>p.id==='maker-red');
   const colors={...original,fg:original.id==='maker-cyan'?original.ink:original.fg};
-  const displayInk=colors.fg,readingInk=original.id==='maker'?'#172C35':displayInk;
   const pages=item?.pages?.length?item.pages:[{role:'cover'}],index=clamp(Number.isInteger(options.pageIndex)?options.pageIndex:0,0,pages.length-1),page=pages[index];
   const selected=getLogoVariant(item?.logoVariant),logoVariant=item?.logoColourMode==='auto'?`${selected.layout}-${original.id==='maker-red'?'white':'black'}`:selected.id;
   const size=FORMATS[format];
-  const scene={phase:Number.isFinite(options.phase)?options.phase:0,width:size.w,height:size.h,margin:MARGIN,background:colors.bg,ops:[],cells:[],direction:item?.treatment||'air',description:`${item?.type==='workshop'?'Workshop':'Maker spotlight'} ${page.role}`,colors,displayInk,readingInk,format,logoVariant,warnings:[],omittedContent:[],textBlocks:[],hasOverflow:false,hasUnsupportedText:false,regions:{}};
-  const assets=item?.assets||[],asset=assets.find(image=>image.id===page.assetId)||assets[0];
-  identity(scene,item||{},event,index,pages.length);
-  (page.role==='details'?details:page.role==='closing'?closing:cover)(scene,item||{type:'maker'},event,page,asset,item?.variants?.[format]);
+  const scene={phase:Number.isFinite(options.phase)?options.phase:0,width:size.w,height:size.h,margin:MARGIN,background:colors.bg,ops:[],cells:[],direction:item?.treatment||'air',description:`${item?.type==='workshop'?'Workshop':'Maker spotlight'} ${page.role}`,colors,displayInk:colors.fg,readingInk:original.id==='maker'?'#172C35':colors.fg,format,logoVariant,warnings:[],omittedContent:[],textBlocks:[],hasOverflow:false,hasUnsupportedText:false,regions:{},callout:''};
+  const assets=item?.assets||[],asset=assets.find(image=>image.id===page.assetId)||assets[0],mode=composition(page,asset);
+  scene.composition=mode;
+  (page.role==='details'?details:page.role==='closing'?closing:cover)(scene,item||{type:'maker'},event,page,asset,item?.variants?.[format],mode);
   signature(scene,item||{},event);
   return scene;
 }

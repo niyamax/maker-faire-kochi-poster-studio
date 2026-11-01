@@ -13,3 +13,6 @@
 .partner-logo-preview{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:13px 0;padding:12px;background:repeating-conic-gradient(#eeeeea 0 25%,#fff 0 50%) 50%/12px 12px;border:1px solid #e1e1d5;border-radius:4px}.partner-logo-preview img{max-width:140px;max-height:66px;object-fit:contain;min-width:0}.partner-logo-preview .text-button{font-size:10px;background:#fff;padding:4px 6px}.partner-logo-button{margin-top:12px}
 
 .auto-logo-toggle{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:400;cursor:pointer}.auto-logo-toggle input{width:14px;margin:0}.auto-logo-hint{margin:-9px 0 0;font-size:10px}
+
+#field-callout{font-size:19px;line-height:1.15;font-weight:550;letter-spacing:-.35px;min-height:94px}#page-composition{margin-top:1px}
+label[for=page-composition]{margin-top:15px}

@@ -80,8 +80,8 @@ async function scenePNG(scene){
 export async function contentPNG(item,event,options={}){
   const output=outputOptions(options),snapshot=snapshotContent(item,event);
   checkAbort(output.signal);
-  const scene=checkedScene(snapshot.item,snapshot.event,output);
   await prepareContentAssets(snapshot.item);checkAbort(output.signal);
+  const scene=checkedScene(snapshot.item,snapshot.event,output);
   return scenePNG(scene);
 }
 
@@ -139,12 +139,13 @@ function withOmittedText(copy,omissions){
   }
   return result;
 }
-function altTextForPage(item,event,page,omissions=[]){
+function altTextForPage(item,event,page,omissions=[],callout=''){
   if(item.altText?.trim())return withOmittedText(item.altText,omissions);
   const c=item.content||{},heading=page?.heading||c.project||c.title||c.name||contentItemLabel(item);
   const details=page?.body||c.description;
   const facts=item.type==='workshop'?[c.host,c.date||event.dates,c.time,c.duration,c.location||event.venue,c.url||event.url]:[c.name,c.handle,c.date||event.dates,c.location||event.venue,c.url||event.url];
-  const description=[event.name,heading,details,...facts].filter(Boolean).join('. ');
+  const hero=typeof callout==='string'?callout.trim():'';
+  const description=[...new Set([event.name,hero,heading,details,...facts].filter(Boolean))].join('. ');
   return withOmittedText(description,omissions);
 }
 
@@ -152,13 +153,13 @@ export async function contentPack(item,event,{onProgress=()=>{},signal}={}){
   const snapshot=snapshotContent(item,event);item=snapshot.item;event=snapshot.event;
   const count=pageCount(item),outputs=[];
   checkAbort(signal);
+  onProgress(0,{stage:'preparing',totalPages:Object.keys(CONTENT_FORMATS).length*count});
+  await prepareContentAssets(item);checkAbort(signal);
   // Validate the entire pack before the first expensive raster operation.
   for(const format of Object.keys(CONTENT_FORMATS))for(let pageIndex=0;pageIndex<count;pageIndex++){
     const options={format,pageIndex,phase:0};
     outputs.push({options,scene:checkedScene(item,event,options)});
   }
-  onProgress(0,{stage:'preparing',totalPages:outputs.length});
-  await prepareContentAssets(item);checkAbort(signal);
   const entries=[],files=[],alternativeText=[];
   for(const [index,{options,scene}] of outputs.entries()){
     checkAbort(signal);
@@ -168,7 +169,7 @@ export async function contentPack(item,event,{onProgress=()=>{},signal}={}){
     const page=item.pages?.[options.pageIndex];
     const omissions=omittedContent(scene);
     files.push({filename,format:options.format,pageIndex:options.pageIndex,page:options.pageIndex+1,role:page?.role||'cover',width:scene.width,height:scene.height,warnings:scene.warnings||[],omittedContent:omissions});
-    alternativeText.push(`${filename}\n${altTextForPage(item,event,page,omissions)}`);
+    alternativeText.push(`${filename}\n${altTextForPage(item,event,page,omissions,scene.callout)}`);
     onProgress((index+1)/(outputs.length+1),{stage:'rendering',...options,totalPages:outputs.length});
   }
   const manifest={kind:'maker-faire-content-pack',version:1,exportedAt:new Date().toISOString(),itemId:item.id,type:item.type,title:contentItemLabel(item),event,files};
@@ -186,8 +187,8 @@ export async function contentPack(item,event,{onProgress=()=>{},signal}={}){
 export async function contentVideo(item,event,options={}){
   const output=outputOptions(options),snapshot=snapshotContent(item,event);
   checkAbort(output.signal);
-  const first=checkedScene(snapshot.item,snapshot.event,{...output,phase:0});
   await prepareContentAssets(snapshot.item);checkAbort(output.signal);
+  const first=checkedScene(snapshot.item,snapshot.event,{...output,phase:0});
   return exportVideo({
     width:first.width,height:first.height,duration:output.duration??8,fps:output.fps??30,renderScale:1,maxSide:1920,
     signal:output.signal,onProgress:output.onProgress,onSetup:output.onSetup,

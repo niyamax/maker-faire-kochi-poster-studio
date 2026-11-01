@@ -8,15 +8,17 @@ Create Maker Faire Kochi social content from shared maker and workshop informati
 
 Open the root page to create a **Maker Spotlight**, **Workshop**, or **Poster**. Name and duplicate items, edit the shared event details, and reopen your work from the library.
 
-- **Maker Spotlight:** maker and project names, description, handle, photographs and a link.
-- **Workshop:** title, host, date, time, duration, location, description and booking link. Empty event fields inherit the shared event details.
+- **Maker Spotlight:** maker and project names, a short poster callout, description, handle, photographs and a link.
+- **Workshop:** full title, poster callout, host, date, time, duration, location, description and booking link. Empty event fields inherit the shared event details.
 - **Linked outputs:** feed at 1080 × 1350 and Story at 1080 × 1920 share content, colours and logo. Each output retains its own image zoom and focal point.
-- **Carousels:** cover, details and closing pages, with custom page headings/body text, image selection, duplication, ordering and removal. Add up to 30 pages and eight photographs per item.
+- **Carousels:** cover, details and closing pages, with custom callouts/body text, image selection, duplication, ordering and removal. Choose an automatic composition, photo window, object cut-out or type-only artwork per page. Add up to 30 pages and eight photographs per item.
 - **Partner branding:** add a partner name and a dedicated logo alongside the Maker Faire identity, independently of the photo gallery.
 - **Sharing packs:** individual PNG/SVG outputs or an ordered ZIP of feed and Story PNGs, an editable project, caption text, image descriptions and an output manifest. Video export uses the same selected page and motion geometry.
 - **Editing guides:** toggle Story safe-area guides in the preview. Guides are omitted from exports; add native social links and stickers on the destination platform.
 
-Templates follow the [Content Studio art direction](docs/art-direction.md): Anton headlines at their original proportions, generous image scale, readable facts directly on the colour field, and distinct cover, editorial and invitation compositions. Each master keeps its composition when supporting copy runs long. Whole secondary blocks, or complete sentences from a longer story, are selected for the artwork; the complete source stays in the project and sharing pack caption. New packs automatically choose a contrasting monochrome logo; turn off Automatic contrast to choose a specific supplied colour variant.
+Templates follow the [Content Studio art direction](docs/art-direction.md) and use the original hero poster lettering engine. Air, Flex and Packed shape a substantial typographic field, with the same optical spacing, letter character and motion as the poster editor. Photo windows sit between rows of lettering; transparent objects interrupt the field and the letters respond to their silhouette; type-only callouts reclaim the full artwork area. Names, complete official titles and practical facts have separate reading areas.
+
+Write a short **Poster callout**, using Enter for two to four deliberate lines, while retaining the full project or workshop title in its own field. A page's optional callout overrides the shared cover wording. Feed and Story are composed separately. Whole secondary blocks, or complete sentences from a longer story, are selected for the artwork; the complete source stays in the project and sharing pack caption. New packs automatically choose a contrasting monochrome logo; turn off Automatic contrast to choose a specific supplied colour variant.
 
 The library saves to **IndexedDB on this device**. The first visit migrates a previously saved Poster Studio project into a library item. Imported v1 poster files keep their original artwork, media, fonts, logo and placement, and open in the classic editor at `/poster.html`. Use the editor’s back link to return to the library after saving.
 
@@ -137,7 +139,6 @@ Precompiled outlines are included, so normal builds need only Node.js. To regene
 ```sh
 python scripts/build-fonts.py
 python scripts/build-copy-font.py
-python scripts/build-display-font.py
 ```
 
 ## Contributing

@@ -12,6 +12,7 @@ const all=selector=>[...document.querySelectorAll(selector)];
 const el=(tag,className,text)=>{const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;};
 const typeLabel=type=>CONTENT_TYPES.find(entry=>entry.id===type)?.label||'Content';
 const roleLabel=role=>({cover:'Cover',details:'Details',closing:'Closing card'}[role]||'Page');
+const pageUsesPhotos=page=>(page?.composition||'auto')!=='type'&&!(page?.role==='closing'&&(page?.composition||'auto')==='auto');
 const clone=value=>structuredClone(value);
 const freshId=()=>crypto.randomUUID();
 let workspace=createWorkspace(),selectedId=null,pageIndex=0,activeFormat='feed',activeTab='content';
@@ -114,8 +115,7 @@ function prepareUiAssets(item){
 }
 async function paintThumbnail(canvas,item,page=0,isCurrent=()=>canvas.isConnected){
   if(!isCurrent())return;
-  const definition=item.pages[page],chosen=item.assets.find(asset=>asset.id===definition?.assetId)
-    ||(definition?.role==='closing'?null:item.assets[0]);
+  const definition=item.pages[page],chosen=pageUsesPhotos(definition)?item.assets.find(asset=>asset.id===definition?.assetId)||item.assets[0]:null;
   const thumbnailItem=item.type==='poster'?item:{...item,assets:chosen?[chosen]:[]};
   try{
     await prepareUiAssets(thumbnailItem);
@@ -156,6 +156,7 @@ function addContent(type){
   const item=createContentItem(type,workspace.event);mutate(()=>workspace.items.unshift(item),{library:true,preview:false});itemRoute(item.id);
 }
 const fieldSpecs={
+  callout:{label:'Poster callout',max:120,placeholder:()=>currentItem()?.type==='workshop'?'MAKE\nLIGHT.':'MEET THE\nMAKER.',rows:3,hint:'Try 2–4 short lines. Use Enter for deliberate breaks; keep the full project or workshop title in its own field.'},
   name:{label:'Maker name',max:240,placeholder:'Who made it?'},project:{label:'Project name',max:240,placeholder:'What have they made?'},
   title:{label:'Workshop title',max:400,placeholder:'What will people learn or make?'},host:{label:'Host or facilitator',max:240,placeholder:'Who is leading the session?'},
   description:{label:'The story',max:8000,placeholder:'A short description in plain language.',rows:5,hint:'Artwork highlights key information. Full supporting copy stays in your sharing text.'},
@@ -174,7 +175,7 @@ function renderEditor(){
   const item=currentItem();if(!item)return;
   pageIndex=Math.max(0,Math.min(pageIndex,item.pages.length-1));$('#editor-type').textContent=typeLabel(item.type).toUpperCase();$('#item-title').value=item.title;$('#item-title').placeholder=contentItemLabel(item);
   $('#content-form-heading').textContent=item.type==='maker'?'Introduce a maker':'Bring people together';
-  const fields=item.type==='maker'?['name','project','description','handle']:['title','host','description','time','duration'];
+  const fields=item.type==='maker'?['name','project','callout','description','handle']:['title','host','callout','description','time','duration'];
   $('#content-fields').replaceChildren(...fields.map(createContentField));$('#event-override-fields').replaceChildren(...['date','location','url'].map(createContentField));
   $('#content-palette').value=item.palette;syncLogoControls();
   for(const button of all('[data-content-treatment]'))button.setAttribute('aria-pressed',String(button.dataset.contentTreatment===item.treatment));
@@ -211,10 +212,12 @@ function syncCrop(){
   for(const button of all('[data-select-format]'))button.setAttribute('aria-pressed',String(button.dataset.selectFormat===activeFormat));
   for(const output of all('[data-preview-format]'))output.dataset.active=String(output.dataset.previewFormat===activeFormat);
   $('#single-export-label').textContent=`${CONTENT_FORMATS[activeFormat].name} · Page ${pageIndex+1}`;
-  const closing=currentPage()?.role==='closing',noPhoto=!item.assets.length||closing;
-  $('#crop-format').disabled=closing||exporting;
+  const page=currentPage(),usesPhotos=pageUsesPhotos(page),noPhoto=!item.assets.length||!usesPhotos;
+  const asset=item.assets.find(candidate=>candidate.id===page?.assetId)||item.assets[0],composition=page?.composition||'auto';
+  const cutout=asset?.hasAlpha&&(composition==='cutout'||(composition==='auto'&&page?.role!=='closing'));
+  $('#crop-format').disabled=!usesPhotos||exporting;
   for(const id of ['crop-zoom','crop-x','crop-y','reset-crop'])$('#'+id).disabled=noPhoto||exporting;
-  $('#crop-help').textContent=closing?'The closing card is a typographic invitation. Choose a cover or details page to adjust a photograph.':noPhoto?'Add a photograph in Content to adjust its crop.':'Each format keeps its own crop. Your content stays linked.';
+  $('#crop-help').textContent=!usesPhotos?'This page uses type only. Choose Photo window or Object cut-out in Pages to include a photograph.':noPhoto?'Add a photograph in Content to adjust its placement.':cutout?'Scale and position the transparent object separately for Feed and Story. Its size stays within the composition.':'Each format keeps its own photo crop. Your content stays linked.';
 }
 function renderPhotos(){
   const item=currentItem();if(!item)return;$('#photo-count').textContent=`${item.assets.length} / ${CONTENT_MAX_ASSETS}`;$('#add-photos').disabled=item.assets.length>=CONTENT_MAX_ASSETS;$('#photo-gallery').replaceChildren();
@@ -228,15 +231,16 @@ function renderPhotos(){
 }
 function syncPageImage(){
   const item=currentItem(),page=currentPage();if(!item||!page)return;
-  const closing=page.role==='closing';
-  $('#page-image').replaceChildren(new Option(closing?'Typography only':item.assets.length?'Automatic · first photo':'No photographs yet',''),...item.assets.map((asset,index)=>new Option(`${index+1}. ${asset.name}`,asset.id)));
-  $('#page-image').value=closing?'':page.assetId||'';$('#page-image').disabled=closing||exporting;
-  $('#page-image-hint').textContent=closing?'The closing card is a typographic invitation. Saved photo choices return when you select another layout.':item.assets.length?'Choose a photo for this page. Feed and Story keep separate crops.':'Add photographs in Content to choose one for this page.';
+  const composition=page.composition||'auto',usesPhotos=pageUsesPhotos(page),asset=item.assets.find(candidate=>candidate.id===page.assetId)||item.assets[0];
+  $('#page-image').replaceChildren(new Option(!usesPhotos?'Typography only':item.assets.length?'Automatic · first photo':'No photographs yet',''),...item.assets.map((asset,index)=>new Option(`${index+1}. ${asset.name}`,asset.id)));
+  $('#page-image').value=usesPhotos?page.assetId||'':'';$('#page-image').disabled=!usesPhotos||!item.assets.length||exporting;
+  $('#page-image-hint').textContent=!usesPhotos?'Saved photo choices stay in the project for compositions that use an image.':item.assets.length?'Choose a photo for this page. Feed and Story keep separate placement.':'Add photographs in Content to choose one for this page.';
+  $('#page-composition-hint').textContent=composition==='type'?'A composition built entirely from expressive type.':composition==='cutout'?(!asset?'Add a genuinely transparent PNG or WebP for an object cut-out.':!asset.hasAlpha?'This image has no transparency, so it uses a photo window. Choose a transparent PNG or WebP for an object cut-out.':'The transparent object shares space with the lettering. Adjust its placement in Design.'):composition==='window'?'A photograph in a composed window, with an independent crop for each output.':page.role==='closing'?'Auto makes the closing card typographic. Choose Photo window or Object cut-out to include an image.':'Auto chooses a composition for this page and its photographs.';
 }
 function syncPageControls(){
   const item=currentItem(),page=currentPage();if(!item||!page)return;
   $('#page-edit-title').textContent=`Page ${pageIndex+1} of ${item.pages.length}`;$('#preview-page-label').textContent=`Page ${pageIndex+1} of ${item.pages.length} · ${roleLabel(page.role)}`;
-  $('#page-role').value=page.role;$('#page-heading').value=page.heading;$('#page-body').value=page.body;
+  $('#page-role').value=page.role;$('#page-composition').value=page.composition||'auto';$('#page-heading').value=page.heading;$('#page-body').value=page.body;
   $('#page-up').disabled=pageIndex===0;$('#page-down').disabled=pageIndex===item.pages.length-1;$('#delete-page').disabled=item.pages.length===1;$('#duplicate-page').disabled=item.pages.length>=CONTENT_MAX_PAGES;
   $('#add-page').disabled=$('#add-page-strip').disabled=item.pages.length>=CONTENT_MAX_PAGES;syncPageImage();syncCrop();
 }
@@ -313,6 +317,10 @@ async function exportCurrent(kind){
   try{
     // Drain in-flight thumbnail work before the exporter prepares its images.
     await libraryThumbnailTask;await uiAssetsTask;
+    if(exportCancelled)throw new DOMException('Export cancelled.','AbortError');
+    // Imported transparent images may need their silhouette prepared before
+    // even a synchronous SVG can compose the original lettering response.
+    await prepareContentAssets(snapshot);
     if(exportCancelled)throw new DOMException('Export cancelled.','AbortError');
     let blob,filename;
     if(kind==='pack'){blob=await contentPack(snapshot,event,{onProgress});filename=contentFilename(snapshot,{extension:'zip'});}
@@ -394,10 +402,11 @@ function addPage(){
 }
 $('#add-page').addEventListener('click',addPage);$('#add-page-strip').addEventListener('click',addPage);
 $('#page-role').addEventListener('change',event=>{const page=currentPage();if(!page)return;mutate(()=>page.role=event.target.value);syncPageControls();renderPageStrip();});
+$('#page-composition').addEventListener('change',event=>{const page=currentPage();if(!page)return;mutate(()=>page.composition=event.target.value);syncPageControls();renderPageStrip();});
 for(const [id,key] of [['page-heading','heading'],['page-body','body']])$('#'+id).addEventListener('input',event=>{
   const page=currentPage();if(!page)return;rememberInput(event.target);page[key]=event.target.value;changed();
 });
-$('#page-image').addEventListener('change',event=>{const page=currentPage();if(!page)return;mutate(()=>page.assetId=event.target.value||null);syncCrop();renderPageStrip();});
+$('#page-image').addEventListener('change',event=>{const page=currentPage();if(!page)return;mutate(()=>page.assetId=event.target.value||null);syncPageImage();syncCrop();renderPageStrip();});
 function movePage(direction){const item=currentItem(),next=pageIndex+direction;if(!item||next<0||next>=item.pages.length)return;mutate(()=>{const [page]=item.pages.splice(pageIndex,1);item.pages.splice(next,0,page);pageIndex=next;});syncPageControls();renderPageStrip();}
 $('#page-up').addEventListener('click',()=>movePage(-1));$('#page-down').addEventListener('click',()=>movePage(1));
 $('#duplicate-page').addEventListener('click',()=>{const item=currentItem(),page=currentPage();if(!item||!page||item.pages.length>=CONTENT_MAX_PAGES)return;mutate(()=>{item.pages.splice(pageIndex+1,0,{...clone(page),id:freshId()});pageIndex++;});syncPageControls();renderPageStrip();});
