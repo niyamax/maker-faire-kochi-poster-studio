@@ -30,12 +30,23 @@ function snapshotContent(item,event){
   return {workspace,item:workspace.items[0],event:workspace.event};
 }
 function pageCount(item){return Math.max(1,item.pages?.length||0);}
+function omittedContent(scene){
+  return Array.isArray(scene.omittedContent)?scene.omittedContent.filter(entry=>entry&&typeof entry.field==='string'&&typeof entry.text==='string'):[];
+}
+function isOmittedBlock(block,omissions){
+  return block.omitted===true||omissions.some(entry=>entry.field===block.field&&(typeof block.text!=='string'||entry.text===block.text));
+}
 function checkedScene(item,event,options){
   if(options.pageIndex>=pageCount(item))throw new RangeError('This content page no longer exists.');
   const scene=createContentScene(item,event,options),expected=CONTENT_FORMATS[options.format];
   if(scene.width!==expected.w||scene.height!==expected.h)throw new Error('This output has invalid dimensions.');
-  if(scene.hasOverflow||scene.textBlocks?.some(block=>block.overflow))throw new Error('Some text does not fit this page. Shorten it or move it to another carousel page before exporting.');
-  if(scene.hasUnsupportedText||scene.textBlocks?.some(block=>block.unsupportedCharacters?.length))throw new Error('Some characters cannot be rendered by the current fonts. Edit the highlighted text before exporting.');
+  const omissions=omittedContent(scene),blocks=scene.textBlocks||[];
+  const overflowing=blocks.filter(block=>block.overflow),unsupported=blocks.filter(block=>block.unsupportedCharacters?.length);
+  // A composed layout may deliberately leave secondary copy off the artwork.
+  // Only unresolved rendering failures block an export; omissions are retained
+  // in the source project and carried into the pack's supporting text.
+  if(overflowing.some(block=>!isOmittedBlock(block,omissions))||(scene.hasOverflow&&!overflowing.length))throw new Error('Some text cannot be laid out correctly on this page. Edit the highlighted text before exporting.');
+  if(unsupported.some(block=>!isOmittedBlock(block,omissions))||(scene.hasUnsupportedText&&!unsupported.length))throw new Error('Some characters cannot be rendered by the current fonts. Edit the highlighted text before exporting.');
   if(!Array.isArray(scene.ops)||!scene.ops.length)throw new Error('This content page has no artwork to export.');
   return scene;
 }
@@ -118,12 +129,23 @@ export async function zipEntries(entries){
   return new Blob([...local,...central,end],{type:'application/zip'});
 }
 
-function altTextForPage(item,event,page){
-  if(item.altText?.trim())return item.altText.trim();
+function withOmittedText(copy,omissions){
+  let result=String(copy||'').trim();
+  const included=new Set();
+  for(const entry of omissions){
+    const text=entry.text.trim();
+    if(!text||included.has(text)||result.includes(text))continue;
+    included.add(text);result+=(result?'\n\n':'')+text;
+  }
+  return result;
+}
+function altTextForPage(item,event,page,omissions=[]){
+  if(item.altText?.trim())return withOmittedText(item.altText,omissions);
   const c=item.content||{},heading=page?.heading||c.project||c.title||c.name||contentItemLabel(item);
   const details=page?.body||c.description;
-  const facts=item.type==='workshop'?[c.host,c.date||event.dates,c.time,c.duration,c.location||event.venue]:[c.name,c.handle];
-  return [event.name,heading,details,...facts].filter(Boolean).join('. ').replace(/\.\./g,'.');
+  const facts=item.type==='workshop'?[c.host,c.date||event.dates,c.time,c.duration,c.location||event.venue,c.url||event.url]:[c.name,c.handle,c.date||event.dates,c.location||event.venue,c.url||event.url];
+  const description=[event.name,heading,details,...facts].filter(Boolean).join('. ');
+  return withOmittedText(description,omissions);
 }
 
 export async function contentPack(item,event,{onProgress=()=>{},signal}={}){
@@ -144,14 +166,15 @@ export async function contentPack(item,event,{onProgress=()=>{},signal}={}){
     checkAbort(signal);
     entries.push({name:filename,data});
     const page=item.pages?.[options.pageIndex];
-    files.push({filename,format:options.format,pageIndex:options.pageIndex,page:options.pageIndex+1,role:page?.role||'cover',width:scene.width,height:scene.height,warnings:scene.warnings||[]});
-    alternativeText.push(`${filename}\n${altTextForPage(item,event,page)}`);
+    const omissions=omittedContent(scene);
+    files.push({filename,format:options.format,pageIndex:options.pageIndex,page:options.pageIndex+1,role:page?.role||'cover',width:scene.width,height:scene.height,warnings:scene.warnings||[],omittedContent:omissions});
+    alternativeText.push(`${filename}\n${altTextForPage(item,event,page,omissions)}`);
     onProgress((index+1)/(outputs.length+1),{stage:'rendering',...options,totalPages:outputs.length});
   }
   const manifest={kind:'maker-faire-content-pack',version:1,exportedAt:new Date().toISOString(),itemId:item.id,type:item.type,title:contentItemLabel(item),event,files};
   entries.push(
     {name:'project.json',data:JSON.stringify(snapshot.workspace,null,2)+'\n'},
-    {name:'caption.txt',data:(item.caption?.trim()||contentCaption(item,event)||'')+'\n'},
+    {name:'caption.txt',data:withOmittedText(item.caption?.trim()||contentCaption(item,event),outputs.flatMap(({scene})=>omittedContent(scene)))+'\n'},
     {name:'alt-text.txt',data:alternativeText.join('\n\n')+'\n'},
     {name:'manifest.json',data:JSON.stringify(manifest,null,2)+'\n'},
   );

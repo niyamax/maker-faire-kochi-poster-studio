@@ -158,7 +158,7 @@ function addContent(type){
 const fieldSpecs={
   name:{label:'Maker name',max:240,placeholder:'Who made it?'},project:{label:'Project name',max:240,placeholder:'What have they made?'},
   title:{label:'Workshop title',max:400,placeholder:'What will people learn or make?'},host:{label:'Host or facilitator',max:240,placeholder:'Who is leading the session?'},
-  description:{label:'The story',max:8000,placeholder:'A short description in plain language.',rows:5,hint:'Keep the cover concise. Use details pages for longer stories.'},
+  description:{label:'The story',max:8000,placeholder:'A short description in plain language.',rows:5,hint:'Artwork highlights key information. Full supporting copy stays in your sharing text.'},
   handle:{label:'Social handle',max:240,placeholder:'@maker'},time:{label:'Time',max:120,placeholder:'e.g. 10:30 AM'},duration:{label:'Duration',max:120,placeholder:'e.g. 60 minutes'},
   date:{label:'Date',max:240,placeholder:()=>workspace.event.dates||'Use the event dates'},location:{label:'Location',max:500,placeholder:()=>workspace.event.venue||'Use the event venue'},url:{label:'Booking or project link',max:2000,placeholder:()=>workspace.event.url||'Use the event link'},
 };
@@ -211,9 +211,10 @@ function syncCrop(){
   for(const button of all('[data-select-format]'))button.setAttribute('aria-pressed',String(button.dataset.selectFormat===activeFormat));
   for(const output of all('[data-preview-format]'))output.dataset.active=String(output.dataset.previewFormat===activeFormat);
   $('#single-export-label').textContent=`${CONTENT_FORMATS[activeFormat].name} · Page ${pageIndex+1}`;
-  const noPhoto=!item.assets.length||(currentPage()?.role==='closing'&&!currentPage()?.assetId);
+  const closing=currentPage()?.role==='closing',noPhoto=!item.assets.length||closing;
+  $('#crop-format').disabled=closing||exporting;
   for(const id of ['crop-zoom','crop-x','crop-y','reset-crop'])$('#'+id).disabled=noPhoto||exporting;
-  $('#crop-help').textContent=noPhoto?(currentPage()?.role==='closing'?'Choose a photograph in Pages to add an image to this closing card.':'Add a photograph in Content to adjust its crop.'):'Each format keeps its own crop. Your content stays linked.';
+  $('#crop-help').textContent=closing?'The closing card is a typographic invitation. Choose a cover or details page to adjust a photograph.':noPhoto?'Add a photograph in Content to adjust its crop.':'Each format keeps its own crop. Your content stays linked.';
 }
 function renderPhotos(){
   const item=currentItem();if(!item)return;$('#photo-count').textContent=`${item.assets.length} / ${CONTENT_MAX_ASSETS}`;$('#add-photos').disabled=item.assets.length>=CONTENT_MAX_ASSETS;$('#photo-gallery').replaceChildren();
@@ -227,7 +228,10 @@ function renderPhotos(){
 }
 function syncPageImage(){
   const item=currentItem(),page=currentPage();if(!item||!page)return;
-  $('#page-image').replaceChildren(new Option(page.role==='closing'?'No photo':item.assets.length?'Automatic · first photo':'No photographs yet',''),...item.assets.map((asset,index)=>new Option(`${index+1}. ${asset.name}`,asset.id)));$('#page-image').value=page.assetId||'';
+  const closing=page.role==='closing';
+  $('#page-image').replaceChildren(new Option(closing?'Typography only':item.assets.length?'Automatic · first photo':'No photographs yet',''),...item.assets.map((asset,index)=>new Option(`${index+1}. ${asset.name}`,asset.id)));
+  $('#page-image').value=closing?'':page.assetId||'';$('#page-image').disabled=closing||exporting;
+  $('#page-image-hint').textContent=closing?'The closing card is a typographic invitation. Saved photo choices return when you select another layout.':item.assets.length?'Choose a photo for this page. Feed and Story keep separate crops.':'Add photographs in Content to choose one for this page.';
 }
 function syncPageControls(){
   const item=currentItem(),page=currentPage();if(!item||!page)return;
@@ -246,12 +250,14 @@ function renderPageStrip(){
   });
 }
 function drawPreviews(phase=0){
-  const item=currentItem();if(!item)return;const warnings=new Set();let invalidCurrent=false;
+  const item=currentItem();if(!item)return;const warnings=new Set();let invalidCurrent=false,hasEditorialOmissions=false;
   for(const format of Object.keys(CONTENT_FORMATS)){
     const scene=createContentScene(item,workspace.event,{format,pageIndex,phase});paintCanvas($(`#preview-${format}`),scene);
     for(const warning of scene.warnings||[])warnings.add(`${CONTENT_FORMATS[format].name}: ${warning}`);
+    if(scene.omittedContent?.length)hasEditorialOmissions=true;
     if(format===activeFormat)invalidCurrent=Boolean(scene.hasOverflow||scene.hasUnsupportedText);
   }
+  $('#preview-editorial-note').hidden=!hasEditorialOmissions;
   $('#preview-warnings').hidden=warnings.size===0;
   const list=el('ul');for(const warning of warnings)list.append(el('li','',warning));$('#preview-warnings').replaceChildren(list);
   for(const id of ['export-png','export-svg','export-content-video'])$('#'+id).disabled=exporting||invalidCurrent;
@@ -319,7 +325,7 @@ async function exportCurrent(kind){
     $('#cancel-content-export').hidden=true;$('#close-content-export').hidden=false;
   }catch(error){
     if(error.name==='AbortError'){$('#export-dialog').close();announce('Export cancelled.');}
-    else{$('#export-dialog-title').textContent='A little more editing is needed';$('#export-dialog-message').textContent=error.message||'This export could not be created.';$('#cancel-content-export').hidden=true;$('#close-content-export').hidden=false;$('#close-content-export').textContent='Back to editing';announce(error.message||'This export could not be created.',{error:true});}
+    else{$('#export-dialog-title').textContent='The export could not be completed';$('#export-dialog-message').textContent=error.message||'This export could not be created.';$('#cancel-content-export').hidden=true;$('#close-content-export').hidden=false;$('#close-content-export').textContent='Back to editing';announce(error.message||'This export could not be created.',{error:true});}
   }finally{exportController=null;$('#export-progress').textContent='';setExporting(false);}
 }
 function cancelExport(){exportCancelled=true;exportController?.abort();$('#cancel-content-export').disabled=true;$('#cancel-content-export').textContent='Cancelling…';}
