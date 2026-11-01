@@ -6,7 +6,7 @@ Application source code, scripts and documentation are licensed under the MIT Li
 
 ## Procedural lettering
 
-Studio Sans and the exploratory Beam Sans sample are original procedural application code covered by the MIT licence. Beam Sans is currently a drawing system and specimen page, not a redistributed font binary.
+Studio Sans is original procedural application code covered by the MIT licence.
 
 ## Fonts
 

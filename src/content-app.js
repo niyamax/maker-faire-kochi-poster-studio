@@ -447,7 +447,7 @@ document.addEventListener('keydown',event=>{
   if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==='s'){event.preventDefault();downloadWorkspace();}
   if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==='z'&&!event.target.matches('input,textarea,[contenteditable=true]')){event.preventDefault();if(event.shiftKey)restoreHistory(redoStack,undoStack);else restoreHistory(undoStack,redoStack);}
 });
-for(const link of all('a[href="beam.html"], a[href="poster.html"]'))link.addEventListener('click',async event=>{
+for(const link of all('a[href="poster.html"]'))link.addEventListener('click',async event=>{
   event.preventDefault();const saved=await flushSave();if(saved===false){announce('Download your project to keep changes before leaving this page.',{error:true});return;}location.href=link.href;
 });
 window.addEventListener('hashchange',()=>{if(ready)route();});

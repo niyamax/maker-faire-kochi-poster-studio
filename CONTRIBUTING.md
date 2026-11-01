@@ -19,7 +19,7 @@ npm run dev
 
 The application opens at `http://127.0.0.1:8800/`. Refresh after source changes rebuild. `npm run build` creates `dist/`. Review actual rendered artwork and the relevant user flow when making changes.
 
-Use `src/` for application changes. The shell markup lives in `public/content.html` for the library, `public/index.html` for the classic poster editor, and `public/beam.html` for the specimen. Build output, dependencies and local project exports do not belong in commits.
+Use `src/` for application changes. The shell markup lives in `public/content.html` for the library and `public/index.html` for the classic poster editor. Build output, dependencies and local project exports do not belong in commits.
 
 ## Art direction
 

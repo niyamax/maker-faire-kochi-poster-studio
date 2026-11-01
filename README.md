@@ -1,6 +1,6 @@
 # Maker Faire Kochi Content Studio
 
-Create Maker Faire Kochi social content from shared maker and workshop information. Content Studio combines a local content library, linked feed and Story designs, carousels, the expressive poster editor, and an exploratory Beam Sans specimen.
+Create Maker Faire Kochi social content from shared maker and workshop information. Content Studio combines a local content library, linked feed and Story designs, carousels and the expressive poster editor.
 
 ![Maker Faire Content Studio artwork series](docs/images/content-series.png)
 
@@ -23,14 +23,6 @@ The library saves to **IndexedDB on this device**. The first visit migrates a pr
 Download a project JSON or ZIP to hand work to another person or device. This release has no shared server, account permissions, live collaboration or social publishing integration. Organisers, volunteers and partners can exchange files; a shared workspace is a later phase.
 
 Template text currently uses the bundled Latin glyphs. Unsupported characters and overflowing text are called out in the preview and must be resolved before export; the source wording remains in the project. Malayalam shaping is a separate future text-rendering task.
-
-## Beam Sans sample
-
-Open **Beam Sans** from the studio to explore an original procedural alphabet made from connected straight members and chamfered joints. Change its weight, width and joint character, play the responsive motion, and export PNG or SVG specimens. An optional connection mode joins adjacent letters within words.
-
-[View the Beam Sans specimen](docs/images/beam-sans.png).
-
-This is an exploratory sample based on the beam idea; the earlier beam reference was not available. It is separate from the production font catalogue and is not an installable font file.
 
 ## Poster editor
 
@@ -55,7 +47,7 @@ npm ci
 npm run dev
 ```
 
-Open **[http://127.0.0.1:8800/](http://127.0.0.1:8800/)** for Content Studio. The classic poster editor is at `/poster.html`, and the interactive Beam Sans sample is at `/beam.html`. The development server listens only on your computer. JavaScript and CSS changes rebuild automatically; refresh the browser to see them.
+Open **[http://127.0.0.1:8800/](http://127.0.0.1:8800/)** for Content Studio. The classic poster editor is at `/poster.html`. The development server listens only on your computer. JavaScript and CSS changes rebuild automatically; refresh the browser to see them.
 
 If the port is occupied, set the `PORT` environment variable before starting the server. For example, in a POSIX shell:
 
@@ -131,7 +123,7 @@ The npm package has `private: true` to prevent accidental publication to the npm
 
 | Folder | Contents |
 | --- | --- |
-| `src/` | Content project model, storage, templates, pack exports, poster editor and Beam Sans sample |
+| `src/` | Content project model, storage, templates, pack exports, poster editor |
 | `src/data/` | Precompiled font outlines, supporting-text paths and embedded logo |
 | `src/styles/` | Editor styles and design tokens |
 | `assets/` | Source fonts, logo and asset manifests |
