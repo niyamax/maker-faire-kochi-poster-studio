@@ -2,6 +2,8 @@
 
 Create Maker Faire Kochi social content from shared maker and workshop information. Content Studio combines a local content library, linked feed and Story designs, carousels and the expressive poster editor.
 
+**[Open Content Studio](https://niyamax.github.io/maker-faire-kochi-poster-studio/)** · [Classic poster editor](https://niyamax.github.io/maker-faire-kochi-poster-studio/poster.html)
+
 ![Maker Faire Content Studio artwork series](docs/images/content-series.png)
 
 ## Content library and social packs
@@ -120,6 +122,8 @@ Headlines use the supported Latin uppercase letters, numbers and punctuation. Su
 | `npm run preview` | Serve an existing `dist/` build locally |
 
 The `dist/` folder can be served by a static web host. It includes the application, runtime assets, licence and asset notices. Keep these files together when distributing the build. The development server is for local use.
+
+GitHub Pages serves the built application from the root of the `gh-pages` branch. To publish an update, run `npm run build` and commit the contents of `dist/` to that branch, retaining `.nojekyll`. Source changes are reviewed separately; pushing a source branch alone does not update the live site. The published `deployment.json` records the source commit for the current build.
 
 The npm package has `private: true` to prevent accidental publication to the npm registry; this does not restrict the public GitHub repository or the MIT licence.
 
