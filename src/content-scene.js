@@ -32,9 +32,18 @@ function wrap(text,width,size,measure=copyWidth){
   }
   return lines;
 }
-function drawCopy(scene,text,box,{size=36,leading=48,color=scene.readingInk,field='Supporting text',maxLines=1,tracking=0,align='left'}={}){
+function drawCopy(scene,text,box,{size=36,leading=48,color=scene.readingInk,field='Supporting text',maxLines=1,tracking=0,align='left',keepLastWords=1}={}){
   text=value(text);if(!text)return {height:0,drawn:false};
   const measure=(line,s)=>copyWidth(line,s,tracking),lines=supportedCopy(text)?wrap(text,box.w,size,measure):null;
+  if(lines?.length>1&&keepLastWords>1){
+    const last=lines.length-1,previous=lines[last-1].split(' '),ending=lines[last].split(' ');
+    while(ending.length<keepLastWords&&previous.length>1){
+      const candidate=[previous[previous.length-1],...ending];
+      if(measure(candidate.join(' '),size)>box.w)break;
+      ending.unshift(previous.pop());
+    }
+    lines[last-1]=previous.join(' ');lines[last]=ending.join(' ');
+  }
   const capacity=Math.min(maxLines,Math.floor(box.h/leading));
   if(!lines||lines.length>capacity){omit(scene,field,text);record(scene,field,text,[],box,size,true);return {height:0,drawn:false};}
   const scale=size/COPY_FONT.em;
@@ -217,16 +226,14 @@ function closing(scene,item,event,page,asset,crop,mode){
   const story=scene.format==='story',lines=chooseCallout(scene,item,page),info=eventFacts(item,event);
   expressive(scene,lines,{x:34,y:story?176:44,w:1012,h:story?780:620});
   context(scene,item,{y:story?1016:730});
-  const date=info.date,pieces=date.match(/^(?:(\w+day)\s+)?(\d{1,2}(?:\s*[–—-]\s*\d{1,2})?)\s+([a-z]+(?:\s+\d{4})?)$/i);
-  const dateY=story?1234:888;
-  if(pieces){
-    const numerals=pieces[2].replace(/\s/g,'').replace(/[–—]/g,'-');
-    const dateWidth=Math.min(pieces[1]?650:952,Math.max(320,numerals.length*140));
-    expressive(scene,[numerals],{x:34,y:dateY,w:dateWidth,h:story?220:190},{field:'Festival date'});
-    if(pieces[1])drawCopy(scene,pieces[1].toUpperCase(),{x:718,y:dateY+70,w:298,h:76},{size:30,leading:40,maxLines:2,field:'Day of week'});
-    drawCopy(scene,pieces[3].toUpperCase(),{x:64,y:dateY+(story?236:208),w:952,h:52},{size:36,leading:48,field:'Festival month'});
-  }else drawCopy(scene,date,{x:64,y:dateY,w:952,h:160},{size:48,leading:60,maxLines:2,field:'Festival date'});
-  drawCopy(scene,[info.time,info.venue].filter(Boolean).join(' / '),{x:64,y:story?1556:1164,w:952,h:76},{size:30,leading:38,maxLines:2,field:'Time and venue'});
+  // One factual reading block: original wording, stable proportions and no
+  // lettering motion. The callout is the composition's expressive voice.
+  const dateY=story?1336:930;
+  const date=drawCopy(scene,info.date,{x:64,y:dateY,w:952,h:128},{size:52,leading:64,maxLines:2,keepLastWords:2,field:'Festival date'});
+  let next=dateY+(date.drawn?date.height+24:0);
+  const time=drawCopy(scene,info.time,{x:64,y:next,w:952,h:48},{size:36,leading:48,field:'Event time'});
+  if(time.drawn)next+=time.height+12;
+  drawCopy(scene,info.venue,{x:64,y:next,w:952,h:96},{size:36,leading:48,maxLines:2,field:'Event venue'});
   omit(scene,'Closing supporting text',value(page.body,item.content?.description),'Supporting text is retained in the caption.');
 }
 

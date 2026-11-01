@@ -4,6 +4,14 @@ Content Studio extends the expressive identity of the original Poster Studio. It
 
 The original [type poster](images/studio.png), [image window](images/image-window.png) and [object cutout](images/object-cutout.png) are the visual reference. A tidy generic heading, rectangular photograph and detached information stack do not meet this direction.
 
+## Role hierarchy
+
+1. **The callout provides the graphic voice.** A short, authored phrase uses the original expressive lettering and establishes the main silhouette.
+2. **The image provides the subject and an independent palette.** Materials, objects, people and their surroundings bring their own colours. The photograph or cutout should complement the graphic field without being artificially coordinated with the brand colours.
+3. **Plain factual type provides clarity.** Names, official titles, dates, times and venues use stable Inter. The date, time and venue form one coherent reading block with shared alignment and comfortable spacing.
+
+These roles stay consistent as content and formats change. Expression comes from the callout, its scale and its relationship with imagery; practical information remains calm and dependable.
+
 ## Lettering and composition
 
 Reuse the original treatment and composition engine for expressive headlines. Air, Flex and Packed retain their designed letter geometry, rhythm and response; one chosen treatment gives a content pack a consistent voice. Responsive letter widths and contours are intentional parts of this identity. Simulating them by stretching conventional font outlines is not an equivalent.
@@ -12,7 +20,9 @@ Use short, authored display phrases with deliberate line breaks. Keep the comple
 
 The letter silhouette should shape image placement and the surrounding space. A photograph can meet the last typographic row; an object can interrupt it; practical information can balance its weight. Expression should remain evident when the image is absent. Avoid applying an expressive heading to an otherwise generic card layout.
 
-Maker Faire red, cyan, white and dark ink remain the palette. Keep colour use confident and coherent across a series. New packs use transparent logos with automatic contrast; explicit manual logo choices remain intact. Use one compact identity signature, with comfortable space around it.
+Maker Faire red and white lead the example series, with dark ink for reading information. Cyan remains an intentional option and a restrained accent. It is not an automatic third full-field panel in every pack. Judge its use against the particular image, message and visual balance. Existing manual palette choices remain intact.
+
+New packs use transparent logos with automatic contrast; explicit manual logo choices remain intact. Use one compact identity signature, with comfortable space around it.
 
 ## Three composition families
 
@@ -30,9 +40,15 @@ Use this family only when an appropriate cutout exists. An ordinary photograph b
 
 ### Typographic callout
 
-A short, specific message becomes the graphic event. The original lettering engine carries the main field; a substantial date, time and venue block makes the invitation useful. A missing image produces a deliberate type poster without reserving an empty photo area.
+A short, specific message becomes the graphic event. The original lettering engine carries the main field; a substantial date, time and venue block in plain Inter makes the invitation useful. Preserve the date's normal numeral forms and punctuation. A missing image produces a deliberate type poster without reserving an empty photo area.
 
 Keep the action relevant to the content. An invitation must identify what the visitor will make, see or join. Give its practical information enough weight to read at phone size.
+
+## Image selection
+
+Real maker photography is the preferred source when it is available. A demonstration image should show believable materials, working conditions and light, with an independent colour palette. Warm timber, bare metal, paper, clothing and the surrounding space can provide contrast with the brand field. The existing robot remains a useful example of a cutout whose own colours give it character.
+
+Avoid selecting, generating or recolouring a workbench scene to repeat the poster's red and cyan across its tools, machine and background. A subject should feel chosen for the story it tells. Generated demonstration assets remain identified as demonstration images in the project documentation.
 
 ## Editorial and format guardrails
 
@@ -50,14 +66,14 @@ Keep the action relevant to the content. An invitation must identify what the vi
 
 Review rendered artwork at native size and at phone size, without editor chrome. Compare it directly with the original three reference posters, not merely with the previous content template revision.
 
-Approve a composition only when its expressive silhouette, hierarchy, image relationship and information balance feel authored. Check complete titles and names, useful dates, intentional crops, comfortable reading copy and clear logo contrast. Examine Feed and Story, a photograph, a genuine cutout, no image and longer source content. A functional export does not establish design quality.
+Review the three roles directly: is the callout expressive, does the image contribute its own subject and palette, and does the factual block read as one calm unit? Check complete titles and names, normal dates, intentional crops, comfortable reading copy and clear logo contrast. Examine Feed and Story, a photograph, a genuine cutout, no image and longer source content. A functional export or legible layout does not establish the desired visual quality.
+
+Record the examples reviewed and any unresolved visual concerns. The user's judgement of the actual artwork remains the deciding bar; an internal review is not an absolute design approval.
 
 ## Review status
 
-The previous static display-type direction and its approval are superseded. They improved legibility but removed the original studio's visual character.
+The earlier approval statements are superseded by the user's visual feedback. Restoring the original lettering did not resolve the cyan-led examples, the artificially coordinated workbench image or the expressive date numerals.
 
-The replacement compositions were manually reviewed on 1 November 2026 against the original poster references. The reviewed artwork includes Feed and Story, maker and workshop, image-window covers, editorial content, an object hero, typographic invitations, a type-only cover, a single-row callout and a longer source identity. The review included native-size artwork and phone-scale compositions.
+The revised examples were manually reviewed on 1 November 2026: a red image-window cover with “DRAWN / BY THE / SUN”, the red robot hero, and a white workshop invitation with “MAKE / WITH US”. The [current three-board series](images/content-series.png) shows these examples. The workbench sample now uses bare aluminium, charcoal, brass and plywood with incidental tool colours; its material palette reads independently of the graphic field. The robot asset is unchanged. The invitation uses normal Inter for its complete date, time and venue in one aligned block.
 
-The reviewed original-engine compositions are approved for this revision. Expressive lettering now drives the image relationship and overall silhouette; the corrected date fields remain legible, and the reviewed reading areas stay clear of images and footers. This approval applies to the reviewed layouts and examples. Future composition changes require a fresh artwork review. The [current six-board series](images/content-series.png) shows the approved direction.
-
-The optional partner-name footer was also reviewed in Feed and Story with a two-line venue. The Maker Faire identity, partner acknowledgement and link occupy separate footer columns without colliding with the event information.
+Separate Story examples were reviewed with the same image families and a longer factual block, two-line venue and partner footer. The wrapped date keeps “January 2027” together, and the practical information remains clear of the footer. These are observations about the specific revised examples. The photograph remains a generated demonstration asset, and real maker photography remains the preferred production source. Further visual decisions should follow the user's response to actual artwork.
