@@ -113,7 +113,8 @@ async function loadPosterImage(src,alpha=false){
   const promise=(async()=>{
     const image=new Image();image.src=src;await image.decode();imageCache.set(src,image);
     if(alpha){const mask=document.createElement('canvas');mask.width=64;mask.height=64;const context=mask.getContext('2d',{willReadFrequently:true});context.drawImage(image,0,0,64,64);const pixels=context.getImageData(0,0,64,64).data;alphaMasks.set(src,pixels);silhouettes.set(src,silhouetteFromPixels(pixels,64,64));}
-    while(imageCache.size>LOGO_VARIANTS.length+8){const oldest=[...imageCache.keys()].find(key=>!logoSources.has(key));imageCache.delete(oldest);alphaMasks.delete(oldest);silhouettes.delete(oldest);}
+    // Eight content photographs plus a separate partner logo can be active.
+    while(imageCache.size>LOGO_VARIANTS.length+9){const oldest=[...imageCache.keys()].find(key=>!logoSources.has(key));imageCache.delete(oldest);alphaMasks.delete(oldest);silhouettes.delete(oldest);}
   })();pendingImages.set(src,promise);
   try{await promise;}finally{pendingImages.delete(src);}
 }

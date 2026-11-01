@@ -1,10 +1,38 @@
-# Maker Faire Kochi Poster Studio
+# Maker Faire Kochi Content Studio
 
-Make expressive posters with letters that stretch, share space and move together. Poster Studio combines direct canvas editing, a small set of lettering treatments and the Maker Faire Kochi colour palette in a browser-based tool.
+Create Maker Faire Kochi social content from shared maker and workshop information. Content Studio combines a local content library, linked feed and Story designs, carousels, the expressive poster editor, and an exploratory Beam Sans specimen.
 
-![Poster Studio showing an editable Maker Faire Kochi poster](docs/images/studio.png)
+![Maker Faire Content Studio artwork series](docs/images/content-series.png)
 
-## What you can make
+## Content library and social packs
+
+Open the root page to create a **Maker Spotlight**, **Workshop**, or **Poster**. Name and duplicate items, edit the shared event details, and reopen your work from the library.
+
+- **Maker Spotlight:** maker and project names, description, handle, photographs and a link.
+- **Workshop:** title, host, date, time, duration, location, description and booking link. Empty event fields inherit the shared event details.
+- **Linked outputs:** feed at 1080 × 1350 and Story at 1080 × 1920 share content, visual treatment, colours and logo. Each output retains its own image zoom and focal point.
+- **Carousels:** cover, details and closing pages, with custom page headings/body text, image selection, duplication, ordering and removal. Add up to 30 pages and eight photographs per item.
+- **Partner branding:** add a partner name and a dedicated logo alongside the Maker Faire identity, independently of the photo gallery.
+- **Sharing packs:** individual PNG/SVG outputs or an ordered ZIP of feed and Story PNGs, an editable project, caption text, image descriptions and an output manifest. Video export uses the same selected page and motion geometry.
+- **Editing guides:** toggle Story safe-area guides in the preview. Guides are omitted from exports; add native social links and stickers on the destination platform.
+
+Templates follow the [Content Studio art direction](docs/art-direction.md): constructed type, purposeful image scale, readable facts directly on the colour field, and distinct cover, editorial and invitation compositions. New packs automatically choose a contrasting monochrome logo; turn off Automatic contrast to choose a specific supplied colour variant.
+
+The library saves to **IndexedDB on this device**. The first visit migrates a previously saved Poster Studio project into a library item. Imported v1 poster files keep their original artwork, media, fonts, logo and placement, and open in the classic editor at `/poster.html`. Use the editor’s back link to return to the library after saving.
+
+Download a project JSON or ZIP to hand work to another person or device. This release has no shared server, account permissions, live collaboration or social publishing integration. Organisers, volunteers and partners can exchange files; a shared workspace is a later phase.
+
+Template text currently uses the bundled Latin glyphs. Unsupported characters and overflowing text are called out in the preview and must be resolved before export; the source wording remains in the project. Malayalam shaping is a separate future text-rendering task.
+
+## Beam Sans sample
+
+Open **Beam Sans** from the studio to explore an original procedural alphabet made from connected straight members and chamfered joints. Change its weight, width and joint character, play the responsive motion, and export PNG or SVG specimens. An optional connection mode joins adjacent letters within words.
+
+[View the Beam Sans specimen](docs/images/beam-sans.png).
+
+This is an exploratory sample based on the beam idea; the earlier beam reference was not available. It is separate from the production font catalogue and is not an installable font file.
+
+## Poster editor
 
 - **Three treatments:** Air, Flex and Packed. Switching treatments keeps your font, layout, headline, supporting text and saved positions.
 - **Expressive type:** seven font choices, optical spacing, selective exaggeration, inflation and outline drawing.
@@ -14,7 +42,7 @@ Make expressive posters with letters that stretch, share space and move together
 - **Image layouts:** an Image window for photography and an Object cut-out layout for transparent objects, with local upload and crop or overlap controls.
 - **Portable output:** PNG images, outlined SVG artwork, video loops and editable JSON project files.
 
-The editor renders artwork and saves projects in your browser. It requires no account, application backend or API keys. Fonts and artwork assets are bundled locally; the application contains no analytics or cloud upload integration.
+The studio renders artwork and saves projects in your browser. It requires no account, application backend or API keys. Fonts and artwork assets are bundled locally; the application contains no analytics or cloud upload integration.
 
 ## Get started
 
@@ -27,7 +55,7 @@ npm ci
 npm run dev
 ```
 
-Open **[http://127.0.0.1:8800/](http://127.0.0.1:8800/)**. The development server listens only on your computer. JavaScript and CSS changes rebuild automatically; refresh the browser to see them.
+Open **[http://127.0.0.1:8800/](http://127.0.0.1:8800/)** for Content Studio. The classic poster editor is at `/poster.html`, and the interactive Beam Sans sample is at `/beam.html`. The development server listens only on your computer. JavaScript and CSS changes rebuild automatically; refresh the browser to see them.
 
 If the port is occupied, set the `PORT` environment variable before starting the server. For example, in a POSIX shell:
 
@@ -35,7 +63,7 @@ If the port is occupied, set the `PORT` environment variable before starting the
 PORT=8801 npm run dev
 ```
 
-## Create a poster
+## Create a poster in the classic editor
 
 1. Enter a headline and supporting text. Headlines accept **120 characters**, including spaces and line breaks. Press Enter to start a new poster line. Repeated spaces, leading spaces and trailing spaces are retained for gaps and indentation in every format.
 2. Choose **Air**, **Flex** or **Packed** above the canvas, then select a font and layout in the properties panel.
@@ -71,7 +99,7 @@ Upload PNG, JPG or WebP files up to 20 MB. The browser resizes and re-encodes im
 
 ### Save your work
 
-Projects autosave to local browser storage. Use **Poster Studio → Save project** to download an editable JSON file, and **Open project…** to restore it.
+Classic posters autosave to local browser storage. Posters opened from the content library also save back into their library item. Use **Poster Studio → Save project** to download an editable JSON file, and **Open project…** to restore it.
 
 Browser storage is specific to the address and port you use. Save a project file before switching addresses, clearing browser storage or moving to another device. Project files contain the poster settings and any uploaded image. Fonts and the logo are supplied by the application. Project files can be up to 4 MB.
 
@@ -94,7 +122,6 @@ Headlines use the supported Latin uppercase letters, numbers and punctuation. Su
 | `npm run dev` | Start the local editor with JavaScript and CSS rebuilds |
 | `npm run build` | Generate the distributable application in `dist/` |
 | `npm run preview` | Serve an existing `dist/` build locally |
-| `npm test` | Run the geometry, motion, state and export tests |
 
 The `dist/` folder can be served by a static web host. It includes the application, runtime assets, licence and asset notices. Keep these files together when distributing the build. The development server is for local use.
 
@@ -104,13 +131,12 @@ The npm package has `private: true` to prevent accidental publication to the npm
 
 | Folder | Contents |
 | --- | --- |
-| `src/` | Editor, typography geometry, alignment, motion and export |
+| `src/` | Content project model, storage, templates, pack exports, poster editor and Beam Sans sample |
 | `src/data/` | Precompiled font outlines, supporting-text paths and embedded logo |
 | `src/styles/` | Editor styles and design tokens |
 | `assets/` | Source fonts, logo and asset manifests |
 | `public/` | Application HTML |
 | `scripts/` | Build, local server and optional font generation |
-| `tests/` | Rendering, continuity, positioning, state and export tests |
 
 Embedded logo SVGs are also included. After editing files in `assets/logos/`, regenerate them with `node scripts/build-logos.mjs` and update their checksums in `assets/logo.json`.
 

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve Poster Studio. The project is a focused poster editor with shared layout rules, expressive type and direct canvas editing.
+Thanks for helping improve Content Studio. The project makes Maker Faire social packs, expressive posters and responsive typography.
 
 ## Start a change
 
@@ -17,9 +17,13 @@ npm ci
 npm run dev
 ```
 
-The application opens at `http://127.0.0.1:8800/`. Refresh after source changes rebuild. `npm test` runs the existing test suite, and `npm run build` creates `dist/`.
+The application opens at `http://127.0.0.1:8800/`. Refresh after source changes rebuild. `npm run build` creates `dist/`. Review actual rendered artwork and the relevant user flow when making changes.
 
-Use `src/` for application changes and `public/index.html` for the shell markup. Build output, dependencies and local project exports do not belong in commits.
+Use `src/` for application changes. The shell markup lives in `public/content.html` for the library, `public/index.html` for the classic poster editor, and `public/beam.html` for the specimen. Build output, dependencies and local project exports do not belong in commits.
+
+## Art direction
+
+Follow [Content Studio art direction](docs/art-direction.md). A creative director reviews actual exported artwork outside the editor before new templates are considered finished. Include real photographs, complete festival information, and feed/Story adaptations.
 
 ## Typography and interaction changes
 

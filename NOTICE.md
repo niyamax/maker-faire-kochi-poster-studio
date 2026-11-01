@@ -4,6 +4,10 @@
 
 Application source code, scripts and documentation are licensed under the MIT License in [LICENSE](LICENSE). The font software and brand artwork below are governed separately.
 
+## Procedural lettering
+
+Studio Sans and the exploratory Beam Sans sample are original procedural application code covered by the MIT licence. Beam Sans is currently a drawing system and specimen page, not a redistributed font binary.
+
 ## Fonts
 
 Bundled fonts and derived outlines retain their respective SIL Open Font License 1.1 terms. Unmodified licence files are included in [licenses/](licenses/); official source URLs, source filenames, instance axes and SHA-256 checksums appear in [assets/font-manifest.json](assets/font-manifest.json).
