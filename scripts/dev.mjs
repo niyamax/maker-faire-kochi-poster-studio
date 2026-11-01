@@ -25,6 +25,6 @@ const server=createServer(async(req,res)=>{
   }catch{res.writeHead(404,{'Content-Type':'text/plain; charset=utf-8'});res.end('Not found');}
 });
 server.on('error',async error=>{console.error(error.message);await builder?.dispose();process.exitCode=1;});
-server.listen(port,'127.0.0.1',()=>console.log(`Poster Studio: http://127.0.0.1:${port}/`));
+server.listen(port,'127.0.0.1',()=>console.log(`Maker Faire Content Studio: http://127.0.0.1:${port}/`));
 async function close(){server.close();await builder?.dispose();process.exit(0);}
 process.on('SIGINT',close);process.on('SIGTERM',close);

@@ -1,5 +1,7 @@
 import './styles/studio.css';
 import {HEADLINE_MAX_LENGTH} from './content-limits.js';
+import {loadWorkspace,updateWorkspaceItem} from './content-storage.js';
+import {LOGO_LAYOUTS,LOGO_COLOURS,getLogoVariant} from './logo-library.js';
 import {mountImageEditor} from './image-editor.js';
 import {importPosterImage} from './image-import.js';
 import {IMAGE_DEFAULTS,dragPosterImage,imageWithRect,scalePosterImage} from './poster-image.js';
@@ -19,6 +21,9 @@ import {TREATMENTS,PALETTES,FORMATS,cleanHeadline,cleanDetail,createPosterScene,
 const $=selector=>document.querySelector(selector),canvas=$('#artwork'),ctx=canvas.getContext('2d');
 $('#headline').maxLength=HEADLINE_MAX_LENGTH;
 const params=new URLSearchParams(location.search);
+const workspaceItemId=params.get('item');
+const studioLocation=direction=>{const query=new URLSearchParams({direction});if(workspaceItemId)query.set('item',workspaceItemId);return `${location.pathname}?${query}`;};
+let workspaceSaveTimer=null,workspaceSaveRevision=0,workspaceSavedRevision=0;
 const state={...STUDIO_DEFAULTS};
 if(VISIBLE_DIRECTION_IDS.includes(params.get('direction')))state.direction=params.get('direction');
 const drafts=defaultStudioDrafts();
@@ -28,9 +33,46 @@ const chosen=()=>TREATMENTS.find(d=>d.id===state.direction);
 const palette=()=>({...PALETTES.find(p=>p.id===state.palette),...state.customColors});
 function announce(message){$('#status').textContent=message;$('#status').classList.add('visible');clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>$('#status').classList.remove('visible'),3200);}
 function saveState(){
-  try{localStorage.setItem(STUDIO_STORAGE_KEY,JSON.stringify(studioProject(state,drafts)));saveError=false;editorShell?.setSaveStatus('saved');}
+  const project=studioProject(state,drafts);
+  if(workspaceItemId){
+    // IndexedDB is the source of truth for library items, even if the legacy
+    // localStorage cache is full. Keep that cache only as a convenience.
+    try{localStorage.setItem(STUDIO_STORAGE_KEY,JSON.stringify(project));}catch{}
+    scheduleWorkspaceSave(project);return;
+  }
+  try{localStorage.setItem(STUDIO_STORAGE_KEY,JSON.stringify(project));saveError=false;editorShell?.setSaveStatus('saved');}
   catch{editorShell?.setSaveStatus('error','Save failed');if(!saveError)announce('Device storage is full. Save a project file to keep your work.');saveError=true;}
 }
+// The classic editor and content library share one IndexedDB workspace. Keep
+// project IDs in treatment URLs so changing style cannot detach a library item.
+function scheduleWorkspaceSave(project){
+  clearTimeout(workspaceSaveTimer);const revision=++workspaceSaveRevision;
+  editorShell?.setSaveStatus('saving');
+  workspaceSaveTimer=setTimeout(()=>{workspaceSaveTimer=null;persistWorkspacePoster(project,revision);},150);
+}
+async function persistWorkspacePoster(project,revision){
+  try{
+    await updateWorkspaceItem(workspaceItemId,item=>({...item,legacyProject:project}));
+    workspaceSavedRevision=Math.max(workspaceSavedRevision,revision);
+    if(revision===workspaceSaveRevision)editorShell?.setSaveStatus('saved');
+    return true;
+  }catch(error){
+    editorShell?.setSaveStatus('error','Library save failed');
+    announce(error.message||'The poster could not be saved to your content library. Save a project file to keep your work.');
+    return false;
+  }
+}
+window.addEventListener('pagehide',()=>{
+  if(workspaceItemId&&ready&&workspaceSavedRevision<workspaceSaveRevision){
+    clearTimeout(workspaceSaveTimer);workspaceSaveTimer=null;
+    persistWorkspacePoster(studioProject(state,drafts),workspaceSaveRevision);
+  }
+});
+document.querySelector('.studio-home-link')?.addEventListener('click',async event=>{
+  if(!workspaceItemId)return;
+  event.preventDefault();clearTimeout(workspaceSaveTimer);workspaceSaveTimer=null;
+  if(await persistWorkspacePoster(studioProject(state,drafts),++workspaceSaveRevision))location.href=new URL('.',location.href).href;
+});
 try{
   const saved=localStorage.getItem(STUDIO_STORAGE_KEY);
   if(saved){const project=normalizeStudioProject(JSON.parse(saved));Object.assign(state,project.state);Object.assign(drafts,project.drafts);restoredProject=true;if(VISIBLE_DIRECTION_IDS.includes(params.get('direction')))switchStudioTreatment(state,drafts,params.get('direction'));}
@@ -39,6 +81,14 @@ try{
 for(const preset of EDITOR_PRESETS){const b=document.createElement('button');b.className='treatment-option';b.dataset.direction=preset.id;b.title=preset.description;b.setAttribute('aria-pressed',String(preset.id===state.direction));b.textContent=preset.label;b.addEventListener('click',()=>selectDirection(preset.id));$('.directions').append(b);}
 for(const [id,f]of Object.entries(FORMATS))$('#format').add(new Option(f.name,id));
 for(const curve of LOOP_CURVES)$('#motion-curve').add(new Option(curve.label,curve.id));
+for(const layout of LOGO_LAYOUTS)$('#logo-layout').add(new Option(layout.label,layout.id));
+for(const colour of LOGO_COLOURS)$('#logo-colour').add(new Option(colour.label,colour.id));
+for(const id of ['logo-layout','logo-colour'])$('#'+id).addEventListener('change',()=>{
+  const next=getLogoVariant(`${$('#logo-layout').value}-${$('#logo-colour').value}`).id;
+  if(next===state.logoVariant)return;
+  rememberPose();state.logoVariant=next;snapGuides=[];
+  syncFooterControls();syncPoseControls();dirty=true;saveState();
+});
 function syncCuratedChoices(){
   const current=drafts[state.direction].lettering;
   const populate=(id,catalog,ids,value,labels={})=>{const element=$('#'+id);element.replaceChildren(...retainCurrentOption(catalog,ids,value).map(item=>new Option(labels[item.id]||item.name||item.label,item.id)));};
@@ -47,7 +97,7 @@ function syncCuratedChoices(){
   populate('type-style',[{id:'original',name:'Original'},{id:'jostle',name:'Jostle'}],VISIBLE_STYLE_IDS,current.style);
   populate('palette',PALETTES,VISIBLE_PALETTE_IDS,state.palette,EDITOR_PALETTE_LABELS);
 }
-function selectDirection(id){if(id===state.direction)return;imageEditor?.setCropping(false);rememberPose();switchStudioTreatment(state,drafts,id);snapGuides=[];activeLayer='letters';state.phase=0;playing=false;selected=hovered=null;selectedFooter=hoveredFooter=null;drag=null;canvas.classList.remove('dragging','resizing');sync();dirty=true;saveState();window.history.replaceState(null,'',`${location.pathname}?direction=${id}`);}
+function selectDirection(id){if(id===state.direction)return;imageEditor?.setCropping(false);rememberPose();switchStudioTreatment(state,drafts,id);snapGuides=[];activeLayer='letters';state.phase=0;playing=false;selected=hovered=null;selectedFooter=hoveredFooter=null;drag=null;canvas.classList.remove('dragging','resizing');sync();dirty=true;saveState();window.history.replaceState(null,'',studioLocation(id));}
 function sync(){
   if(state.media&&!state.media.freePlacement&&!state.media.boxes?.[state.media.layout]){const info=makeScene().media;state.media=imageWithRect(state.media,info.frame,info);}
   const d=chosen();for(const b of document.querySelectorAll('button[data-direction]'))b.setAttribute('aria-pressed',String(b.dataset.direction===d.id));
@@ -136,7 +186,9 @@ for(const part of ['text','logo']){
   fields.append(alignment);
 }
 function syncFooterControls(active=null){
-  const footer=drafts[state.direction].footer;
+  const footer=drafts[state.direction].footer,logo=getLogoVariant(state.logoVariant);
+  $('#logo-layout').value=logo.layout;$('#logo-colour').value=logo.colour;
+  $('#logo-colour-hint').textContent=logo.colour==='colour'?'Original Maker Faire colours.':logo.colour==='white'?'White on transparency. Use on a dark field.':'Black on transparency. Use on a light field.';
   for(const part of ['text','logo'])for(const key of ['size'])for(const suffix of ['','-number']){
     const input=$(`#footer-${part}-${key}${suffix}`);if(input!==active)input.value=Math.round(footer[part][key]*10)/10;
   }
@@ -295,7 +347,7 @@ function captureEdit(){return {project:studioProject(state,drafts),selection:{se
 function restoreEdit(edit){
   Object.assign(state,edit.project.state);Object.assign(drafts,structuredClone(edit.project.drafts));playing=false;drag=null;snapGuides=[];
   selected=edit.selection.selected;selectedFooter=edit.selection.selectedFooter;activeLayer=edit.selection.activeLayer;
-  sync();preparePosterAssets(state.media?.asset).then(()=>dirty=true).catch(error=>announce(error.message));saveState();window.history.replaceState(null,'',`${location.pathname}?direction=${state.direction}`);
+  sync();preparePosterAssets(state.media?.asset).then(()=>dirty=true).catch(error=>announce(error.message));saveState();window.history.replaceState(null,'',studioLocation(state.direction));
 }
 function rememberPose(){undoStack.push(captureEdit());if(undoStack.length>60)undoStack.shift();redoStack=[];syncPoseControls();}
 function undoEdit(){const previous=undoStack.pop();if(!previous)return;redoStack.push(captureEdit());restoreEdit(previous);}
@@ -482,6 +534,13 @@ imageEditor=mountImageEditor({getMedia:()=>state.media,getInfo:()=>lastScene?.me
 editorShell=mountEditorShell({initialLayer:'letters',onSelectLayer:chooseEditorLayer});
 new ResizeObserver(fit).observe(canvas);
 async function startStudio(){
+  if(workspaceItemId){
+    const workspace=await loadWorkspace(),item=workspace.items.find(item=>item.id===workspaceItemId);
+    if(!item||item.type!=='poster'||!item.legacyProject)throw Error('This poster is no longer in the content library. Return to Content Studio to choose another.');
+    const project=normalizeStudioProject(item.legacyProject);
+    Object.assign(state,project.state);Object.assign(drafts,project.drafts);restoredProject=true;
+    if(VISIBLE_DIRECTION_IDS.includes(params.get('direction')))switchStudioTreatment(state,drafts,params.get('direction'));
+  }
   if(!restoredProject){
     try{
       const response=await fetch('assets/samples/studio-robot.png');
@@ -495,5 +554,5 @@ async function startStudio(){
   ready=true;$('#loading').hidden=true;dirty=true;
 }
 sync();fit();
-startStudio().catch(()=>{$('#loading').textContent='A poster image could not load. Refresh to try again.';});
+startStudio().catch(error=>{$('#loading').textContent=error.message||'A poster image could not load. Refresh to try again.';});
 requestAnimationFrame(tick);

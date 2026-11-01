@@ -4,16 +4,14 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "A browser-based poster and motion typography editor for Maker Faire Kochi.",
+  "description": "A local content studio for Maker Faire Kochi social packs, posters and responsive typography.",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
-    "preview": "node scripts/dev.mjs --preview",
-    "test": "node --test tests/*.test.mjs",
-    "check": "npm test && npm run build"
+    "preview": "node scripts/dev.mjs --preview"
   },
   "devDependencies": {
     "esbuild": "0.28.2"

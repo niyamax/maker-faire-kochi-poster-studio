@@ -4,12 +4,12 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Poster Studio — Maker Faire Kochi</title>
   <meta name="description" content="Create Maker Faire Kochi posters with expressive type, a shared colour system and direct canvas editing.">
-  <link rel="stylesheet" href="studio.css">
-  <script defer src="studio.js"></script>
+  <link rel="stylesheet" href="poster.css">
+  <script defer src="poster.js"></script>
 </head>
 <body data-inspector="content">
   <header class="app-header">
-    <div class="app-identity"><img class="app-logo" src="assets/MF_Kochi_Logo_long.png" alt="Maker Faire Kochi"><span class="app-divider" aria-hidden="true"></span><div class="project-control"><h1><button id="project-menu-toggle" class="project-button" aria-haspopup="menu" aria-expanded="false" aria-controls="project-menu">Poster Studio<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button></h1><div id="project-menu" class="project-menu" role="menu" hidden><button id="save-project" role="menuitem">Save project</button><button id="open-project" role="menuitem">Open project…</button></div></div></div>
+    <div class="app-identity"><a href="./" class="studio-home-link" aria-label="Back to Content Studio" title="Content Studio">←</a><img class="app-logo" src="assets/MF_Kochi_Logo_long.png" alt="Maker Faire Kochi"><span class="app-divider" aria-hidden="true"></span><div class="project-control"><h1><button id="project-menu-toggle" class="project-button" aria-haspopup="menu" aria-expanded="false" aria-controls="project-menu">Poster Studio<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button></h1><div id="project-menu" class="project-menu" role="menu" hidden><button id="save-project" role="menuitem">Save project</button><button id="open-project" role="menuitem">Open project…</button></div></div></div>
     <div class="document-actions">
       <output id="save-state" class="save-state" aria-live="polite"></output>
       <div class="history-actions" aria-label="Edit history"><button id="undo-pose" class="icon-button" title="Undo · Cmd/Ctrl Z" aria-label="Undo" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5 3 9l4 4M3.5 9h7a5 5 0 0 1 5 5v1"/></svg></button><button id="redo-pose" class="icon-button" title="Redo · Cmd/Ctrl Shift Z" aria-label="Redo" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m13 5 4 4-4 4M16.5 9h-7a5 5 0 0 0-5 5v1"/></svg></button></div>
@@ -60,7 +60,7 @@
         </section>
         <div id="footer-controls" class="footer-controls">
           <section class="panel-section" data-properties-for="text" hidden><fieldset data-footer-part="text"><legend>Supporting text</legend><div class="footer-fields"></div><p class="field-hint">Drag on the poster. Corner handles resize.</p><button type="button" class="text-button" data-reset-footer="text">Reset text</button></fieldset></section>
-          <section class="panel-section" data-properties-for="logo" hidden><fieldset data-footer-part="logo"><legend>Maker Faire logo</legend><div class="footer-fields"></div><p class="field-hint">Proportions stay locked as you resize.</p><button type="button" class="text-button" data-reset-footer="logo">Reset logo</button></fieldset></section>
+          <section class="panel-section" data-properties-for="logo" hidden><fieldset data-footer-part="logo"><legend>Maker Faire logo</legend><div class="logo-options"><label class="select-field" for="logo-layout">Layout<select id="logo-layout"></select></label><label class="select-field" for="logo-colour">Colour<select id="logo-colour" aria-describedby="logo-colour-hint"></select></label><p id="logo-colour-hint" class="field-hint">Original Maker Faire colours.</p></div><div class="footer-fields"></div><p class="field-hint">Proportions stay locked as you resize.</p><button type="button" class="text-button" data-reset-footer="logo">Reset logo</button></fieldset></section>
         </div>
         <div class="properties-footer"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2M4.5 7h7v6h-7z"/></svg><span>Shared margins keep the set cohesive.</span></div>
       </aside>

@@ -4,6 +4,10 @@
 
 Application source code, scripts and documentation are licensed under the MIT License in [LICENSE](LICENSE). The font software and brand artwork below are governed separately.
 
+## Procedural lettering
+
+Studio Sans is original procedural application code covered by the MIT licence.
+
 ## Fonts
 
 Bundled fonts and derived outlines retain their respective SIL Open Font License 1.1 terms. Unmodified licence files are included in [licenses/](licenses/); official source URLs, source filenames, instance axes and SHA-256 checksums appear in [assets/font-manifest.json](assets/font-manifest.json).
@@ -16,7 +20,7 @@ Keep the applicable font notices with redistributed fonts and derived outlines. 
 
 The supplied Maker Faire Kochi logo is preserved as artwork. The MIT licence for the application does not license the logo, Maker Faire names or related marks, and does not grant trademark rights. Those rights remain with their respective holders.
 
-The source logo is `assets/MF_Kochi_Logo_long.png`; its embedded rendering data is `src/data/logo.js`. Asset information is recorded in [assets/logo.json](assets/logo.json).
+The original raster logo is `assets/MF_Kochi_Logo_long.png`. The selectable long, bordered and square SVG logos, including black and white versions, are in `assets/logos/`, converted from the supplied vector PDFs. Their embedded rendering data is generated in `src/data/logo.js` by `scripts/build-logos.mjs`. Source notes are in [assets/logos/README.md](assets/logos/README.md); asset checksums are recorded in [assets/logo.json](assets/logo.json).
 
 ## Demonstration images
 
