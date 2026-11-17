@@ -2,7 +2,7 @@
 
 Create Maker Faire Kochi social content from shared maker and workshop information. Content Studio combines a local content library, linked feed and Story designs, carousels and the expressive poster editor.
 
-**[Open Content Studio](https://niyamax.github.io/maker-faire-kochi-poster-studio/)** · [Classic poster editor](https://niyamax.github.io/maker-faire-kochi-poster-studio/poster.html)
+**[Open Poster Studio](https://niyamax.github.io/maker-faire-kochi-poster-studio/)** · [Content Studio library](https://niyamax.github.io/maker-faire-kochi-poster-studio/content.html)
 
 ![Maker Faire Content Studio artwork series](docs/images/content-series.png)
 
@@ -53,7 +53,7 @@ npm ci
 npm run dev
 ```
 
-Open **[http://127.0.0.1:8800/](http://127.0.0.1:8800/)** for Content Studio. The classic poster editor is at `/poster.html`. The development server listens only on your computer. JavaScript and CSS changes rebuild automatically; refresh the browser to see them.
+Open **[http://127.0.0.1:8800/](http://127.0.0.1:8800/)** for Poster Studio. The Content Studio library is at `/content.html`. The development server listens only on your computer. JavaScript and CSS changes rebuild automatically; refresh the browser to see them.
 
 If the port is occupied, set the `PORT` environment variable before starting the server. For example, in a POSIX shell:
 

@@ -70,8 +70,9 @@ window.addEventListener('pagehide',()=>{
 });
 document.querySelector('.studio-home-link')?.addEventListener('click',async event=>{
   if(!workspaceItemId)return;
+  const libraryUrl=event.currentTarget.href;
   event.preventDefault();clearTimeout(workspaceSaveTimer);workspaceSaveTimer=null;
-  if(await persistWorkspacePoster(studioProject(state,drafts),++workspaceSaveRevision))location.href=new URL('.',location.href).href;
+  if(await persistWorkspacePoster(studioProject(state,drafts),++workspaceSaveRevision))location.href=libraryUrl;
 });
 try{
   const saved=localStorage.getItem(STUDIO_STORAGE_KEY);
