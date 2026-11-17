@@ -2,11 +2,12 @@ import {TREATMENTS,PALETTES,FORMATS,cleanHeadline,cleanDetail} from './scene.js'
 import {treatmentSettings} from './treatment.js';
 import {normalizeFooter} from './footer-layout.js';
 import {LOOP_CURVE_IDS} from './loop-motion.js';
+import {FLOW_CURVE} from './flow-motion.js';
 import {normalizeLetterOffsets} from './letter-drag.js';
 import {normalizePosterImage} from './poster-image.js';
 import {DEFAULT_LOGO_VARIANT,getLogoVariant} from './logo-library.js';
 export const STUDIO_STORAGE_KEY='maker-poster-studio-v1';
-export const STUDIO_DEFAULTS=Object.freeze({direction:'air',palette:'maker-red',format:'poster',phase:0,energy:1,loop:true,motionCurve:'smooth',customColors:null,snapping:true,media:null,logoVariant:DEFAULT_LOGO_VARIANT});
+export const STUDIO_DEFAULTS=Object.freeze({direction:'air',palette:'maker-red',format:'poster',phase:0,energy:1,loop:true,motionCurve:FLOW_CURVE,customColors:null,snapping:true,media:null,logoVariant:DEFAULT_LOGO_VARIANT});
 export const defaultStudioDrafts=()=>Object.fromEntries(TREATMENTS.map(d=>[d.id,{headline:d.headline,detail:d.detail,offsets:[],lettering:treatmentSettings(d.id),footer:normalizeFooter()}]));
 
 /** Treatments share content, placement, font and layout. Keep their expressive

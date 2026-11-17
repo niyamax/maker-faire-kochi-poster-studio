@@ -11,7 +11,7 @@ import {LAYOUT_PRESETS} from './composition.js';
 import {treatmentSettings} from './treatment.js';
 import {normalizeFooter,FOOTER_LIMITS,dragFooterItem,placeFooterItem,footerSettingsFromRect,alignFooterRect} from './footer-layout.js';
 import {snapFooterRect} from './alignment.js';
-import {LOOP_CURVES} from './loop-motion.js';
+import {STUDIO_MOTION_CURVES,posterLoopSeconds} from './loop-motion.js';
 import {getVideoExportSupport,exportVideo} from './video-export.js';
 import {mountEditorShell} from './editor-shell.js';
 import {VISIBLE_DIRECTION_IDS,VISIBLE_FONT_IDS,VISIBLE_LAYOUT_IDS,VISIBLE_STYLE_IDS,VISIBLE_PALETTE_IDS,EDITOR_PRESETS,EDITOR_PALETTE_LABELS,retainCurrentOption} from './editor-config.js';
@@ -80,7 +80,7 @@ try{
 
 for(const preset of EDITOR_PRESETS){const b=document.createElement('button');b.className='treatment-option';b.dataset.direction=preset.id;b.title=preset.description;b.setAttribute('aria-pressed',String(preset.id===state.direction));b.textContent=preset.label;b.addEventListener('click',()=>selectDirection(preset.id));$('.directions').append(b);}
 for(const [id,f]of Object.entries(FORMATS))$('#format').add(new Option(f.name,id));
-for(const curve of LOOP_CURVES)$('#motion-curve').add(new Option(curve.label,curve.id));
+for(const curve of STUDIO_MOTION_CURVES)$('#motion-curve').add(new Option(curve.label,curve.id));
 for(const layout of LOGO_LAYOUTS)$('#logo-layout').add(new Option(layout.label,layout.id));
 for(const colour of LOGO_COLOURS)$('#logo-colour').add(new Option(colour.label,colour.id));
 for(const id of ['logo-layout','logo-colour'])$('#'+id).addEventListener('change',()=>{
@@ -225,7 +225,7 @@ function resetFooter(part){
 $('#align-footer').addEventListener('click',()=>{rememberPose();for(const part of ['text','logo']){drafts[state.direction].footer[part].x=0;drafts[state.direction].footer[part].y=0;}syncFooterControls();syncPoseControls();dirty=true;saveState();});
 for(const button of document.querySelectorAll('[data-reset-footer]'))button.addEventListener('click',()=>resetFooter(button.dataset.resetFooter));
 function syncColors(){const p=palette();$('#palette-swatches').replaceChildren();for(const [key,title]of [['bg','Field'],['fg','Type'],['accent','Accent']]){const swatch=document.createElement('span');swatch.className='swatch';swatch.style.background=p[key];swatch.title=`${title} ${p[key]}`;$('#palette-swatches').append(swatch);$('#custom-'+key).value=p[key];}}
-function syncTransport(){$('#timeline').value=Math.round(state.phase*1000);$('#time').textContent=(state.phase*8).toFixed(1)+' / 8s';$('#play').setAttribute('aria-label',playing?'Pause motion':'Play motion');$('#play-symbol').textContent=playing?'Ⅱ':'▶';$('#loop').checked=state.loop;}
+function syncTransport(){const seconds=posterLoopSeconds(state.motionCurve);$('#timeline').value=Math.round(state.phase*1000);$('#time').textContent=(state.phase*seconds).toFixed(1)+' / '+seconds+'s';$('#video-loop-note').textContent=seconds+'s loop · 60 fps';$('#play').setAttribute('aria-label',playing?'Pause motion':'Play motion');$('#play-symbol').textContent=playing?'Ⅱ':'▶';$('#loop').checked=state.loop;}
 function fit(){const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);view.w=r.width;view.h=r.height;view.dpr=dpr;dirty=true;}
 function makeScene(override={}){return createPosterScene({...state,...drafts[state.direction],pointer:null,...override});}
 function footerRect(part){return lastScene?.regions[part==='text'?'details':'logo'];}
@@ -312,12 +312,12 @@ function render(){
   }
   dirty=false;
 }
-function tick(now){if(!drag&&snapGuides.length&&now>guideUntil){snapGuides=[];dirty=true;}const elapsed=Math.max(0,(now-last)/1000||.016);last=now;if(!document.hidden){if(playing){state.phase+=elapsed/8;if(state.phase>=1){if(state.loop)state.phase%=1;else{state.phase=1;playing=false;saveState();}}dirty=true;syncTransport();}if(dirty)render();}requestAnimationFrame(tick);}
+function tick(now){if(!drag&&snapGuides.length&&now>guideUntil){snapGuides=[];dirty=true;}const elapsed=Math.max(0,(now-last)/1000||.016);last=now;if(!document.hidden){if(playing){state.phase+=elapsed/posterLoopSeconds(state.motionCurve);if(state.phase>=1){if(state.loop)state.phase%=1;else{state.phase=1;playing=false;saveState();}}dirty=true;syncTransport();}if(dirty)render();}requestAnimationFrame(tick);}
 
 
 $('#play').addEventListener('click',()=>{if(state.phase>=.999)state.phase=0;playing=!playing;syncTransport();dirty=true;if(!playing)saveState();});
 $('#timeline').addEventListener('input',event=>{const phase=Number(event.target.value)/1000;playing=false;state.phase=phase;selected=null;syncTransport();dirty=true;saveState();});
-$('#motion-curve').addEventListener('change',event=>{state.motionCurve=event.target.value;dirty=true;saveState();});
+$('#motion-curve').addEventListener('change',event=>{state.motionCurve=event.target.value;syncTransport();dirty=true;saveState();});
 $('#loop').addEventListener('change',event=>{state.loop=event.target.checked;saveState();});
 $('#format').addEventListener('change',event=>{state.format=event.target.value;dirty=true;saveState();});
 $('#palette').addEventListener('change',event=>{state.palette=event.target.value;state.customColors=null;syncColors();dirty=true;saveState();});
@@ -501,7 +501,7 @@ $('#export-video').addEventListener('click',async()=>{
   $('#video-title').textContent='Exporting loop';$('#video-progress-wrap').hidden=false;$('#video-preview').hidden=true;$('#download-video').hidden=true;$('#video-progress').value=0;$('#video-details').textContent='';$('#video-progress-label').textContent='Preparing video…';$('#cancel-video').textContent='Cancel';$('#video-dialog').showModal();
   try{
     await preparePosterAssets(project.state.media?.asset);
-    const result=await exportVideo({width:first.width,height:first.height,duration:8,fps:60,signal:controller.signal,onSetup:info=>{
+    const result=await exportVideo({width:first.width,height:first.height,duration:posterLoopSeconds(project.state.motionCurve),fps:60,signal:controller.signal,onSetup:info=>{
       $('#video-details').textContent=`${info.width} × ${info.height} · ${info.fps} fps`;
     },renderFrame:(context,phase)=>drawPosterScene(context,createPosterScene({...project.state,...draft,phase})),onProgress:(progress,info)=>{
       $('#video-progress').value=progress;$('#video-progress-label').textContent=info?.stage==='finalizing'?'Finishing video…':info?.totalFrames?`Rendering frame ${info.frame} of ${info.totalFrames}`:'Preparing high-quality video…';

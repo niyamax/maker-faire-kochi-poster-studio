@@ -2,7 +2,7 @@ import './styles/content.css';
 import {CONTENT_TYPES,CONTENT_FORMATS,CONTENT_MAX_ASSETS,CONTENT_MAX_PAGES,createWorkspace,normalizeWorkspace,createContentItem,duplicateContentItem,createContentPage,contentItemLabel,contentCaption} from './content-project.js';
 import {loadWorkspace,saveWorkspace} from './content-storage.js';
 import {createContentScene,prepareContentAssets} from './content-scene.js';
-import {contentPNG,contentSVG,contentPack,contentVideo,contentFilename,downloadContent} from './content-export.js';
+import {contentPNG,contentSVG,contentPack,contentVideo,contentLoopSeconds,contentFilename,downloadContent} from './content-export.js';
 import {drawPosterScene} from './scene.js';
 import {importPosterImage} from './image-import.js';
 import {getLogoVariant} from './logo-library.js';
@@ -277,7 +277,7 @@ function schedulePreviews(){
       await libraryThumbnailTask;
       if(generation!==drawGeneration||currentItem()?.id!==item.id)return;
       await prepareUiAssets(item);if(generation===drawGeneration&&currentItem()?.id===item.id){
-      drawPreviews(playing?(performance.now()-motionStart)/8000%1:0);
+      drawPreviews(playing?(performance.now()-motionStart)/(1000*contentLoopSeconds(item))%1:0);
       const thumbnails=all('.page-thumbnail canvas');
       for(const [index,canvas] of thumbnails.entries())paintCanvas(canvas,createContentScene(item,workspace.event,{format:activeFormat==='newsletter'?'newsletter':'feed',pageIndex:index,phase:0}));
     }}
@@ -285,8 +285,8 @@ function schedulePreviews(){
   },70);
 }
 function animate(now){
-  if(!playing||!currentItem())return;
-  try{drawPreviews((now-motionStart)/8000%1);}catch(error){stopMotion();announce(error.message,{error:true});return;}
+  const item=currentItem();if(!playing||!item)return;
+  try{drawPreviews((now-motionStart)/(1000*contentLoopSeconds(item))%1);}catch(error){stopMotion();announce(error.message,{error:true});return;}
   animationFrame=requestAnimationFrame(animate);
 }
 function openEventDialog(){
