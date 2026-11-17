@@ -1,0 +1,25 @@
+# Poster Studio design guidance
+
+## Photo cutouts
+
+- **Choose the paper opening before composing the photo.** Keep the main object and any parts essential to understanding it visible through the opening. Check the crop in each export ratio.
+  Why: A subject that fits in one format can lose a key part in another.
+  <!-- 2026-11-13: "Can we create images to actually fit in the cut out spaces?" -->
+
+## Footer
+
+- **Default Maker Faire supporting copy to 120% and keep it on one row with the logo.** Place copy on the left and the logo on the right. Align them to the photo frame where there is room. Move the logo inward when an angled paper edge leaves too little clearance.
+  Why: The copy needs to be readable, and the footer should follow the frame while giving the logo room to breathe.
+  <!-- 2026-11-13: "Increase the size of supportive text to 120% by default" and "The logo looks too edged. The spacing should be respected too" -->
+
+## Typography
+
+- **Fit headlines closely to the usable paper area.** Preserve the intended spacing between letters and lines in the paused layout when adding motion.
+  Why: Shrinking letters to create room for movement left unwanted gaps even when the poster was paused.
+  <!-- 2026-11-13: "Why is there an awkward spacing between letters and lines which was not there before" -->
+
+## Motion
+
+- **In Flow loops, vary which letter leads and how fast it stretches.** Ease between pulses, keep rows anchored, and use occasional vertical stretches where there is enough clearance.
+  Why: The changing lead keeps the loop from feeling repetitive. Smooth handoffs and anchored rows prevent the jitter and floating motion seen in earlier attempts.
+  <!-- 2026-11-17: "But that look like the motion is jittering and broken"; final two-axis revision: "Cool this works. Create other videos too" -->

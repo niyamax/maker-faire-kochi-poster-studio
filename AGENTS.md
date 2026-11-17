@@ -7,3 +7,7 @@ Those experiments are checkpointed on the local-only branch `codex/3d-poster-exp
 Production builds must use `npm run build`. The production scope guard rejects experimental source paths and bundles, and each production build starts with an empty `dist`. Keep these guards enabled. Install the local main-push guard with `npm run protect:main` when setting up another checkout.
 
 Use port 8800 for this editor and 8820 for the isolated experiment preview. Keep each checkout’s dependencies and generated output separate.
+
+## Design guidance
+
+Before building or changing UI or poster templates in this project, read [DESIGN.md](DESIGN.md).
