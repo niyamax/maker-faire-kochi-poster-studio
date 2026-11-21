@@ -136,9 +136,13 @@ export function airGlyphPaths(character, width, height, options = {}) {
   const narrow = glyphMetrics(char) <= .35;
   const stacked = 'ABGPRS2345689&?@'.includes(char);
   const ring = 'OQ0'.includes(char);
+  // E carries three horizontal bars: keep both counters open in short, wide cells.
+  const barred = char === 'E';
+  // W has four diagonals across its width: thinner strokes keep its two valleys open.
+  const zigzag = char === 'W';
   const punctuated = char === '?' || char === '!';
   // Preserve a clear gap above the lower dot, including in wide/inflated cells.
-  const cap = Math.min(W * (narrow ? .46 : ring ? .205 : .235), H * (punctuated ? .115 : stacked ? .135 : .195));
+  const cap = Math.min(W * (narrow ? .46 : ring ? .205 : zigzag ? .15 : .235), H * (punctuated ? .115 : barred ? .112 : stacked ? .135 : .195));
   const radius = cap * (.42 + pressure * .58) * clamp(finite(options.volume,1),.3,1.2);
   // A small amount of overfill supplies broad, flat contact rather than a gap
   // between the drawing's edge and the visible bounds of the packed cell.

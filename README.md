@@ -123,6 +123,10 @@ The `dist/` folder can be served by a static web host. It includes the applicati
 
 The npm package has `private: true` to prevent accidental publication to the npm registry; this does not restrict the public GitHub repository or the MIT licence.
 
+### Reels
+
+Scripts in `scripts/reel/` render vertical Reels with the same lettering engine, outside the browser: a list that grows row by row, a word that keeps changing, and lettering that parts around a photograph. They need `rsvg-convert` and `ffmpeg`. See [Reels](docs/reels.md).
+
 ### Source map
 
 | Folder | Contents |
