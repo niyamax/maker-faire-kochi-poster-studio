@@ -2,6 +2,8 @@
 
 Create Maker Faire Kochi social content from shared maker and workshop information. Content Studio combines a local content library, linked feed and Story designs, carousels and the expressive poster editor.
 
+**[Open Poster Studio](https://niyamax.github.io/maker-faire-kochi-poster-studio/)** · [Content Studio library](https://niyamax.github.io/maker-faire-kochi-poster-studio/content.html)
+
 ![Maker Faire Content Studio artwork series](docs/images/content-series.png)
 
 ## Content library and social packs
@@ -10,10 +12,10 @@ Open the root page to create a **Maker Spotlight**, **Workshop**, or **Poster**.
 
 - **Maker Spotlight:** maker and project names, a short poster callout, description, handle, photographs and a link.
 - **Workshop:** full title, poster callout, host, date, time, duration, location, description and booking link. Empty event fields inherit the shared event details.
-- **Linked outputs:** feed at 1080 × 1350 and Story at 1080 × 1920 share content, colours and logo. Each output retains its own image zoom and focal point.
+- **Linked outputs:** Feed at 1080 × 1350, Story at 1080 × 1920 and Newsletter at 1536 × 1024 (3:2) share content, colours and logo. Each output retains its own image zoom and focal point. Choose Newsletter from the preview's Output selector for a dedicated landscape composition.
 - **Carousels:** cover, details and closing pages, with custom callouts/body text, image selection, duplication, ordering and removal. Choose an automatic composition, photo window, object cut-out or type-only artwork per page. Add up to 30 pages and eight photographs per item.
 - **Partner branding:** add a partner name and a dedicated logo alongside the Maker Faire identity, independently of the photo gallery.
-- **Sharing packs:** individual PNG/SVG outputs or an ordered ZIP of feed and Story PNGs, an editable project, caption text, image descriptions and an output manifest. Video export uses the same selected page and motion geometry.
+- **Sharing packs:** individual PNG/SVG outputs or an ordered ZIP of Feed, Story and Newsletter PNGs, an editable project, caption text, image descriptions and an output manifest. Video export uses the same selected page and motion geometry.
 - **Editing guides:** toggle Story safe-area guides in the preview. Guides are omitted from exports; add native social links and stickers on the destination platform.
 
 Templates follow the [Content Studio art direction](docs/art-direction.md) and use the original hero poster lettering engine. Air, Flex and Packed shape a substantial typographic field, with the same optical spacing, letter character and motion as the poster editor. Photo windows sit between rows of lettering; transparent objects interrupt the field and the letters respond to their silhouette; type-only callouts reclaim the full artwork area. Names, complete official titles and practical facts have separate reading areas.
@@ -33,7 +35,7 @@ Template text currently uses the bundled Latin glyphs. Text that cannot be rende
 - **Three treatments:** Air, Flex and Packed. Switching treatments keeps your font, layout, headline, supporting text and saved positions.
 - **Expressive type:** seven font choices, optical spacing, selective exaggeration, inflation and outline drawing.
 - **Direct editing:** drag letters, reshape them with handles, and move or resize the supporting text and logo. Select the logo to choose its long, bordered or square layout in original colours, black or white.
-- **Cohesive layouts:** shared margins, snapping, alignment controls and portrait, story, square and banner formats.
+- **Cohesive layouts:** shared margins, snapping, alignment controls and portrait, story, square, banner and 3:2 newsletter formats.
 - **Motion posters:** seamless eight-second loops with Smooth, Steady, Punchy and Elastic curves.
 - **Image layouts:** an Image window for photography and an Object cut-out layout for transparent objects, with local upload and crop or overlap controls.
 - **Portable output:** PNG images, outlined SVG artwork, video loops and editable JSON project files.
@@ -51,7 +53,7 @@ npm ci
 npm run dev
 ```
 
-Open **[http://127.0.0.1:8800/](http://127.0.0.1:8800/)** for Content Studio. The classic poster editor is at `/poster.html`. The development server listens only on your computer. JavaScript and CSS changes rebuild automatically; refresh the browser to see them.
+Open **[http://127.0.0.1:8800/](http://127.0.0.1:8800/)** for Poster Studio. The Content Studio library is at `/content.html`. The development server listens only on your computer. JavaScript and CSS changes rebuild automatically; refresh the browser to see them.
 
 If the port is occupied, set the `PORT` environment variable before starting the server. For example, in a POSIX shell:
 
@@ -120,6 +122,8 @@ Headlines use the supported Latin uppercase letters, numbers and punctuation. Su
 | `npm run preview` | Serve an existing `dist/` build locally |
 
 The `dist/` folder can be served by a static web host. It includes the application, runtime assets, licence and asset notices. Keep these files together when distributing the build. The development server is for local use.
+
+GitHub Pages serves the built application from the root of the `gh-pages` branch. To publish an update, run `npm run build` and commit the contents of `dist/` to that branch, retaining `.nojekyll`. Source changes are reviewed separately; pushing a source branch alone does not update the live site. The published `deployment.json` records the source commit for the current build.
 
 The npm package has `private: true` to prevent accidental publication to the npm registry; this does not restrict the public GitHub repository or the MIT licence.
 

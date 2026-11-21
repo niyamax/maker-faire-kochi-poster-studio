@@ -2,6 +2,8 @@ import {createContentScene,prepareContentAssets} from './content-scene.js';
 import {createWorkspace,normalizeWorkspace,contentItemLabel,contentCaption,CONTENT_FORMATS} from './content-project.js';
 import {drawPosterScene,posterSVG} from './scene.js';
 import {exportVideo} from './video-export.js';
+import {posterLoopSeconds} from './loop-motion.js';
+import {FLOW_CURVE} from './flow-motion.js';
 
 const encoder=new TextEncoder();
 const MAX_ZIP_SIZE=0xffffffff;
@@ -20,7 +22,7 @@ const checkAbort=signal=>{if(signal?.aborted)throw abortError();};
 const cleanSlug=(value,fallback='content')=>String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,76).replace(/-+$/,'')||fallback;
 
 function outputOptions({format='feed',pageIndex=0,...rest}={}){
-  if(!Object.hasOwn(CONTENT_FORMATS,format))throw new RangeError('Choose a feed or Story output.');
+  if(!Object.hasOwn(CONTENT_FORMATS,format))throw new RangeError('Choose an available output format.');
   if(!Number.isInteger(pageIndex)||pageIndex<0)throw new RangeError('Choose a valid content page.');
   return {...rest,format,pageIndex};
 }
@@ -184,13 +186,18 @@ export async function contentPack(item,event,{onProgress=()=>{},signal}={}){
   onProgress(1,{stage:'complete',totalPages:outputs.length});return blob;
 }
 
+export function contentLoopSeconds(item){
+  return posterLoopSeconds(item?.type==='poster'?item.legacyProject?.state?.motionCurve:undefined);
+}
+
 export async function contentVideo(item,event,options={}){
   const output=outputOptions(options),snapshot=snapshotContent(item,event);
   checkAbort(output.signal);
   await prepareContentAssets(snapshot.item);checkAbort(output.signal);
   const first=checkedScene(snapshot.item,snapshot.event,{...output,phase:0});
+  const flow=snapshot.item.type==='poster'&&snapshot.item.legacyProject?.state?.motionCurve===FLOW_CURVE;
   return exportVideo({
-    width:first.width,height:first.height,duration:output.duration??8,fps:output.fps??30,renderScale:1,maxSide:1920,
+    width:first.width,height:first.height,duration:output.duration??contentLoopSeconds(snapshot.item),fps:output.fps??(flow?60:30),renderScale:1,maxSide:1920,
     signal:output.signal,onProgress:output.onProgress,onSetup:output.onSetup,
     renderFrame:(context,phase)=>drawPosterScene(context,createContentScene(snapshot.item,snapshot.event,{...output,phase})),
   });

@@ -1,3 +1,5 @@
+import {FLOW_CURVE,FLOW_SECONDS} from './flow-motion.js';
+
 const TAU=Math.PI*2;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const unitPhase=value=>Number.isFinite(value)?((value%1)+1)%1:0;
@@ -13,7 +15,9 @@ export const LOOP_CURVES=Object.freeze([
   Object.freeze({id:'punchy',label:'Punchy'}),
   Object.freeze({id:'elastic',label:'Elastic'}),
 ]);
-export const LOOP_CURVE_IDS=Object.freeze(LOOP_CURVES.map(curve=>curve.id));
+export const STUDIO_MOTION_CURVES=Object.freeze([Object.freeze({id:FLOW_CURVE,label:'Flow'}),...LOOP_CURVES]);
+export const LOOP_CURVE_IDS=Object.freeze(STUDIO_MOTION_CURVES.map(curve=>curve.id));
+export const posterLoopSeconds=curve=>curve===FLOW_CURVE?FLOW_SECONDS:8;
 
 const PROFILES=Object.freeze({
   smooth:{warp:[.12,-.045,0],harmonics:[.11,0]},
