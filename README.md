@@ -123,6 +123,10 @@ The `dist/` folder can be served by a static web host. It includes the applicati
 
 The npm package has `private: true` to prevent accidental publication to the npm registry; this does not restrict the public GitHub repository or the MIT licence.
 
+### Reels
+
+`scripts/reel/team-grows.mjs` renders a vertical volunteer-call Reel with the same lettering engine, outside the browser. It needs `rsvg-convert` and `ffmpeg`. See [Reel: The team grows](docs/reel-team-grows.md) for how to run it and the decisions behind it.
+
 ### Source map
 
 | Folder | Contents |
