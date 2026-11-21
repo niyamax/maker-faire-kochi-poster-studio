@@ -125,7 +125,7 @@ The npm package has `private: true` to prevent accidental publication to the npm
 
 ### Reels
 
-`scripts/reel/team-grows.mjs` renders a vertical volunteer-call Reel with the same lettering engine, outside the browser. It needs `rsvg-convert` and `ffmpeg`. See [Reel: The team grows](docs/reel-team-grows.md) for how to run it and the decisions behind it.
+Scripts in `scripts/reel/` render vertical Reels with the same lettering engine, outside the browser: a list that grows row by row, a word that keeps changing, and lettering that parts around a photograph. They need `rsvg-convert` and `ffmpeg`. See [Reels](docs/reels.md).
 
 ### Source map
 

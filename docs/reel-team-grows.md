@@ -8,32 +8,15 @@ This page records how to run it, what each number does, and why the reel looks t
 
 ## Run it
 
-You need Node 22 or newer, plus `rsvg-convert` (librsvg) and `ffmpeg` on your PATH. On macOS: `brew install librsvg ffmpeg`. Run from the repository root.
-
 ```sh
-# 1080 × 1920, silent
-node scripts/reel/team-grows.mjs --out reel.mp4
-
-# 4K (2160 × 3840) with muffled music
 node scripts/reel/team-grows.mjs --out reel-4k.mp4 --scale 2 --music lobby-time.mp3 --music-start 83.85
-
-# One frame as a PNG, for a cover or end card
-node scripts/reel/team-grows.mjs --still 14.9 --out end-card.png --scale 2
 ```
 
-| Option | Meaning | Default |
-| --- | --- | --- |
-| `--out` | Output file | `team-grows.mp4` |
-| `--scale` | 1 for 1080 × 1920, 2 for 4K. Frames are redrawn from vectors, not upscaled. | 1 |
-| `--music` | Audio file to muffle and lay under the video | none (silent) |
-| `--music-start` | Where in the track the 15-second excerpt starts, in seconds | 0 |
-| `--still` | Write the frame at this time (seconds) as a PNG instead of a video | none |
-
-A 1080p render takes about a minute; 4K takes a few. The script writes frames to a temporary folder and removes them when it finishes.
+Requirements and every option are in [Reels](reels.md), along with the other styles that share this layout.
 
 ## Make a new reel
 
-Everything you would change sits in the `CONFIG` block at the top of the script.
+Everything you would change sits in the `CONFIG` block at the top of the script, or in the shared `DEFAULTS` in `scripts/reel/core.mjs`.
 
 | To change | Edit |
 | --- | --- |
