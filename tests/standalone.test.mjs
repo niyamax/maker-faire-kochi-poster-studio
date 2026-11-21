@@ -8,7 +8,7 @@ import {TREATMENTS,FORMATS,PALETTES} from '../src/scene.js';
 import {FONT_CATALOG} from '../src/font-library.js';
 import {LAYOUT_IDS} from '../src/composition.js';
 import {STYLE_IDS} from '../src/style-system.js';
-import {LOGO_DATA} from '../src/data/logo.js';
+import {getLogoVariant} from '../src/logo-library.js';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const sha=data=>createHash('sha256').update(data).digest('hex');
@@ -21,7 +21,7 @@ test('the standalone product exposes exactly its supported editing choices',()=>
   assert.deepEqual(PALETTES.map(({id,bg,fg})=>[id,bg,fg]),[
     ['maker','#FFFFFF','#ED1C24'],['maker-red','#ED1C24','#FFFFFF'],
   ]);
-  assert.equal(Object.keys(FORMATS).length,4);
+  assert.equal(Object.keys(FORMATS).length,5);
 });
 
 test('every runtime source module is reachable from the app and resolves inside the repository',async()=>{
@@ -32,11 +32,13 @@ test('every runtime source module is reachable from the app and resolves inside 
     const source=await readFile(path,'utf8');
     if(!path.endsWith('.js'))return;
     for(const match of source.matchAll(/(?:import\s+(?:[^;]*?\sfrom\s*)?|export\s+[^;]*?\sfrom\s*)['"]([^'"]+)['"]/g)){
-      assert.ok(match[1].startsWith('.'),'browser code uses local modules');
+      if(match[1]==='mediabunny')continue;
+      assert.ok(match[1].startsWith('.'),'browser code imports the bundled codec or a local module');
       await visit(resolve(dirname(path),match[1]));
     }
   }
   await visit(resolve(root,'src/app.js'));
+  await visit(resolve(root,'src/content-app.js'));
   async function check(path){for(const item of await readdir(path,{withFileTypes:true})){const name=resolve(path,item.name);if(item.isDirectory())await check(name);else if(name.endsWith('.js'))assert.ok(seen.has(name),`${name.split(sep).at(-1)} is used by the editor`);}}
   await check(resolve(root,'src'));
 });
@@ -51,5 +53,9 @@ test('font sources, licence files and embedded logo match the shipped asset mani
   const logo=await readFile(resolve(root,'assets/MF_Kochi_Logo_long.png'));
   const info=JSON.parse(await readFile(resolve(root,'assets/logo.json'),'utf8'));
   assert.equal(sha(logo),info.sha256);
-  assert.deepEqual(Buffer.from(LOGO_DATA.split(',')[1],'base64'),logo);
+  for(const variant of info.variants){
+    const svg=await readFile(resolve(root,'assets',variant.file),'utf8');
+    assert.equal(sha(svg),variant.sha256);
+    assert.equal(decodeURIComponent(getLogoVariant(variant.id).src.split(',')[1]),svg);
+  }
 });

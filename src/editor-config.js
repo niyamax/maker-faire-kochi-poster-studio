@@ -9,7 +9,7 @@ export const VISIBLE_FONT_IDS=Object.freeze(['original']);
 export const VISIBLE_LAYOUT_IDS=Object.freeze(['stack','centered','offset']);
 export const VISIBLE_STYLE_IDS=Object.freeze(['original','jostle']);
 export const VISIBLE_PALETTE_IDS=Object.freeze(['maker-red','maker']);
-export const VISIBLE_FORMAT_IDS=Object.freeze(['poster','story','square','banner']);
+export const VISIBLE_FORMAT_IDS=Object.freeze(['poster','story','square','banner','newsletter']);
 
 export const EDITOR_PRESETS=Object.freeze([
   Object.freeze({id:'air',label:'Air',description:'Inflated letters that share space.'}),

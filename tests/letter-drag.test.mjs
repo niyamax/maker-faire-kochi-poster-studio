@@ -58,5 +58,7 @@ test('letter edge and corner handles track the pointer while the opposite edges 
   assert.equal(reshaped.x,160);assert.equal(reshaped.x+reshaped.w,right);assert.equal(reshaped.h,cell.h);
   const corner=resizeLetterOffset(cell,cell,{x:0,y:0},{x:-20,y:-20},bounds,'nw');
   const expanded=displaceLetters(cells,[null,corner],bounds)[1];
-  assert.equal(expanded.x,110);assert.equal(expanded.y,0);assert.equal(expanded.x+expanded.w,right);assert.equal(expanded.y+expanded.h,bottom);
+  assert.equal(expanded.y,0);
+  assert.equal(expanded.x+expanded.w,right);assert.equal(expanded.y+expanded.h,bottom);
+  assert.ok(Math.abs(expanded.w/expanded.h-cell.w/cell.h)<1e-9,'corner handles preserve the original ratio');
 });

@@ -4,17 +4,24 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Poster Studio — Maker Faire Kochi</title>
   <meta name="description" content="Create Maker Faire Kochi posters with expressive type, a shared colour system and direct canvas editing.">
-  <link rel="stylesheet" href="studio.css">
-  <script defer src="studio.js"></script>
+  <link rel="stylesheet" href="poster.css">
+  <script>
+    // Content Studio used to write item links to the site root.
+    if ((location.pathname.endsWith('/') || location.pathname.endsWith('/index.html')) &&
+        new URLSearchParams(location.hash.slice(1)).has('item')) {
+      location.replace('content.html' + location.search + location.hash);
+    }
+  </script>
+  <script defer src="poster.js"></script>
 </head>
 <body data-inspector="content">
   <header class="app-header">
-    <div class="app-identity"><img class="app-logo" src="assets/MF_Kochi_Logo_long.png" alt="Maker Faire Kochi"><span class="app-divider" aria-hidden="true"></span><div class="project-control"><h1><button id="project-menu-toggle" class="project-button" aria-haspopup="menu" aria-expanded="false" aria-controls="project-menu">Poster Studio<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button></h1><div id="project-menu" class="project-menu" role="menu" hidden><button id="save-project" role="menuitem">Save project</button><button id="open-project" role="menuitem">Open project…</button></div></div></div>
+    <div class="app-identity"><a href="content.html" class="studio-home-link" aria-label="Open Content Studio" title="Content Studio">←</a><img class="app-logo" src="assets/MF_Kochi_Logo_long.png" alt="Maker Faire Kochi"><span class="app-divider" aria-hidden="true"></span><div class="project-control"><h1><button id="project-menu-toggle" class="project-button" aria-haspopup="menu" aria-expanded="false" aria-controls="project-menu">Poster Studio<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button></h1><div id="project-menu" class="project-menu" role="menu" hidden><button id="save-project" role="menuitem">Save project</button><button id="open-project" role="menuitem">Open project…</button></div></div></div>
     <div class="document-actions">
       <output id="save-state" class="save-state" aria-live="polite"></output>
       <button id="open-templates" class="templates-trigger" type="button">Poster templates</button>
       <div class="history-actions" aria-label="Edit history"><button id="undo-pose" class="icon-button" title="Undo · Cmd/Ctrl Z" aria-label="Undo" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5 3 9l4 4M3.5 9h7a5 5 0 0 1 5 5v1"/></svg></button><button id="redo-pose" class="icon-button" title="Redo · Cmd/Ctrl Shift Z" aria-label="Redo" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m13 5 4 4-4 4M16.5 9h-7a5 5 0 0 0-5 5v1"/></svg></button></div>
-      <div class="export-control"><button id="export-menu-toggle" class="primary-button" aria-haspopup="menu" aria-expanded="false" aria-controls="export-menu">Export <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button><div id="export-menu" class="export-menu" role="menu" hidden><button id="export-video" role="menuitem"><span id="export-video-label">Video</span><span class="menu-note">20s loop · 60 fps</span></button><button id="export-png" role="menuitem"><span>PNG image</span><span class="menu-note">For sharing</span></button><button id="export-svg" role="menuitem"><span>SVG artwork</span><span class="menu-note">For print &amp; editing</span></button></div></div>
+      <div class="export-control"><button id="export-menu-toggle" class="primary-button" aria-haspopup="menu" aria-expanded="false" aria-controls="export-menu">Export <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button><div id="export-menu" class="export-menu" role="menu" hidden><button id="export-video" role="menuitem"><span id="export-video-label">Video</span><span id="video-loop-note" class="menu-note">12s loop · 60 fps</span></button><button id="export-png" role="menuitem"><span>PNG image</span><span class="menu-note">For sharing</span></button><button id="export-svg" role="menuitem"><span>SVG artwork</span><span class="menu-note">For print &amp; editing</span></button></div></div>
     </div>
   </header>
   <main class="studio" aria-label="Maker Faire poster editor">
@@ -78,7 +85,7 @@
         </section>
         <div id="footer-controls" class="footer-controls">
           <section class="panel-section" data-properties-for="text" hidden><fieldset data-footer-part="text"><legend>Supporting text</legend><div class="footer-fields"></div><p class="field-hint">Drag on the poster. Corner handles resize.</p><button type="button" class="text-button" data-reset-footer="text">Reset text</button></fieldset></section>
-          <section class="panel-section" data-properties-for="logo" hidden><fieldset data-footer-part="logo"><legend>Maker Faire logo</legend><div class="footer-fields"></div><p class="field-hint">Proportions stay locked as you resize.</p><button type="button" class="text-button" data-reset-footer="logo">Reset logo</button></fieldset></section>
+          <section class="panel-section" data-properties-for="logo" hidden><fieldset data-footer-part="logo"><legend>Maker Faire logo</legend><div class="logo-options"><label class="select-field" for="logo-layout">Layout<select id="logo-layout"></select></label><label class="select-field" for="logo-colour">Colour<select id="logo-colour" aria-describedby="logo-colour-hint"></select></label><p id="logo-colour-hint" class="field-hint">Original Maker Faire colours.</p></div><div class="footer-fields"></div><p class="field-hint">Proportions stay locked as you resize.</p><button type="button" class="text-button" data-reset-footer="logo">Reset logo</button></fieldset></section>
         </div>
         <div class="properties-footer"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2M4.5 7h7v6h-7z"/></svg><span>Shared margins keep the set cohesive.</span></div>
       </aside>
@@ -87,7 +94,7 @@
       <div class="workspace-toolbar"><div class="treatment-control"><span class="treatment-label" aria-hidden="true">Treatment</span><div class="directions" role="group" aria-label="Lettering treatment"></div></div><div class="view-controls"><select id="format" aria-label="Poster format"></select><button id="focus" class="icon-button" title="Focus canvas" aria-label="Focus canvas" aria-expanded="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3H3v4M13 3h4v4M17 13v4h-4M7 17H3v-4"/></svg></button></div></div>
       <div class="artwork-stage"><canvas id="artwork" tabindex="0" aria-label="Editable poster. Hover previews what a single click will select. When the headline container is selected, clicking or dragging inside it keeps the whole container selected. Double-click or press Enter to enter its letters. Inside the headline, single-click letter ink to select that letter; clicking empty space or a frame edge selects the parent headline again. Escape returns from a letter to the headline, then clears the headline selection. Dragging keeps its original target. Corner handles always keep proportions. Side handles reshape independently when the proportion lock is off; with the lock on, width and height change together. The Size controls and lock apply to the selected headline or letter. Drag supporting text, images or the logo to move them. Double-click a photo to adjust its crop. Pink guides show shared edges, centres and margins. Hold Alt to bypass snapping. Arrow keys nudge the selection. Square brackets select previous or next letters. Space plays or pauses motion."></canvas><p id="loading">Preparing your poster…</p><button id="close-focus">Exit focus <kbd>Esc</kbd></button></div>
       <div class="canvas-status"><label class="snap-toggle" title="Snap to poster margins and other items. Hold Alt for free placement."><input id="snapping" type="checkbox" checked><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3v5a4 4 0 0 0 8 0V3M4 6h2M10 6h2"/></svg>Snap</label><span id="drag-note">Drag to move · handles to reshape</span><span class="canvas-view">Fit</span></div>
-      <div class="transport"><button id="play" class="icon-button" aria-label="Play motion"><span id="play-symbol">▶</span></button><input id="timeline" type="range" min="0" max="1000" value="0" aria-label="Motion timeline"><span id="time">0.0 / 20s</span><label class="loop-label"><input type="checkbox" id="loop">Loop</label></div>
+      <div class="transport"><button id="play" class="icon-button" aria-label="Play motion"><span id="play-symbol">▶</span></button><input id="timeline" type="range" min="0" max="1000" value="0" aria-label="Motion timeline"><span id="time">0.0 / 12s</span><label class="loop-label"><input type="checkbox" id="loop">Loop</label></div>
     </section>
   </main>
   <div id="status" role="status" aria-live="polite"></div>

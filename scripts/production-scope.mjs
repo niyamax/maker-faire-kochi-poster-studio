@@ -38,7 +38,7 @@ export function assertProductionInputs(metafile){
   reject(Object.keys(metafile.inputs).filter(experimentalPath),'Production bundle');
 }
 export async function assertProductionOutput(root){
-  const directory=resolve(root,'dist'),allowed=new Set(['index.html','studio.js','studio.css','assets','licenses','LICENSE','NOTICE.md']);
+  const directory=resolve(root,'dist'),allowed=new Set(['index.html','poster.html','content.html','poster.js','poster.css','studio.js','studio.css','assets','licenses','LICENSE','NOTICE.md']);
   const unexpected=[];
   async function walk(path){
     for(const entry of await readdir(path,{withFileTypes:true})){

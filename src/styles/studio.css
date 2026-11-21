@@ -249,3 +249,7 @@ textarea:hover,.select-field select:hover,.footer-range input[type=number]:hover
   .template-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .templates-trigger { font-size: 11px; padding-inline: 5px; }
 }
+
+/* Logo choices share the existing selection inspector on desktop and mobile. */
+.logo-options{display:grid;gap:12px;margin-bottom:20px;min-width:0}
+.logo-options .field-hint{margin:0}

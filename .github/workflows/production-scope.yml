@@ -1,10 +1,11 @@
-name: Production editor scope
+name: Production editor and Pages
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,4 +20,30 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: npm run build
+      - run: npm run check
+      - name: Record deployment source
+        if: github.ref == 'refs/heads/main'
+        run: |
+          node --input-type=module -e 'import {writeFileSync} from "node:fs"; writeFileSync("dist/deployment.json", JSON.stringify({sourceCommit:process.env.GITHUB_SHA,sourceBranch:process.env.GITHUB_REF_NAME,builtAt:new Date().toISOString()},null,2)+"\n")'
+      - uses: actions/upload-pages-artifact@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: dist
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: production-build
+    runs-on: ubuntu-latest
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages
+        uses: actions/deploy-pages@v4
+        id: deployment

@@ -1,6 +1,6 @@
 import {CUTOUTS,paperImageArea,paperSpanAt} from './paper-shapes.js';
 import {composePaperScene} from './paper-scene.js';
-import {LOGO_DATA} from './data/logo.js';
+import {LOGO_VARIANTS,getLogoVariant} from './logo-library.js';
 import {layoutTreatment,appendTreatmentArtwork} from './treatment.js';
 import {stableLetterPose} from './letter-pose.js';
 import {animateLetterPose} from './letter-drag.js';
@@ -28,17 +28,18 @@ export const TREATMENTS=Object.freeze([
   {id:'flex',name:'Flex',description:'Open strokes and elastic proportions.',headline:'MAKER FAIRE\nKOCHI',detail:'Build. Repair. Experiment.\nBring your curiosity.'},
   {id:'packed',name:'Packed',description:'Dense, playful poster lettering.',headline:'MAKER FAIRE\nKOCHI',detail:'Build. Repair. Experiment.\nBring your curiosity.'},
 ]);
-const LOGO_HEIGHT_RATIO=646/3871;
 
-function placeMakerFooter(scene,text,colors,placement,{top,bottom,rowWidth,logoWidth,fontScale,frame}){
+function placeMakerFooter(scene,text,colors,placement,{top,bottom,rowWidth,logoWidth,fontScale,frame,artwork}){
   const {width,height}=scene,short=Math.min(width,height);
+  if(artwork.layout==='square')logoWidth=Math.min(logoWidth,short*.16);
+  const logoRatio=artwork.height/artwork.width;
   const textScale=MAKER_FOOTER_DEFAULTS.text.size/100;
   const gap=short*.032;
   const availableWidth=frame?frame.right-frame.left:rowWidth;
   const copy=addText(scene,text,0,0,short*fontScale,colors.fg,(availableWidth-logoWidth-gap)/textScale,placement.text.align);
   const textWidth=copy.w*textScale;
   const textGap=textWidth>0?gap:0;
-  const logoHeight=logoWidth*LOGO_HEIGHT_RATIO;
+  const logoHeight=logoWidth*logoRatio;
   const rowHeight=Math.max(copy.h*textScale,logoHeight);
   const left=frame?.left??(width-textWidth-textGap-logoWidth)/2;
   const right=frame?.right??(left+textWidth+textGap+logoWidth);
@@ -56,10 +57,11 @@ function placeMakerFooter(scene,text,colors,placement,{top,bottom,rowWidth,logoW
   }
   scene.regions.details=details;
   scene.regions.logo=logo;
-  scene.ops.push({kind:'image',src:LOGO_DATA,x:logo.x,y:logo.y,w:logo.w,h:logo.h});
+  scene.ops.push({kind:'image',src:artwork.src,x:logo.x,y:logo.y,w:logo.w,h:logo.h});
 }
 
-export function createPosterScene({direction='air',palette='maker',format='poster',headline,detail,phase=0,energy=1,offsets=[],lettering={},footer={},headlineFrame={},motionCurve='smooth',media=null,cutout=null,wrapMode='words'}={}){
+export function createPosterScene({direction='air',palette='maker',format='poster',headline,detail,phase=0,energy=1,offsets=[],lettering={},footer={},headlineFrame={},motionCurve='smooth',media=null,cutout=null,wrapMode='words',logoVariant}={}){
+  const artwork=getLogoVariant(logoVariant);
   const spec=TREATMENTS.find(d=>d.id===direction)||TREATMENTS[0],size=FORMATS[format]||FORMATS.poster;
   const colors=PALETTES.find(theme=>theme.id===makerPaletteId(palette));
   const {w:width,h:height}=size,short=Math.min(width,height),pad=short*.065;
@@ -86,7 +88,7 @@ export function createPosterScene({direction='air',palette='maker',format='poste
       const paper=paperSpanAt(shape.outline,bottom);
       const textInset=short*.007;
       // Reserve more room for the bordered logo, including at bevels.
-      const logoInset=logoWidth*LOGO_HEIGHT_RATIO*.75;
+      const logoInset=Math.min(logoWidth,artwork.layout==='square'?short*.16:logoWidth)*artwork.height/artwork.width*.75;
       frame={
         left:Math.max(opening.x,paper.left)*width+textInset,
         right:Math.min(opening.x+opening.w,paper.right)*width-logoInset,
@@ -94,7 +96,7 @@ export function createPosterScene({direction='air',palette='maker',format='poste
     }
     placeMakerFooter(scene,supportingText,colors,placement,{
       top:shape.copy[1]*height,bottom:bottom*height,rowWidth:(footerWidths[cutout]??.74)*width,frame,
-      logoWidth,fontScale:.019,
+      logoWidth,fontScale:.019,artwork,
     });
     // The Step footer starts to the right of centre, so give its centred
     // footer a paper tab where it extends into the photo.
@@ -109,7 +111,7 @@ export function createPosterScene({direction='air',palette='maker',format='poste
   placeMakerFooter(scene,supportingText,colors,placement,{
     top:height-pad,bottom:height-pad,rowWidth:width-2*pad,
     logoWidth:Math.min((width-2*pad)*(width>=height?.33:.47),short*(width>=height?.40:.48)),
-    fontScale:.026,
+    fontScale:.026,artwork,
   });
   const footerOps=scene.ops;
   scene.ops=[];
@@ -158,5 +160,5 @@ export function createPosterScene({direction='air',palette='maker',format='poste
 }
 
 export async function preparePosterAssets(asset=null){
-  await Promise.all([loadPosterImage(LOGO_DATA,false,true),prepareImageAsset(asset)]);
+  await Promise.all([...LOGO_VARIANTS.map(variant=>loadPosterImage(variant.src,false,true)),prepareImageAsset(asset)]);
 }

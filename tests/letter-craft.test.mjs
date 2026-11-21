@@ -5,7 +5,7 @@ import {opticalPairGap,shareHeroWidth,craftedLetterMatrix} from '../src/letter-c
 import {connectedRowResponses,LOOP_CURVES} from '../src/loop-motion.js';
 import {layoutTreatment} from '../src/treatment.js';
 import {createPosterScene,posterSVG} from '../src/scene.js';
-import {dragLetterOffset} from '../src/letter-drag.js';
+import {letterOffsetFromDisplay} from '../src/letter-drag.js';
 
 const near=(a,b,tolerance=1e-6)=>assert.ok(Math.abs(a-b)<tolerance,`${a} ≠ ${b}`);
 const rect={x:40,y:50,w:1000,h:650};
@@ -77,11 +77,11 @@ test('saved letter anchors and footer placement remain intact; grabbing a refine
   for(const direction of ['air','flex','packed']){
     const settings={direction,format:'poster',phase:.811,headline:'COMING\nSOON',detail:'Build. Repair. Experiment.\nBring your curiosity.',lettering:{font:'bowlby',layout:'stack',variation:0,contrast:.44},footer:{text:{size:141,x:11,y:-6},logo:{size:81.5,x:-27,y:-3}}};
     const before=createPosterScene(settings),visible=before.cells[1],base=before.baseCells[1],bounds=before.regions.type;
-    const offsets=[];offsets[1]=dragLetterOffset(base,visible,{x:0,y:0},{x:0,y:0},bounds);
+    const offsets=[];offsets[1]=letterOffsetFromDisplay(base,before.editCells[1],visible,{x:0,y:0},{x:0,y:0},bounds);
     const grabbed=createPosterScene({...settings,offsets});box(grabbed.cells[1]).forEach((n,i)=>near(n,box(visible)[i]));
-    const saved=[{x:.025,y:.015,w:1.03,h:.91}],moved=createPosterScene({...settings,offsets:saved}),original=before.baseCells[0];
-    near(moved.cells[0].x,original.x+.025*bounds.w);near(moved.cells[0].y,original.y+.015*bounds.h);
-    near(moved.cells[0].w,original.w*1.03);near(moved.cells[0].h,original.h*.91);
+    const saved=[{x:.025,y:.015,w:1.03,h:.91,basis:'rest'}],moved=createPosterScene({...settings,offsets:saved}),original=before.baseCells[0];
+    near(moved.editCells[0].x,original.x+.025*bounds.w);near(moved.editCells[0].y,original.y+.015*bounds.h);
+    near(moved.editCells[0].w,original.w*1.03);near(moved.editCells[0].h,original.h*.91);
     assert.deepEqual(moved.regions,before.regions);
     assert.equal(posterSVG(moved),posterSVG(createPosterScene(JSON.parse(JSON.stringify({...settings,offsets:saved})))));
   }

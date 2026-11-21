@@ -6,6 +6,7 @@ import {heroForRow,styleCell,paintLayers,STYLE_IDS} from './style-system.js';
 import {continuousCompositionFrame,continuousLetterResponse} from './loop-motion.js';
 import {craftTreatmentLayout,craftedLetterMatrix} from './letter-craft.js';
 import {glyphStrokeWidth,easeInkLimit} from './glyph-anatomy.js';
+import {FLOW_CURVE,applyFlowMotion} from './flow-motion.js';
 
 export const TREATMENT_PROFILES=Object.freeze({
   air:{mode:'air',font:'original',style:'jostle',render:'solid',contrast:.62,spread:.035,pressure:.84,variation:0},
@@ -31,16 +32,19 @@ export function layoutTreatment(words,rect,id,phase=0,energy=1,settings={},curve
   const options={width:rect.w,height:rect.h,mode:profile.mode,layout:profile.layout,spread:profile.spread,pressure:profile.pressure,variation:profile.variation,weights,metrics};
   const neutral=layoutComposition(words,options);
   if(profile.style!=='original')for(const row of neutral.rows){const hero=row.cells.find(c=>c.index===heroForRow(neutral.cells,row.index));if(hero){weights[row.index][hero.col]*=profile.style==='jostle'?1.28:1.38;for(const c of row.cells.filter(c=>Math.abs(c.col-hero.col)===1))weights[row.index][c.col]*=profile.style==='jostle'?.83:.88;}}
-  for(const c of neutral.cells)weights[c.row][c.col]*=continuousLetterResponse(phase,c,energy,curve).width;
-  const motion=continuousCompositionFrame(phase,energy,curve);
+  const isFlow=curve===FLOW_CURVE;
+  const legacyEnergy=isFlow?0:energy;
+  for(const c of neutral.cells)weights[c.row][c.col]*=continuousLetterResponse(phase,c,legacyEnergy,curve).width;
+  const motion=continuousCompositionFrame(phase,legacyEnergy,curve);
   const result=layoutComposition(words,{...options,spread:options.spread+motion.spreadOffset,pressure:options.pressure+motion.pressureOffset,rowWeights:motion.rowBias});
-  for(const cell of result.cells){cell.x+=rect.x;cell.y+=rect.y;cell.focus=0;cell.response=continuousLetterResponse(phase,cell,energy,curve);}
+  for(const cell of result.cells){cell.x+=rect.x;cell.y+=rect.y;cell.focus=0;cell.response=continuousLetterResponse(phase,cell,legacyEnergy,curve);}
   for(const row of result.rows){row.x+=rect.x;row.y+=rect.y;}
   if(rowOffset){
     for(const cell of result.cells)cell.row+=rowOffset;
     for(const row of result.rows)row.index+=rowOffset;
   }
-  return {...craftTreatmentLayout(result,profile,phase,energy,curve),unrefinedCells:result.cells,profile,motion,pressure:options.pressure+motion.pressureOffset};
+  const layout={...craftTreatmentLayout(result,profile,phase,legacyEnergy,curve),unrefinedCells:result.cells,profile,motion,pressure:options.pressure+motion.pressureOffset};
+  return isFlow?applyFlowMotion(layout,words,phase,energy):layout;
 }
 function contain(cell,matrix,rect){
   const points=[[0,0],[cell.w,0],[cell.w,cell.h],[0,cell.h]].map(([x,y])=>[matrix[0]*x+matrix[2]*y+matrix[4],matrix[1]*x+matrix[3]*y+matrix[5]]);
@@ -55,9 +59,15 @@ export function appendTreatmentArtwork(scene,letters,colors,rect){
   for(const cell of letters.cells){
     const info=styleCell(cell,{style:p.style,cells:letters.cells,focus:letters.motion.focus,gesture:letters.motion.gesture,width:scene.width,height:scene.height});
     info.matrix=cell.craft?craftedLetterMatrix(cell,p):contain(cell,info.matrix,rect);
-    const short=Math.min(cell.w,cell.h);
+    const base=cell.flowBase??cell;
+    if(cell.flowBase){
+      const sx=cell.w/base.w,sy=cell.h/base.h;
+      const [a,b,c,d,x,y]=info.matrix;
+      info.matrix=[a*sx,b*sx,c*sy,d*sy,x,y];
+    }
+    const short=Math.min(base.w,base.h);
     const airOutline=p.mode==='air'&&p.render==='line'?easeInkLimit(p.strokeWidth*2,short*.20):0;
-    const inset=airOutline/2,w=Math.max(.001,cell.w-inset*2),h=Math.max(.001,cell.h-inset*2);
+    const inset=airOutline/2,w=Math.max(.001,base.w-inset*2),h=Math.max(.001,base.h-inset*2);
     let geometry;
     if(p.font!=='original')geometry=fontGlyphGeometry(p.font,cell.char,w,h,{mode:p.mode,pressure:letters.pressure,character:p.variation*(cell.craft&&!cell.craft.hero?.55:1)});
     if(!geometry&&p.mode==='air')geometry={paths:airGlyphPaths(cell.char,w,h,{pressure:letters.pressure,character:p.variation,phase:(cell.index*.173)%1,outlineWidth:airOutline}),weight:4.4};

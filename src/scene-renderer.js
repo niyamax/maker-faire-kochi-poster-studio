@@ -2,7 +2,7 @@ import {COPY_FONT} from './data/copy-outlines.js';
 import {HEADLINE_MAX_LENGTH} from './content-limits.js';
 import {silhouetteFromPixels} from './cutout-response.js';
 
-export const FORMATS={poster:{name:'Poster · 4:5',w:1080,h:1350},story:{name:'Story · 9:16',w:1080,h:1920},square:{name:'Square · 1:1',w:1080,h:1080},banner:{name:'Banner · 16:9',w:1920,h:1080}};
+export const FORMATS={poster:{name:'Poster · 4:5',w:1080,h:1350},story:{name:'Story · 9:16',w:1080,h:1920},square:{name:'Square · 1:1',w:1080,h:1080},banner:{name:'Banner · 16:9',w:1920,h:1080},newsletter:{name:'Newsletter · 3:2',w:1536,h:1024}};
 const n=v=>Number(v.toFixed(3));
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 export function cleanHeadline(value){return String(value||'').toUpperCase().replace(/\r\n?/g,'\n').replace(/[^A-Z0-9 &!?\n.-]/g,'').slice(0,HEADLINE_MAX_LENGTH);}
@@ -45,7 +45,11 @@ export async function loadPosterImage(src,alpha=false,pinned=false){
   const promise=(async()=>{
     const image=new Image();image.src=src;await image.decode();imageCache.set(src,image);
     if(alpha){const mask=document.createElement('canvas');mask.width=64;mask.height=64;const context=mask.getContext('2d',{willReadFrequently:true});context.drawImage(image,0,0,64,64);const pixels=context.getImageData(0,0,64,64).data;alphaMasks.set(src,pixels);silhouettes.set(src,silhouetteFromPixels(pixels,64,64));}
-    while(imageCache.size>8){const oldest=[...imageCache.keys()].find(key=>!pinnedImages.has(key));imageCache.delete(oldest);alphaMasks.delete(oldest);silhouettes.delete(oldest);}
+    while(imageCache.size>pinnedImages.size+9){
+      const oldest=[...imageCache.keys()].find(key=>!pinnedImages.has(key));
+      if(oldest===undefined)break;
+      imageCache.delete(oldest);alphaMasks.delete(oldest);silhouettes.delete(oldest);
+    }
   })();pendingImages.set(src,promise);
   try{await promise;}finally{pendingImages.delete(src);}
 }
