@@ -40,7 +40,7 @@ export const LAYOUT_PRESETS = Object.freeze([
 export const LAYOUT_IDS = Object.freeze(LAYOUT_PRESETS.map(preset => preset.id));
 
 function textRows(text) {
-  const source = String(text ?? 'MAKER\nFAIRE\nKOCHI').replace(/\r\n?/g, '\n');
+  const source = String(text ?? 'TYPE').replace(/\r\n?/g, '\n');
   if (!source.trim()) return [];
   return source.split('\n').map(line => line.replace(/[^\S\n]/g, ' ')).filter(line => line.trim().length > 0);
 }

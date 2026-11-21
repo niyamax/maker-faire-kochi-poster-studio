@@ -1,6 +1,53 @@
 {
   "file": "MF_Kochi_Logo_long.png",
-  "usage": "Preserve original proportions and colours.",
+  "usage": "Preserve original proportions. Use the original colour, black or white artwork variants.",
   "rights": "Maker Faire marks remain with their rights holders.",
-  "sha256": "41d8234a330daf8c7e2d02b4e82020b1c13cfea038644943819c87cac815c755"
+  "sha256": "41d8234a330daf8c7e2d02b4e82020b1c13cfea038644943819c87cac815c755",
+  "variants": [
+    {
+      "id": "long-colour",
+      "file": "logos/MF_Kochi_Logo_long.svg",
+      "sha256": "6a1f5fe1e227662caa8bc09aa71eb426bc50c71071170ad04f5c7104892534c7"
+    },
+    {
+      "id": "long-black",
+      "file": "logos/MF_Kochi_Logo_long_black.svg",
+      "sha256": "1146a996b7613c6f5f50d43cd879423eb7859a473f772b626826fd3303f4e94f"
+    },
+    {
+      "id": "long-white",
+      "file": "logos/MF_Kochi_Logo_long_white.svg",
+      "sha256": "830088c42d72dfef1309c158d0558c9ffff35605753133da3ef67acde27e1186"
+    },
+    {
+      "id": "border-colour",
+      "file": "logos/MF_Kochi_Logo_border.svg",
+      "sha256": "834eae2806079d9209cd23dd4a49e9a534f9501ab5ccacdb2aba1488207ff1d9"
+    },
+    {
+      "id": "border-black",
+      "file": "logos/MF_Kochi_Logo_border_black.svg",
+      "sha256": "7808ab1551d90b9b113c2d727b2d4d5d6df1d466ca9b5d3a7bc7ae3c2fe72c0c"
+    },
+    {
+      "id": "border-white",
+      "file": "logos/MF_Kochi_Logo_border_white.svg",
+      "sha256": "1965d838a6231cd3d479f2096aad577aa000d832fd83d4ef4a7107a99523f09f"
+    },
+    {
+      "id": "square-colour",
+      "file": "logos/MF_Kochi_Logo_square.svg",
+      "sha256": "8344b0d1e32a0f91ac5af098c345d1c90edc3a24b2800ce9dd3e0c1bd763c66a"
+    },
+    {
+      "id": "square-black",
+      "file": "logos/MF_Kochi_Logo_square_black.svg",
+      "sha256": "5033ba1eb6c9332a963e84dc400465b59651981ab172899e68e88061aa081017"
+    },
+    {
+      "id": "square-white",
+      "file": "logos/MF_Kochi_Logo_square_white.svg",
+      "sha256": "4843f45179d74d6bd613ad042f77b4618984cf0a5be43937b164be0a795cfcf2"
+    }
+  ]
 }

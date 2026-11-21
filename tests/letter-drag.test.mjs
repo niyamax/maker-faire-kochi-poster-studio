@@ -37,6 +37,13 @@ test('reset returns the exact authored arrangement and a previously yielded lett
   assert.ok(Math.abs(next[1].x-visible.x)<.001&&Math.abs(next[1].w-visible.w)<.001);
 });
 
+test('overlapping saved edits make room for both letters',()=>{
+  const offsets=[{x:.2,y:0,w:1,h:1},{x:-.02,y:0,w:1,h:1}];
+  const [a,b]=displaceLetters(cells,offsets,bounds);
+  assert.ok(a.w>0&&b.w>0);
+  assert.ok(a.x+a.w<b.x||b.x+b.w<a.x);
+});
+
 test('positions validate before loading and hit testing chooses the topmost visible cell',()=>{
   assert.throws(()=>normalizeLetterOffsets([{x:NaN}]));assert.throws(()=>normalizeLetterOffsets(Array(121).fill(null)));
   assert.deepEqual(normalizeLetterOffsets([{x:4,y:-3,w:20,h:.01}]),[{x:1,y:-1,w:1.8,h:.45}]);
@@ -51,5 +58,7 @@ test('letter edge and corner handles track the pointer while the opposite edges 
   assert.equal(reshaped.x,160);assert.equal(reshaped.x+reshaped.w,right);assert.equal(reshaped.h,cell.h);
   const corner=resizeLetterOffset(cell,cell,{x:0,y:0},{x:-20,y:-20},bounds,'nw');
   const expanded=displaceLetters(cells,[null,corner],bounds)[1];
-  assert.equal(expanded.x,110);assert.equal(expanded.y,0);assert.equal(expanded.x+expanded.w,right);assert.equal(expanded.y+expanded.h,bottom);
+  assert.equal(expanded.y,0);
+  assert.equal(expanded.x+expanded.w,right);assert.equal(expanded.y+expanded.h,bottom);
+  assert.ok(Math.abs(expanded.w/expanded.h-cell.w/cell.h)<1e-9,'corner handles preserve the original ratio');
 });

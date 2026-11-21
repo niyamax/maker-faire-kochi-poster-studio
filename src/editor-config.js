@@ -8,21 +8,14 @@ export const VISIBLE_DIRECTION_IDS=Object.freeze(['air','flex','packed']);
 export const VISIBLE_FONT_IDS=Object.freeze(['original']);
 export const VISIBLE_LAYOUT_IDS=Object.freeze(['stack','centered','offset']);
 export const VISIBLE_STYLE_IDS=Object.freeze(['original','jostle']);
-export const VISIBLE_PALETTE_IDS=Object.freeze(['maker-red','maker','maker-cyan','noise']);
-export const VISIBLE_FORMAT_IDS=Object.freeze(['poster','story','square','banner']);
+export const VISIBLE_PALETTE_IDS=Object.freeze(['maker-red','maker']);
+export const VISIBLE_FORMAT_IDS=Object.freeze(['poster','story','square','banner','newsletter']);
 
 export const EDITOR_PRESETS=Object.freeze([
   Object.freeze({id:'air',label:'Air',description:'Inflated letters that share space.'}),
   Object.freeze({id:'flex',label:'Flex',description:'Open strokes and elastic proportions.'}),
   Object.freeze({id:'packed',label:'Packed',description:'Dense, playful poster lettering.'}),
 ]);
-
-export const EDITOR_PALETTE_LABELS=Object.freeze({
-  'maker-red':'Maker red',
-  maker:'Maker white',
-  'maker-cyan':'Maker cyan',
-  noise:'Yellow / blue',
-});
 
 /**
  * Preserve the familiar 0–100 controls and every valid current value. Character

@@ -12,7 +12,7 @@ let builder;
 if(!preview){await prepareProductionBuild(root);builder=await context(buildOptions);await builder.rebuild();await builder.watch();}
 else{await assertProductionSources(root);await assertProductionOutput(root);}
 const directory=resolve(root,'dist');
-const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.woff2':'font/woff2','.svg':'image/svg+xml'};
+const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.woff2':'font/woff2','.svg':'image/svg+xml'};
 const server=createServer(async(req,res)=>{
   if(req.method!=='GET'&&req.method!=='HEAD'){res.writeHead(405,{Allow:'GET, HEAD'});res.end();return;}
   try{
@@ -27,6 +27,6 @@ const server=createServer(async(req,res)=>{
   }catch{res.writeHead(404,{'Content-Type':'text/plain; charset=utf-8'});res.end('Not found');}
 });
 server.on('error',async error=>{console.error(error.message);await builder?.dispose();process.exitCode=1;});
-server.listen(port,'127.0.0.1',()=>console.log(`Poster Studio: http://127.0.0.1:${port}/`));
+server.listen(port,'127.0.0.1',()=>console.log(`Maker Faire Poster Studio: http://127.0.0.1:${port}/`));
 async function close(){server.close();await builder?.dispose();process.exit(0);}
 process.on('SIGINT',close);process.on('SIGTERM',close);

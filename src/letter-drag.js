@@ -15,19 +15,49 @@ export function normalizeLetterOffsets(value){
 const edited=entry=>entry&&(Math.abs(entry.x||0)+Math.abs(entry.y||0)+Math.abs((entry.w??1)-1)+Math.abs((entry.h??1)-1)>1e-8);
 export const hasLetterEdits=offsets=>Boolean(offsets?.some(edited));
 
+/** Leave a seam between crowded cells by shortening their facing edges.
+ * The soft drag and motion responses have already placed the letters. Each
+ * correction stays inside those boxes, so it cannot cause another collision.
+ */
+export function keepLettersApart(cells,bounds,pinned=[]){
+  const result=cells.map(cell=>({...cell}));
+  const clearance=Math.min(bounds.w,bounds.h)*.004;
+  for(let i=0;i<result.length;i++)for(let j=i+1;j<result.length;j++){
+    const a=result[i],b=result[j],sameRow=a.row===b.row;
+    const [axis,size,cross,crossSize]=sameRow?['x','w','y','h']:['y','h','x','w'];
+    if(a[cross]+a[crossSize]<=b[cross]||b[cross]+b[crossSize]<=a[cross])continue;
+    const forward=a[axis]+a[size]/2<=b[axis]+b[size]/2;
+    const [first,second]=forward?[a,b]:[b,a];
+    const firstEnd=first[axis]+first[size],secondEnd=second[axis]+second[size];
+    const gap=Math.min(clearance,first[size]*.12,second[size]*.12);
+    const secondEdge=second[axis]-gap;
+    if(firstEnd<=secondEdge)continue;
+
+    // A held letter keeps its edge when the neighbour has room to give.
+    const firstPinned=pinned[forward?i:j],secondPinned=pinned[forward?j:i];
+    const target=firstPinned&&!secondPinned?firstEnd:secondPinned&&!firstPinned?secondEdge:(firstEnd+secondEdge)/2;
+    const seam=clamp(target,first[axis]+first[size]*.12,secondEnd-second[size]*.12-gap);
+    first[size]=Math.min(firstEnd,seam)-first[axis];
+    second[axis]=Math.max(second[axis],seam+gap);
+    second[size]=secondEnd-second[axis];
+  }
+  return result;
+}
+
 /** Apply the continuous motion field to an already resolved editing pose.
- * Collision decisions are made at rest, never against a moving set of boxes.
- * Using centre deltas keeps relocated letters close to their edited position.
+ * Centre deltas keep relocated letters close to their edited position. Check
+ * clearance again after applying them because playback can consume the gap.
  */
 export function animateLetterPose(restCells,referenceCells,animatedCells,bounds){
   const reference=new Map(referenceCells.map(c=>[c.index,c])),animated=new Map(animatedCells.map(c=>[c.index,c]));
-  return restCells.map(rest=>{
+  const moving=restCells.map(rest=>{
     const neutral=reference.get(rest.index),current=animated.get(rest.index);if(!neutral||!current)return {...rest};
     const sx=current.w/Math.max(.0001,neutral.w),sy=current.h/Math.max(.0001,neutral.h);
     const dx=current.x+current.w/2-neutral.x-neutral.w/2,dy=current.y+current.h/2-neutral.y-neutral.h/2;
     const w=Math.min(bounds.w,Math.max(.1,rest.w*sx)),h=Math.min(bounds.h,Math.max(.1,rest.h*sy));
     return {...rest,x:clamp(rest.x+(rest.w-w)/2+dx,bounds.x,bounds.x+bounds.w-w),y:clamp(rest.y+(rest.h-h)/2+dy,bounds.y,bounds.y+bounds.h-h),w,h,response:current.response,craft:current.craft};
   });
+  return keepLettersApart(moving,bounds);
 }
 
 /** A grabbed letter follows its saved offset. Nearby unedited rectangles yield
@@ -75,7 +105,7 @@ export function displaceLetters(cells,offsets,bounds){
       else{push(i,0,-sign*pressure*shareA);push(j,0,sign*pressure*shareB);}
     }
   }
-  return moved;
+  return keepLettersApart(moved,bounds,pinned);
 }
 
 export function dragLetterOffset(base,visible,start,point,bounds,action='move'){

@@ -23,7 +23,7 @@ const f = n => String(Math.round(n * 1000) / 1000);
 
 const RATIOS = Object.freeze({
   A: .78, B: .74, C: .79, D: .79, E: .68, F: .66, G: .81,
-  H: .79, I: .20, J: .65, K: .76, L: .66, M: 1.02, N: .82,
+  H: .79, I: .20, J: .56, K: .76, L: .66, M: 1.02, N: .82,
   O: .82, P: .72, Q: .85, R: .78, S: .77, T: .75, U: .80,
   V: .81, W: 1.09, X: .78, Y: .78, Z: .76,
   '0': .78, '1': .46, '2': .75, '3': .74, '4': .76,
@@ -157,9 +157,13 @@ export function glyphPath(character, width, height, options = {}) {
       break;
     case 'I': p.m(cx, t).l(cx, b); break;
     case 'J':
+    {
+      // Keep the hook low in short, wide cells so the letter never reads as U.
+      const hook = Math.min(a, h * .2), hk = hook * K;
       p.m(r, t).l(r, b - a).c(r, b - a + ak, r - a + ak, b, r - a, b)
-        .l(l + a, b).c(l + a - ak, b, l, b - a + ak, l, b - a);
+        .l(l + a, b).c(l + a - ak, b, l, b - hook + hk, l, b - hook);
       break;
+    }
     case 'K':
       p.m(l, t).l(l, b);
       polyline(p, [[r, t], [l, y(.54)], [r, b]], joint);

@@ -1,12 +1,13 @@
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 export const FOOTER_LIMITS={size:{min:40,max:250,step:.1},x:{min:-100,max:100,step:.1},y:{min:-100,max:100,step:.1}};
+export const MAKER_FOOTER_DEFAULTS=Object.freeze({text:Object.freeze({size:120,align:'center'})});
 
-export function normalizeFooter(value){
+export function normalizeFooter(value,defaults){
   const footer=Object.fromEntries(['text','logo'].map(part=>[part,Object.fromEntries(Object.entries(FOOTER_LIMITS).map(([key,limit])=>{
     const n=value?.[part]?.[key];
-    return [key,Number.isFinite(n)?clamp(n,limit.min,limit.max):key==='size'?100:0];
+    return [key,Number.isFinite(n)?clamp(n,limit.min,limit.max):key==='size'?(defaults?.[part]?.size??100):0];
   }))]));
-  footer.text.align=['left','center','right'].includes(value?.text?.align)?value.text.align:'left';
+  footer.text.align=['left','center','right'].includes(value?.text?.align)?value.text.align:(defaults?.text?.align??'left');
   return footer;
 }
 
