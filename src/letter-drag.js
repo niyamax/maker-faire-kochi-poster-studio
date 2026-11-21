@@ -60,6 +60,47 @@ export function animateLetterPose(restCells,referenceCells,animatedCells,bounds)
   return keepLettersApart(moving,bounds);
 }
 
+/** When a wider letter pushes a row against the frame, divide the shortfall
+ * by the neighbours' authored widths. Preserve the held edges and let the
+ * ordinary collision pass handle vertical contacts and multiple held letters.
+ */
+function shareResizePressure(cells,originals,bounds,pinned,clearance){
+  const rows=new Map();
+  for(const [i,cell] of originals.entries()){
+    if(!rows.has(cell.row))rows.set(cell.row,[]);
+    rows.get(cell.row).push(i);
+  }
+  for(const row of rows.values()){
+    const held=row.filter(i=>pinned[i]);
+    if(held.length!==1)continue;
+    const i=held[0],anchor=cells[i],base=originals[i];
+    if(anchor.w<=base.w+.01)continue;
+    row.sort((a,b)=>originals[a].x-originals[b].x);
+    const pivot=row.indexOf(i);
+    for(const direction of [-1,1]){
+      const neighbors=direction===1?row.slice(pivot+1):row.slice(0,pivot).reverse();
+      if(!neighbors.length||neighbors.some(j=>{
+        const cell=cells[j];
+        return cell.y>=anchor.y+anchor.h||cell.y+cell.h<=anchor.y;
+      }))continue;
+      const anchorEdge=direction===1?anchor.x+anchor.w:anchor.x;
+      const frameEdge=direction===1?bounds.x+bounds.w:bounds.x;
+      const room=(frameEdge-anchorEdge)*direction;
+      const width=neighbors.reduce((sum,j)=>sum+originals[j].w,0);
+      if(room>=width+clearance*neighbors.length||room<=neighbors.length*.1)continue;
+      const gap=Math.min(clearance,room/(2*neighbors.length));
+      const share=(room-gap*neighbors.length)/width;
+      let edge=anchorEdge;
+      for(const j of neighbors){
+        const w=originals[j].w*share;
+        cells[j].w=w;
+        cells[j].x=direction===1?edge+gap:edge-gap-w;
+        edge+=direction*(w+gap);
+      }
+    }
+  }
+}
+
 /** A grabbed letter follows its saved offset. Nearby unedited rectangles yield
  * and compress inside the type area. No clock or browser state enters export. */
 export function displaceLetters(cells,offsets,bounds){
@@ -105,6 +146,7 @@ export function displaceLetters(cells,offsets,bounds){
       else{push(i,0,-sign*pressure*shareA);push(j,0,sign*pressure*shareB);}
     }
   }
+  shareResizePressure(moved,originals,bounds,pinned,gap);
   return keepLettersApart(moved,bounds,pinned);
 }
 

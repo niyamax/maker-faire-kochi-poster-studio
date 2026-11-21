@@ -160,6 +160,26 @@ test('edited Air letters make room for each other through the Banner loop',()=>{
   assert.equal(posterSVG(rest),posterSVG(createPosterScene({...options,offsets,phase:1})));
 });
 
+test('a wide M shares compression across the rest of MAKE',()=>{
+  const options={format:'banner',headline:'MAKE\nIT MOVE',motionCurve:'flow',energy:0};
+  const original=createPosterScene(options);
+  const offsets=[{x:0,y:0,w:1.48,h:1,basis:'rest'}];
+  const stretched=createPosterScene({...options,offsets});
+  const [m,a,k,e]=stretched.cells;
+  const [baseM,baseA,baseK,baseE]=original.cells;
+  const share=a.w/baseA.w;
+  assert.ok(Math.abs(m.w/baseM.w-1.48)<1e-6);
+  assert.ok(share>.8&&share<.9);
+  assert.ok(Math.abs(k.w/baseK.w-share)<1e-6);
+  assert.ok(Math.abs(e.w/baseE.w-share)<1e-6);
+  for(let i=0;i<=40;i++){
+    const scene=createPosterScene({...options,offsets,phase:i/40,energy:1.5});
+    const [, ,movingK,movingE]=scene.cells;
+    assert.ok(movingE.w/baseE.w>.68);
+    assert.ok(movingK.x+movingK.w<movingE.x);
+  }
+});
+
 test('SVG exports keep vector copy and embed the original logo',()=>{
   for(const direction of TREATMENTS){
     const svg=posterSVG(createPosterScene({direction:direction.id,phase:.4}));
