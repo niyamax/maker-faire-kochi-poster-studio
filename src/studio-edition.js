@@ -2,16 +2,15 @@ import './styles/studio.css';
 import {mountPaperEditor} from './paper-editor.js';
 import {mountPosterTemplates} from './poster-templates.js';
 import {VISIBLE_FONT_IDS,VISIBLE_PALETTE_IDS} from './editor-config.js';
+import {PAPER_CUTOUTS_ENABLED,STANDARD_POSTER_SAMPLES} from './studio-features.js';
 import {MAKER_FOOTER_DEFAULTS} from './footer-layout.js';
 export {treatmentSettings as letteringDefaults} from './treatment.js';
 export * from './project-state.js';
 export * from './scene.js';
 
-const samples=Object.fromEntries([
-  ['studio-robot','cutout'],['workshop','window'],['robot','cutout'],
-].map(([id,layout])=>[id,{path:`assets/samples/${id}.png`,name:`${id}-sample.png`,type:'image/png',layout}]));
+const samples=Object.fromEntries(STANDARD_POSTER_SAMPLES.map(([id,layout])=>[id,{path:`assets/samples/${id}.png`,name:`${id}-sample.png`,type:'image/png',layout}]));
 
-Object.assign(samples,{
+if(PAPER_CUTOUTS_ENABLED)Object.assign(samples,{
   coir:{path:'assets/samples/coir.jpg',name:'Coir weaving.jpg',type:'image/jpeg',layout:'window'},
   print:{path:'assets/samples/print.jpg',name:'Screen printing.jpg',type:'image/jpeg',layout:'window'},
   'cardboard-automaton':{path:'assets/samples/cardboard-automaton.jpg',name:'Cardboard automaton.jpg',type:'image/jpeg',layout:'window'},
@@ -44,6 +43,7 @@ export const edition={
   title:'Poster Studio',
   headlineHint:'Press Enter for a new line. Add spaces to control gaps and indentation.',
   mount(options){
+    if(!PAPER_CUTOUTS_ENABLED)return null;
     const paper=mountPaperEditor(options);
     mountPosterTemplates({...options,samples});
     return paper;

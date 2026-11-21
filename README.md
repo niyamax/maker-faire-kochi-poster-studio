@@ -184,4 +184,4 @@ Video encoding and MP4/WebM muxing use Mediabunny 1.62.1. The MPL-2.0 dependency
 
 ### Paper cutouts and templates
 
-Choose a paper shape in Properties. Words or letters wrap within the solid areas, and photos show through the openings. The header’s Poster templates button opens editable Maker Faire compositions with prepared images, copy and colours, including four volunteer callouts in Poster and Story formats. Loading a template is undoable.
+The paper cutout controls, template picker, and their sample images are temporarily hidden in the site build. To restore them, enable `PAPER_CUTOUTS_ENABLED` in `src/studio-features.js` and rebuild. When enabled, choose a paper shape in Properties. Words or letters wrap within the solid areas, and photos show through the openings. The header’s Poster templates button opens editable Maker Faire compositions with prepared images, copy and colours, including four volunteer callouts in Poster and Story formats. Loading a template is undoable.
