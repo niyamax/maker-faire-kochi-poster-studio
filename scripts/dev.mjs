@@ -12,7 +12,7 @@ let builder;
 if(!preview){await prepareProductionBuild(root);builder=await context(buildOptions);await builder.rebuild();await builder.watch();}
 else{await assertProductionSources(root);await assertProductionOutput(root);}
 const directory=resolve(root,'dist');
-const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.woff2':'font/woff2','.svg':'image/svg+xml'};
+const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.woff2':'font/woff2','.svg':'image/svg+xml'};
 const server=createServer(async(req,res)=>{
   if(req.method!=='GET'&&req.method!=='HEAD'){res.writeHead(405,{Allow:'GET, HEAD'});res.end();return;}
   try{

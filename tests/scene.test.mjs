@@ -5,8 +5,9 @@ import {LOGO_DATA} from '../src/data/logo.js';
 import {dragLetterOffset} from '../src/letter-drag.js';
 import {treatmentSettings} from '../src/treatment.js';
 import {FONT_IDS} from '../src/font-library.js';
-import {normalizeFooter} from '../src/footer-layout.js';
+import {MAKER_FOOTER_DEFAULTS,normalizeFooter} from '../src/footer-layout.js';
 import {LOOP_CURVES} from '../src/loop-motion.js';
+import {CUTOUTS,paperImageArea} from '../src/paper-shapes.js';
 
 test('line artwork has a dedicated portable stroke width independent of inflation',()=>{
   for(const direction of ['air','flex','packed']){
@@ -26,19 +27,45 @@ test('every selectable loop curve exports a closed seam without a quiet ending',
   }
 });
 
+test('the default Maker Faire footer stays on one row and follows the window edges where paper supports them',()=>{
+  for(const format of Object.keys(FORMATS))for(const cutout of [null,...Object.keys(CUTOUTS)]){
+    const scene=createPosterScene({format,cutout});
+    const {details,logo}=scene.regions;
+    assert.equal(details.scale,1.2);
+    assert.ok(details.x+details.w<logo.x);
+    assert.ok(Math.abs(details.y+details.h/2-logo.y-logo.h/2)<1e-6);
+    if(!CUTOUTS[cutout]?.window||cutout==='step'){
+      assert.ok(Math.abs(details.x+logo.x+logo.w-scene.width)<1e-6);
+      continue;
+    }
+    const {x,y,w,h}=paperImageArea(CUTOUTS[cutout]);
+    assert.ok(details.x>=x*scene.width);
+    const logoClearance=(x+w)*scene.width-logo.x-logo.w;
+    assert.ok(logoClearance>=logo.h*.75-1e-6);
+    assert.ok(Math.min(details.y,logo.y)>(y+h)*scene.height);
+    const shorter=createPosterScene({format,cutout,detail:'Make something.'});
+    assert.equal(shorter.regions.details.x,details.x);
+    assert.equal(shorter.regions.logo.x,logo.x);
+    if(cutout==='wide-fold'&&(format==='poster'||format==='story')){
+      const inset=Math.min(scene.width,scene.height)*.007;
+      assert.ok(Math.abs(details.x-(x*scene.width+inset))<1e-6);
+    }
+  }
+});
+
 test('footer controls resize and move copy and logo independently without changing the lettering',()=>{
   const baseline=createPosterScene({format:'banner'});
   const footer=normalizeFooter({text:{size:150,x:8,y:-10},logo:{size:125,x:-5,y:-15}});
   const changed=createPosterScene({format:'banner',footer});
   assert.deepEqual(changed.cells,baseline.cells);
-  assert.ok(Math.abs(changed.regions.details.w/baseline.regions.details.w-1.5)<1e-9);
+  assert.ok(Math.abs(changed.regions.details.w/baseline.regions.details.w-150/120)<1e-9);
   assert.ok(Math.abs(changed.regions.logo.w/baseline.regions.logo.w-1.25)<1e-9);
   assert.ok(changed.regions.details.x>baseline.regions.details.x&&changed.regions.details.y<baseline.regions.details.y);
   assert.ok(changed.regions.logo.x<baseline.regions.logo.x&&changed.regions.logo.y<baseline.regions.logo.y);
   assert.equal(changed.ops.at(-1).src,LOGO_DATA);
   assert.equal(posterSVG(changed),posterSVG(createPosterScene({format:'banner',footer:JSON.parse(JSON.stringify(footer))})));
   assert.notEqual(posterSVG(changed),posterSVG(baseline));
-  assert.equal(posterSVG(createPosterScene({format:'banner',footer:normalizeFooter()})),posterSVG(baseline));
+  assert.equal(posterSVG(createPosterScene({format:'banner',footer:normalizeFooter(undefined,MAKER_FOOTER_DEFAULTS)})),posterSVG(baseline));
 });
 
 test('footer extremes stay on every artboard and preserve the supplied logo proportions',()=>{
@@ -104,6 +131,29 @@ test('all treatments use finite portable geometry in every colour family and art
     const a=scene.regions.details,b=scene.regions.logo;
     assert.ok(a.x+a.w<=b.x||b.x+b.w<=a.x||a.y+a.h<=b.y||b.y+b.h<=a.y,'details and logo have separate space even in square and wide formats');
   }
+});
+
+test('edited Air letters make room for each other through the Banner loop',()=>{
+  const options={format:'banner',headline:'MAKE\nIT MOVE',detail:'',energy:1.5,motionCurve:'elastic'};
+  const offsets=[{x:0,y:0,w:1.4826798773225076,h:1,basis:'rest'}];
+  const base=createPosterScene(options);
+  const rest=createPosterScene({...options,offsets});
+  assert.ok(rest.cells[1].x>base.cells[1].x,'the A yields when the M widens');
+  assert.ok(rest.cells[2].w<base.cells[2].w,'the pressure reaches the K');
+  const widths=new Set();
+  for(let step=0;step<=40;step++){
+    const scene=createPosterScene({...options,offsets,phase:step/40});
+    const [,a,k,e]=scene.cells;
+    widths.add(a.w.toFixed(1));
+    assert.ok(e.x-k.x-k.w>2,`the K and E keep a seam at phase ${step/40}`);
+    for(const [index,first] of scene.cells.entries())for(const second of scene.cells.slice(index+1)){
+      assert.ok(first.x+first.w<=second.x||second.x+second.w<=first.x||
+        first.y+first.h<=second.y||second.y+second.h<=first.y,
+      `${first.char} and ${second.char} have separate cells at phase ${step/40}`);
+    }
+  }
+  assert.ok(widths.size>10,'the spacing constraint leaves the neighbours in motion');
+  assert.equal(posterSVG(rest),posterSVG(createPosterScene({...options,offsets,phase:1})));
 });
 
 test('SVG exports keep vector copy and embed the original logo',()=>{

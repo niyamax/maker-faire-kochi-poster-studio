@@ -14,6 +14,7 @@ export async function copyPublic(){
     copyFile(resolve(root,'NOTICE.md'),resolve(root,'dist/NOTICE.md')),
     cp(resolve(root,'licenses'),resolve(root,'dist/licenses'),{recursive:true}),
     cp(resolve(root,'assets/samples'),resolve(root,'dist/assets/samples'),{recursive:true}),
+    cp(resolve(root,'assets/templates'),resolve(root,'dist/assets/templates'),{recursive:true}),
   ]);
 }
 export const buildOptions={

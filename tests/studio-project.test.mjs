@@ -17,10 +17,12 @@ test('an existing studio project migrates without losing custom wording, type, p
 
 test('saved project files restore all treatments and produce the same exported artwork',()=>{
   const drafts=defaultStudioDrafts();drafts.air.lettering.font='inter';drafts.air.lettering.strokeWidth=12;drafts.flex.detail='Make something.\nShare it with Kochi.';drafts.packed.lettering.font='dela';
-  const state={...STUDIO_DEFAULTS,direction:'packed',phase:.36,motionCurve:'elastic',customColors:{bg:'#112233',fg:'#FFFFFF',accent:'#ED1C24'}};
+  const state={...STUDIO_DEFAULTS,direction:'packed',palette:'noise',phase:.36,motionCurve:'elastic',customColors:{bg:'#112233',fg:'#FFFFFF',accent:'#ED1C24'}};
   const saved=studioProject(state,drafts),opened=normalizeStudioProject(JSON.parse(JSON.stringify(saved)));
   assert.deepEqual(opened,saved);assert.equal(opened.drafts.air.lettering.font,'inter');assert.equal(opened.drafts.air.lettering.strokeWidth,12);assert.equal(opened.state.motionCurve,'elastic');
   assert.equal(posterSVG(createPosterScene({...opened.state,...opened.drafts.packed})),posterSVG(createPosterScene({...state,...drafts.packed})));
+  assert.equal(opened.state.palette,'maker-red');
+  assert.equal(opened.state.customColors,null);
   const choices=retainCurrentOption(FONT_CATALOG,VISIBLE_FONT_IDS,opened.drafts.packed.lettering.font);
   assert.ok(choices.some(c=>c.id==='dela'),'the selected font remains available');
 });

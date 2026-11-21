@@ -18,7 +18,10 @@ test('the standalone product exposes exactly its supported editing choices',()=>
   assert.equal(FONT_CATALOG.length,7);
   assert.deepEqual(LAYOUT_IDS,['stack','offset','centered']);
   assert.deepEqual(STYLE_IDS,['original','jostle']);
-  assert.equal(PALETTES.length,4);assert.equal(Object.keys(FORMATS).length,4);
+  assert.deepEqual(PALETTES.map(({id,bg,fg})=>[id,bg,fg]),[
+    ['maker','#FFFFFF','#ED1C24'],['maker-red','#ED1C24','#FFFFFF'],
+  ]);
+  assert.equal(Object.keys(FORMATS).length,4);
 });
 
 test('every runtime source module is reachable from the app and resolves inside the repository',async()=>{

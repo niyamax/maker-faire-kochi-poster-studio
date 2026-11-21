@@ -37,6 +37,13 @@ test('reset returns the exact authored arrangement and a previously yielded lett
   assert.ok(Math.abs(next[1].x-visible.x)<.001&&Math.abs(next[1].w-visible.w)<.001);
 });
 
+test('overlapping saved edits make room for both letters',()=>{
+  const offsets=[{x:.2,y:0,w:1,h:1},{x:-.02,y:0,w:1,h:1}];
+  const [a,b]=displaceLetters(cells,offsets,bounds);
+  assert.ok(a.w>0&&b.w>0);
+  assert.ok(a.x+a.w<b.x||b.x+b.w<a.x);
+});
+
 test('positions validate before loading and hit testing chooses the topmost visible cell',()=>{
   assert.throws(()=>normalizeLetterOffsets([{x:NaN}]));assert.throws(()=>normalizeLetterOffsets(Array(121).fill(null)));
   assert.deepEqual(normalizeLetterOffsets([{x:4,y:-3,w:20,h:.01}]),[{x:1,y:-1,w:1.8,h:.45}]);

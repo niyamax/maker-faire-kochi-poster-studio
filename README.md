@@ -38,11 +38,11 @@ PORT=8801 npm run dev
 ## Create a poster
 
 1. Enter a headline and supporting text. Headlines accept **120 characters**, including spaces and line breaks. Press Enter to start a new poster line. Repeated spaces, leading spaces and trailing spaces are retained for gaps and indentation in every format.
-2. Choose **Air**, **Flex** or **Packed** above the canvas, then select a drawing style and layout in the properties panel. Studio Sans is the default for all three treatments; the font picker is temporarily hidden. Older project files retain their saved font.
+2. Choose **Air**, **Flex** or **Packed** above the canvas, then select a drawing style and layout in the properties panel. All three treatments use Studio Sans for headlines, including when you open older projects.
 3. Adjust **Contrast** for emphasis, **Inflation** or **Stroke** for drawing weight, and **Character** for shape variation.
 4. Hover over the artwork to preview what a click will select. At headline-container level, clicking or dragging anywhere inside the headline keeps the whole container selected, including over its letters. A drag retains its initial target until release. **Width**, **Height** and the chain-shaped proportion lock apply to the selected headline or letter. Corners always resize proportionally. Unlocked side handles and numeric dimensions reshape independently; enabling the lock links both dimensions. New objects start unlocked, and older projects retain an explicit proportional headline setting. Expand **Position** for exact distances from the left and top edges; the headline's **Centre on poster** action is there too. **Reset** restores only the current selection's placement or letter adjustments.
 5. Double-click the headline, or press **Enter**, to enter its letters, selecting the letter beneath the pointer when there is one. Within that scope, hovering previews individual letter ink and a single click selects the previewed letter. Clicking an empty gap or frame edge reselects the parent headline and leaves letter scope. Press **Escape** to return from a letter to the headline frame; press it again to clear the headline selection. Drag a letter to move it and pull its handles to reshape it; nearby letters make room. Each letter's proportion lock is saved with its adjustments. Frame placement and individual adjustments are saved separately. Animation runs within the saved frame and does not bake an animated pose into the edit. Manual line breaks and repeated spaces are retained. Select supporting text to align its lines left, centre or right. Text and logo blocks can also be resized or aligned to the poster.
-6. Pick a palette or set custom colours. Press Play to preview motion, then export.
+6. Pick Red paper or White paper under Colour. Press Play to preview motion, then export.
 
 Studio Sans preserves uniform strokes while protecting G/C openings, E/F bar spacing and closed counters. Inflation and outline limits ease back as a letter becomes compressed. The G's crossbar accounts for its rounded tip and the bowl beside it. Flex uses the same constrained stroke width for construction and drawing, and its centreline paths remain stroked in Solid drawing so their counters stay open. Preview and exports share this geometry.
 
@@ -147,3 +147,7 @@ Bundled fonts and their derived outlines retain the **SIL Open Font License 1.1*
 The Maker Faire Kochi logo and Maker Faire names and marks are separate from the application-code licence. No trademark rights are granted. See [NOTICE.md](NOTICE.md) for the asset notices.
 
 Video encoding and MP4/WebM muxing use Mediabunny 1.62.1. The MPL-2.0 dependency notice and corresponding source link are in [NOTICE.md](NOTICE.md). All encoding runs locally on this device.
+
+### Paper cutouts and templates
+
+Choose a paper shape in Properties. Words or letters wrap within the solid areas, and photos show through the openings. The header’s Poster templates button opens editable Maker Faire compositions with prepared images, copy and colours, including four volunteer callouts in Poster and Story formats. Loading a template is undoable.

@@ -1,3 +1,5 @@
+import {keepLettersApart} from './letter-drag.js';
+
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const smooth=n=>{const t=clamp(n,0,1);return t*t*(3-2*t);};
 const SAMPLES=48;
@@ -44,18 +46,19 @@ export function reactTypeToCutout(cells,frame,silhouette,bounds,amount=1){
   if(amount<=0||frame.y>=bounds.y+bounds.h||frame.y+frame.h<=bounds.y)return cells;
   const weight=smooth(((frame.y+frame.h*.5-bounds.y)/bounds.h-.3)/.4);
   const above=weight>0?reactAbove(cells,frame,silhouette,bounds,amount):cells;
-  if(weight===1)return above;
+  if(weight===1)return keepLettersApart(above,bounds);
   const mirrorY=y=>2*bounds.y+bounds.h-y,maxRow=Math.max(...cells.map(cell=>cell.row));
   const mirrored=cells.map(cell=>({...cell,row:maxRow-cell.row,y:mirrorY(cell.y+cell.h)}));
   const bottom=silhouette?.bottom||silhouette?.top?.map(n=>n===null?null:1)||Array(SAMPLES).fill(1);
   const shape={top:bottom.map(n=>n===null?null:1-n)};
   const below=reactAbove(mirrored,{...frame,y:mirrorY(frame.y+frame.h)},shape,bounds,amount);
   const originals=new Map(cells.map(cell=>[cell.index,cell]));
-  return below.map((cell,i)=>{
+  const blended=below.map((cell,i)=>{
     const original=originals.get(cell.index),upper=above[i],y=mirrorY(cell.y+cell.h)*(1-weight)+upper.y*weight;
     const h=cell.h*(1-weight)+upper.h*weight;
     return {...original,x:cell.x*(1-weight)+upper.x*weight,y,w:cell.w*(1-weight)+upper.w*weight,h,response:{...original.response,angle:(cell.response?.angle||0)*(1-weight)+(upper.response?.angle||0)*weight},objectResponse:{strength:(cell.objectResponse?.strength||0)*(1-weight)+(upper.objectResponse?.strength||0)*weight,dy:y-original.y,scaleY:h/original.h}};
   });
+  return keepLettersApart(blended,bounds);
 }
 
 function reactAbove(cells,frame,silhouette,bounds,amount){

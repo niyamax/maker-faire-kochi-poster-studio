@@ -21,7 +21,7 @@ export function treatmentSettings(id,values={}){
   if(id==='packed')profile.spread=profile.contrast;
   return profile;
 }
-export function layoutTreatment(words,rect,id,phase=0,energy=1,settings={},curve='smooth'){
+export function layoutTreatment(words,rect,id,phase=0,energy=1,settings={},curve='smooth',{rowOffset=0}={}){
   const profile=treatmentSettings(id,settings);
   const rhythm=[[1.55,.62,.86,.52,1.26],[.68,1.60,.62,1.34,.8],[.88,1.46,.66,1.14,.8]];
   const coefficient=id==='packed'?.32:profile.mode==='flex'?.92:.35;
@@ -36,6 +36,10 @@ export function layoutTreatment(words,rect,id,phase=0,energy=1,settings={},curve
   const result=layoutComposition(words,{...options,spread:options.spread+motion.spreadOffset,pressure:options.pressure+motion.pressureOffset,rowWeights:motion.rowBias});
   for(const cell of result.cells){cell.x+=rect.x;cell.y+=rect.y;cell.focus=0;cell.response=continuousLetterResponse(phase,cell,energy,curve);}
   for(const row of result.rows){row.x+=rect.x;row.y+=rect.y;}
+  if(rowOffset){
+    for(const cell of result.cells)cell.row+=rowOffset;
+    for(const row of result.rows)row.index+=rowOffset;
+  }
   return {...craftTreatmentLayout(result,profile,phase,energy,curve),unrefinedCells:result.cells,profile,motion,pressure:options.pressure+motion.pressureOffset};
 }
 function contain(cell,matrix,rect){

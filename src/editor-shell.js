@@ -11,7 +11,7 @@ const SAVE_LABELS = {
  * The shell reflects the editor's selection and persistence status. Poster state,
  * undo, file actions and exports remain owned by app.js.
  */
-export function mountEditorShell({root = document, initialLayer = 'letters', onSelectLayer = () => {}} = {}) {
+export function mountEditorShell({root = document, initialLayer = 'letters', layerLabels = {}, onSelectLayer = () => {}} = {}) {
   const doc = root.ownerDocument || root;
   const body = doc.body;
   const find = selector => root.querySelector(selector);
@@ -46,7 +46,7 @@ export function mountEditorShell({root = document, initialLayer = 'letters', onS
       section.hidden = !contexts.includes('all') && !contexts.includes(selectedLayer);
     }
     const title = find('#selection-title');
-    if (title) title.textContent = label || LAYER_LABELS[selectedLayer];
+    if (title) title.textContent = label || layerLabels[selectedLayer] || LAYER_LABELS[selectedLayer];
     if (showProperties) setInspector('properties');
   }
 
