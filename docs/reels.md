@@ -10,6 +10,8 @@ Scripts in `scripts/reel/` render vertical Reels with the same lettering engine 
 | Swap | `swap.mjs` | One line stays. The other keeps changing: each new word rises from below and presses the last one flat. | Invitations, lists of activities |
 | Window | `window.mjs` | Two lines fill the poster, then part to open a photograph between them. | Workshops, maker spotlights |
 
+For campaign announcements and callouts, see the [angled reveal and date card recipe](reel-date-reveal.md). It documents the silent Maker Faire Kochi reference cut and its finished date hold.
+
 ## Run one
 
 You need Node 22 or newer, plus `rsvg-convert` (librsvg) and `ffmpeg` on your PATH. On macOS: `brew install librsvg ffmpeg`. Run from the repository root.
@@ -52,7 +54,7 @@ The sample wording and the sample photograph are placeholders. Replace both befo
 
 ## Shared design
 
-All styles use one layout so a series looks like a set. The reasons are in [Reel: The team grows](reel-team-grows.md).
+The three scripts above use one layout so a series looks like a set. The reasons are in [Reel: The team grows](reel-team-grows.md).
 
 - **One left edge.** Logo, lettering, story line and link bar share a 940 px column starting at x 70.
 - **Inside the 4:5 crop.** Everything sits between y 285 and 1635, which is what the profile grid shows and what clears the app's controls.

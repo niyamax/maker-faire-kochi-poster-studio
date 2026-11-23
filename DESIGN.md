@@ -23,3 +23,6 @@
 - **In Flow loops, vary which letter leads and how fast it stretches.** Ease between pulses, keep rows anchored, and use occasional vertical stretches where there is enough clearance.
   Why: The changing lead keeps the loop from feeling repetitive. Smooth handoffs and anchored rows prevent the jitter and floating motion seen in earlier attempts.
   <!-- 2026-11-17: "But that look like the motion is jittering and broken"; final two-axis revision: "Cool this works. Create other videos too" -->
+
+- **Use the [angled reveal recipe](docs/reel-date-reveal.md) for Maker Faire date announcements and related callouts.** Let complete Studio letters stretch as the rows part around the photograph. Reveal the date as a separate card and hold the numerals still once they settle.
+  <!-- 2026-11-23: "I want it to use the core animation we created for it, the stretching and all." / "The number can stay fix once revealed" -->
