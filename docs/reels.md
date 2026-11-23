@@ -12,6 +12,8 @@ Scripts in `scripts/reel/` render vertical Reels with the same lettering engine 
 
 For campaign announcements and callouts, see the [angled reveal and date card recipe](reel-date-reveal.md). It documents the silent Maker Faire Kochi reference cut and its finished date hold.
 
+For an awareness example with a photo-led opening and diagonal folds, see [What Is a Maker Faire?](reel-what-is-a-maker-faire.md). The guide includes the editable canvas reel and its reference MP4.
+
 ## Run one
 
 You need Node 22 or newer, plus `rsvg-convert` (librsvg) and `ffmpeg` on your PATH. On macOS: `brew install librsvg ffmpeg`. Run from the repository root.

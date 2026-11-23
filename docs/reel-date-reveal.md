@@ -35,3 +35,5 @@ At 1080 × 1920, the open photo window is 894 px wide. Its upper edge rises 56 p
 For a visitor invite, use a short opening line and open onto a project, workshop or encounter worth coming for. End with the date, venue and free entry. For a volunteer callout, show a candid moment that gives a sense of the people and the work, then use the end card for the action and destination. A single strong image can carry a short callout. Give each post one clear reason to come or take part.
 
 Use [the Window script](../scripts/reel/window.mjs) as a starting point for a single photo opening. The timing above specifies the separate stages for an announcement with multiple windows and a dedicated date card.
+
+The [What Is a Maker Faire? reel](reel-what-is-a-maker-faire.md) applies the angled windows to an awareness post with a full-bleed photo cover and two diagonal folds.
