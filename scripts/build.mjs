@@ -23,6 +23,7 @@ export async function copyPublic(){
     writeFile(resolve(root,'dist/poster.html'),poster),
     copyFile(resolve(root,'public/content.html'),resolve(root,'dist/content.html')),
     copyFile(resolve(root,'assets/MF_Kochi_Logo_long.png'),resolve(root,'dist/assets/MF_Kochi_Logo_long.png')),
+    copyFile(resolve(root,'assets/poster-studio-share.png'),resolve(root,'dist/assets/poster-studio-share.png')),
     copyFile(resolve(root,'LICENSE'),resolve(root,'dist/LICENSE')),
     copyFile(resolve(root,'NOTICE.md'),resolve(root,'dist/NOTICE.md')),
     cp(resolve(root,'licenses'),resolve(root,'dist/licenses'),{recursive:true}),

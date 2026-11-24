@@ -33,6 +33,9 @@ h1,.project-button{font-size:14px;font-weight:500;letter-spacing:0}
 .save-state{font-size:12px;line-height:18px;color:var(--studio-text-secondary)}
 .history-actions{border-color:var(--studio-border-subtle)}
 .icon-button{height:var(--studio-control-height);width:var(--studio-control-height)}
+.github-link{border-radius:6px}
+.github-link svg{width:16px;height:16px;fill:currentColor;stroke:none}
+.github-link:hover,.github-link:active{background:var(--studio-action-ghost-hover)}
 .primary-button{height:var(--studio-control-height);padding:0 var(--studio-control-padding);font-size:14px;font-weight:500;color:var(--studio-text-inverse);background:var(--studio-action-primary);border:1px solid var(--studio-action-primary);gap:var(--studio-space-8)}
 .primary-button:hover:not(:disabled){background:var(--studio-action-primary-hover);border-color:var(--studio-action-primary-hover)}
 .primary-button:active:not(:disabled){background:var(--studio-action-primary-pressed)}
@@ -253,3 +256,12 @@ textarea:hover,.select-field select:hover,.footer-range input[type=number]:hover
 /* Logo choices share the existing selection inspector on desktop and mobile. */
 .logo-options{display:grid;gap:12px;margin-bottom:20px;min-width:0}
 .logo-options .field-hint{margin:0}
+
+@media (max-width: 365px), (pointer: coarse) and (max-width: 430px) {
+  :root{--header:88px}
+  .app-header{display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:4px}
+  .app-header .document-actions{justify-self:end}
+}
+@media (pointer: coarse) and (max-width: 430px) {
+  :root{--header:112px}
+}
