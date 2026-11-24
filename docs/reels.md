@@ -12,8 +12,6 @@ Scripts in `scripts/reel/` render vertical Reels with the same lettering engine 
 
 For campaign announcements and callouts, see the [angled reveal and date card recipe](reel-date-reveal.md). It documents the silent Maker Faire Kochi reference cut and its finished date hold.
 
-For an awareness example with a photo-led opening and diagonal folds, see [What Is a Maker Faire?](reel-what-is-a-maker-faire.md). The guide includes the editable canvas reel and its reference MP4.
-
 ## Run one
 
 You need Node 22 or newer, plus `rsvg-convert` (librsvg) and `ffmpeg` on your PATH. On macOS: `brew install librsvg ffmpeg`. Run from the repository root.
@@ -90,3 +88,14 @@ A style is one function, `frame(t, config, assets)`, that returns the SVG for ti
 | `runReel({name, config, frame, prepare})` | Command-line options, rendering and encoding |
 
 Animate a row by animating its weight. Start from `swap.mjs`, which is the shortest.
+
+## Maker Faire Kochi awareness
+
+These two reels share Maker Faire red `#ED1C24`, white `#FFFFFF`, real event photos, and the Studio’s stretching letterforms. Each has its own motion. **What Is a Maker Faire?** pulls a full-bleed cover into a frame and uses diagonal photo windows. **How Can I Take Part?** keeps three roles in one composition and grows each photo band in turn.
+
+| Reel | Production guide | Runtime |
+| --- | --- | --- |
+| What Is a Maker Faire? | [Photo-led explainer script](reel-what-is-a-maker-faire.md) | 24.0 s |
+| How Can I Take Part? | [Participation script](reel-how-can-i-take-part.md) | 16.8 s |
+
+The delivered masters are silent H.264 MP4s at **2160 × 3840, 9:16, 30 fps**. Keep essential copy, the logo, and the focal part of framed photos within the centered **2160 × 2700** crop, from `y=570` up to (but excluding) `y=3270`. This corresponds to `y=285` through `y=1634` in the 1080 × 1920 layout. Full-bleed photos and moving edges can extend outside that area. Check the opening copy, each settled photo state, and the closing card at both aspect ratios. [4K masters in Google Drive](https://drive.google.com/drive/u/0/folders/18GSn1c19gS09Y2Ez095-J1x2-GpwAxIT)

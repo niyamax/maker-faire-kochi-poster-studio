@@ -26,3 +26,6 @@
 
 - **Use the [angled reveal recipe](docs/reel-date-reveal.md) for Maker Faire date announcements and related callouts.** Let complete Studio letters stretch as the rows part around the photograph. Reveal the date as a separate card and hold the numerals still once they settle.
   <!-- 2026-11-23: "I want it to use the core animation we created for it, the stretching and all." / "The number can stay fix once revealed" -->
+
+- **Build the Maker Faire awareness reels in red and white with the Studio’s own stretching type.** Give each reel a distinct way for the type and photos to move within the composition. Use the silent 4K vertical format and keep the reading area inside the centered 4:5 crop. See the [awareness reel guides](docs/reels.md#maker-faire-kochi-awareness) for the two approved treatments and scripts.
+  <!-- "I think we can use the white and red itself." / "I need everything to be morphing and changing" / "Make all the video in 4k and with 4:5 clearance too in 9:16 ratio" -->
